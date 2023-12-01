@@ -1,0 +1,126 @@
+from PyQt6.QtWidgets import QStyleFactory
+from PyQt6.QtGui import QColor, QPalette, QFont, QPixmap
+from PyQt6.QtWidgets import QVBoxLayout, QLabel, QWidget, QApplication
+from PyQt6.QtCore import Qt
+
+
+class GUIStyles:
+    @staticmethod
+    def set_default_theme(theme):
+        QApplication.setStyle(QStyleFactory.create(theme))
+
+    @staticmethod
+    def customize_theme(window):
+        palette = QPalette()
+        background_color = QColor(28, 28, 28, 128)
+        palette.setColor(QPalette.ColorRole.Window, background_color)
+        palette.setColor(QPalette.ColorRole.WindowText, QColor(255, 255, 255))
+        window.setPalette(palette)
+
+    @staticmethod 
+    def set_fonts():
+        general_font = QFont("Montserrat", 10)
+        QApplication.setFont(general_font)
+
+    @staticmethod   
+    def button_style(color_base, color_hover, color_pressed, min_width):
+        return f"""
+            QPushButton {{
+                background-color: {color_base};
+                border: 2px solid {color_base};
+                font-family: "Montserrat";
+                color: white;
+                letter-spacing: 0.1em;
+                min-width: {min_width};
+                padding: 6px;
+                border-radius: 4px;
+                font-size: 12px;
+                font-weight: bold;
+            }}
+
+            QPushButton:hover {{
+                background-color: {color_hover};
+                border: 2px solid {color_hover};
+            }}
+
+            QPushButton:pressed {{
+                background-color: {color_pressed};
+                border: 2px solid {color_pressed};
+            }}
+            
+            QPushButton:disabled {{
+                background-color: #cecece;
+                border: 2px solid #cecece;
+                color: #8c8b8b;
+            }}
+        """
+
+    @staticmethod
+    def _set_button_style(button, color_dict, min_width):
+        color_base, color_hover, color_pressed = color_dict['base'], color_dict['hover'], color_dict['pressed']
+        button.setStyleSheet(GUIStyles.button_style(color_base, color_hover, color_pressed, min_width))
+
+    @staticmethod
+    def set_start_btn_style(button):
+        color_dict = {'base': "#13B6B4", 'hover': "#1EC99F", 'pressed': "#1AAE88"}
+        GUIStyles._set_button_style(button, color_dict, min_width="150px")
+
+    @staticmethod
+    def set_stop_btn_style(button):
+        color_dict = {'base': "#FFA726", 'hover': "#FB8C00", 'pressed': "#E65100"}
+        GUIStyles._set_button_style(button, color_dict, min_width="150px") 
+
+    @staticmethod    
+    def set_reset_btn_style(button):
+        color_dict = {'base': "#8d4ef2", 'hover': "#a179ff", 'pressed': "#6b3da5"}
+        GUIStyles._set_button_style(button, color_dict, min_width="50px")
+
+    @staticmethod
+    def set_checkbox_style():
+        return """
+            QCheckBox {
+                spacing: 5px;
+                color: #f8f8f8;
+                font-family: "Montserrat";
+                font-size: 14px;
+                letter-spacing: 0.1em;
+                border: 1px solid #252525;
+                border-radius: 5px;
+                padding: 10px;
+            }
+            QCheckBox::indicator {
+                width: 20px;
+                height: 20px;
+                border-radius: 10px;  
+            }
+
+            QCheckBox::indicator:unchecked {
+                background-color: #6b6a6a;
+            }
+
+            QCheckBox::indicator:checked {
+                background-color: #8d4ef2;
+            }
+        """
+
+
+
+class LogoOverlay(QWidget):
+    def __init__(self, parent=None):
+        super(LogoOverlay, self).__init__(parent)
+        self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+
+        logo_path = "flimlabs-logo.png"
+        self.logo_label = QLabel(self, pixmap=QPixmap(logo_path).scaledToWidth(100))
+
+        layout = QVBoxLayout(self)
+        layout.addWidget(self.logo_label)
+        self.setLayout(layout)
+        self.adjustSize()
+
+    def update_position(self, window):
+        self.move(window.width() - self.width() - 10, window.height() - self.height() - 30)
+
+    def update_visibility(self, window):
+        self.setVisible(500 <= window.height() <= 2000)
