@@ -38,7 +38,7 @@ class PhotonsTracingWindow(QMainWindow):
         # depending on the draw_frequency, this will keep the last 1-10 seconds of data
         self.keep_points = 1000
         self.free_running_acquisition_time = True
-        self.enabled_channels = [] 
+        self.enabled_channels = [1] 
 
         self.flim_thread = None
         self.terminate_thread = False
