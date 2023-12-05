@@ -2,7 +2,7 @@ import sys
 from threading import Thread
 from time import sleep
 from PyQt5.QtWidgets import QMainWindow, QDesktopWidget, QApplication, QCheckBox, QWidget, QPushButton, QVBoxLayout, \
-    QHBoxLayout, QGridLayout, QSpinBox, QLabel, QSizePolicy, QComboBox, QScrollArea
+    QHBoxLayout, QGridLayout, QSpinBox, QLabel, QSizePolicy, QComboBox, QScrollArea, QMessageBox, QSpacerItem
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import QTimer
 from switch_control import SwitchControl
@@ -13,6 +13,7 @@ from pglive.sources.live_axis import LiveAxis
 from pglive.sources.live_plot import LiveLinePlot
 from pglive.sources.live_plot_widget import LivePlotWidget
 from gui_styles import GUIStyles, LogoOverlay
+from messages_utilities import MessagesUtilities
 import pyqtgraph as pg
 
 
@@ -37,7 +38,7 @@ class PhotonsTracingWindow(QMainWindow):
         # depending on the draw_frequency, this will keep the last 1-10 seconds of data
         self.keep_points = 1000
         self.free_running_acquisition_time = True
-        self.enabled_channels = [1] # for test purposes / TO DO: change to empty list
+        self.enabled_channels = [] 
 
         self.flim_thread = None
         self.terminate_thread = False
@@ -59,7 +60,7 @@ class PhotonsTracingWindow(QMainWindow):
         self.connectors = []
         
         self.checkbox_layout = QGridLayout()
-        self.checkboxes = self.draw_checkboxes()
+        self.channels_checkboxes = self.draw_checkboxes()
         
         toolbar_layout = QVBoxLayout()
         toolbar_layout.addSpacing(10)
@@ -115,7 +116,7 @@ class PhotonsTracingWindow(QMainWindow):
         self.start_button = QPushButton("START")
         GUIStyles.set_start_btn_style(self.start_button)
         self.start_button.clicked.connect(self.start_button_pressed)
-        self.start_button.setEnabled(not all(not checkbox.isChecked() for checkbox in self.checkboxes))
+        self.start_button.setEnabled(not all(not checkbox.isChecked() for checkbox in self.channels_checkboxes))
         buttons_row_layout.addWidget(self.start_button)
 
         self.stop_button = QPushButton("STOP")
@@ -192,7 +193,7 @@ class PhotonsTracingWindow(QMainWindow):
 
     
     def draw_checkboxes(self):
-        checkboxes = []
+        channels_checkboxes = []
 
         for i in range(8):
             self.enabled_channels.sort()
@@ -204,11 +205,11 @@ class PhotonsTracingWindow(QMainWindow):
                 checkbox.setChecked(True)
             checkbox.stateChanged.connect(lambda state, index=i: self.toggle_channels_checkbox(state, index))
 
-            checkboxes.append(checkbox)
+            channels_checkboxes.append(checkbox)
 
         self.layout.addLayout(self.checkbox_layout)
-        self.update_checkbox_layout(checkboxes)
-        return checkboxes
+        self.update_checkbox_layout(channels_checkboxes)
+        return channels_checkboxes
 
 
 
@@ -219,7 +220,7 @@ class PhotonsTracingWindow(QMainWindow):
             self.enabled_channels.remove(index)
         self.enabled_channels.sort()
         print("Enabled channels: " + str(self.enabled_channels))
-        self.start_button.setEnabled(not all(not checkbox.isChecked() for checkbox in self.checkboxes))
+        self.start_button.setEnabled(not all(not checkbox.isChecked() for checkbox in self.channels_checkboxes))
 
     
 
@@ -264,14 +265,26 @@ class PhotonsTracingWindow(QMainWindow):
     
 
 
+    def show_box_message(self, title, msg, icon):
+        message_box = QMessageBox()
+        message_box.setIcon(icon)
+        message_box.setText(msg)
+        message_box.setWindowTitle(title)
+        message_box.setStyleSheet(GUIStyles.set_msg_box_style())
+        message_box.exec_()
+    
 
-    def start_button_pressed(self): 
+    def start_button_pressed(self):
+        warn_title, warn_msg = MessagesUtilities.invalid_inputs_handler(self.bin_width_micros, self.keep_points, self.acquisition_time_millis, self.acquisition_time_mode_switch, self.enabled_channels, self.selected_conn_channel, self.selected_update_rate)
+        if warn_title and warn_msg:
+            self.show_box_message(warn_title, warn_msg, QMessageBox.Warning)
+            return
         self.set_draw_frequency()
         self.blank_space.hide()
         terminate_thread = False
         self.start_button.setEnabled(False)
         self.stop_button.setEnabled(True)
-        for checkbox in self.checkboxes:
+        for checkbox in self.channels_checkboxes:
             checkbox.setEnabled(False)
 
         for chart in self.charts:
@@ -299,9 +312,9 @@ class PhotonsTracingWindow(QMainWindow):
 
 
     def stop_button_pressed(self, thread_join=True):
-        self.start_button.setEnabled(not all(not checkbox.isChecked() for checkbox in self.checkboxes))
+        self.start_button.setEnabled(not all(not checkbox.isChecked() for checkbox in self.channels_checkboxes))
         self.stop_button.setEnabled(False)
-        for checkbox in self.checkboxes:
+        for checkbox in self.channels_checkboxes:
             checkbox.setEnabled(True)
         QApplication.processEvents()
 
@@ -330,9 +343,9 @@ class PhotonsTracingWindow(QMainWindow):
         self.bin_width_micros_input.setValue(1000)
         self.keep_points_input.setValue(self.keep_points)
         self.blank_space.show()
-        self.start_button.setEnabled(not all(not checkbox.isChecked() for checkbox in self.checkboxes))
+        self.start_button.setEnabled(not all(not checkbox.isChecked() for checkbox in self.channels_checkboxes))
         self.stop_button.setEnabled(False)
-        for checkbox in self.checkboxes:
+        for checkbox in self.channels_checkboxes:
             checkbox.setEnabled(True)
             checkbox.setChecked(False)
             
@@ -403,7 +416,7 @@ class PhotonsTracingWindow(QMainWindow):
         self.move(x, y)
 
 
-    def update_checkbox_layout(self, checkboxes):
+    def update_checkbox_layout(self, channels_checkboxes):
         screen_width = self.width()
         if screen_width < 500:
             num_columns = 1
@@ -414,7 +427,7 @@ class PhotonsTracingWindow(QMainWindow):
         else:
             num_columns = 8
 
-        for i, checkbox in enumerate(checkboxes):
+        for i, checkbox in enumerate(channels_checkboxes):
             row, col = divmod(i, num_columns)
             self.checkbox_layout.addWidget(checkbox, row, col)   
   
@@ -423,7 +436,7 @@ class PhotonsTracingWindow(QMainWindow):
         super(PhotonsTracingWindow, self).resizeEvent(event)
         self.logo_overlay.update_position(self)
         self.logo_overlay.update_visibility(self)
-        self.update_checkbox_layout(self.checkboxes)
+        self.update_checkbox_layout(self.channels_checkboxes)
 
 
     def process_point(self, time, x, counts):
@@ -452,27 +465,33 @@ class PhotonsTracingWindow(QMainWindow):
 
 
     def start_photons_tracing(self):
-        acquisition_time_millis = None if self.acquisition_time_millis in (0, None) else self.acquisition_time_millis
-        print("Selected firmware: " + (str(self.selected_firmware)))
-        print("Free running enabled: " + str(self.acquisition_time_mode_switch.isChecked()))
-        print("Acquisition time millis: " + str(acquisition_time_millis))
-        print("Max points: " + str(self.keep_points))
-        print("Bin width micros: " + str(self.bin_width_micros))
-        print("Draw frequency: " + str(self.draw_frequency))
+        try:
+            acquisition_time_millis = None if self.acquisition_time_millis in (0, None) else self.acquisition_time_millis
+            print("Selected firmware: " + (str(self.selected_firmware)))
+            print("Free running enabled: " + str(self.acquisition_time_mode_switch.isChecked()))
+            print("Acquisition time millis: " + str(acquisition_time_millis))
+            print("Max points: " + str(self.keep_points))
+            print("Bin width micros: " + str(self.bin_width_micros))
+            print("Draw frequency: " + str(self.draw_frequency))
 
-        file_bin = flim_labs.start_photons_tracing(
-            enabled_channels=self.enabled_channels,
-            bin_width_micros= self.bin_width_micros,  # E.g. 1000 = 1ms bin width
-            write_bin=False, # True = Write raw data from card in a binary file
-            acquisition_time_millis=acquisition_time_millis,  # E.g. 10000 = Stops after 10 seconds of acquisition
-            firmware_file=None,  # String, if None let flim decide to use intensity tracing Firmware
-        )
+            file_bin = flim_labs.start_photons_tracing(
+                enabled_channels=self.enabled_channels,
+                bin_width_micros=self.bin_width_micros,  # E.g. 1000 = 1ms bin width
+                write_bin=False,  # True = Write raw data from card in a binary file
+                acquisition_time_millis=acquisition_time_millis,  # E.g. 10000 = Stops after 10 seconds of acquisition
+                firmware_file=None,  # String, if None let flim decide to use intensity tracing Firmware
+            )
 
-        if file_bin != "":
-            print("File bin written in: " + file_bin)
+            if file_bin != "":
+                print("File bin written in: " + file_bin)
 
-        self.flim_thread = Thread(target=self.flim_read)
-        self.flim_thread.start()
+            self.flim_thread = Thread(target=self.flim_read)
+            self.flim_thread.start()
+
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            error_title, error_msg = MessagesUtilities.error_handler(str(e))
+            self.show_box_message(error_title, error_msg, QMessageBox.Critical)
 
 
 if __name__ == '__main__':
