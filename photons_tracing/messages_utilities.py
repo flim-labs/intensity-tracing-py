@@ -4,7 +4,7 @@ class MessagesUtilities:
         if "NotDownloadable" in error_msg:
             return ("Error Resolving Firmware", "Unable to download the selected firmware")
         else:
-            return ("Unknown error", "An unknown error has occurred")    
+            return ("Error", error_msg)    
 
     @staticmethod
     def invalid_inputs_handler(bin_width_micros, keep_points, acquisition_time_millis, acquisition_time_mode_switch, enabled_channels, selected_conn_channel, selected_update_rate):
