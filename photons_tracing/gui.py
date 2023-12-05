@@ -489,7 +489,6 @@ class PhotonsTracingWindow(QMainWindow):
             self.flim_thread.start()
 
         except Exception as e:
-            print(f"An error occurred: {e}")
             error_title, error_msg = MessagesUtilities.error_handler(str(e))
             self.show_box_message(error_title, error_msg, QMessageBox.Critical)
 

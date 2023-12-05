@@ -1,4 +1,3 @@
 PyQt5
 flim-labs
 pglive
-pyinstaller
