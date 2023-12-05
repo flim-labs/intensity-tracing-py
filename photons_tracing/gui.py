@@ -1,18 +1,25 @@
 import sys
+import os
+current_path = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.abspath(os.path.join(current_path, '..'))
+sys.path.append(project_root)
 from threading import Thread
 from time import sleep
 from PyQt5.QtWidgets import QMainWindow, QDesktopWidget, QApplication, QCheckBox, QWidget, QPushButton, QVBoxLayout, \
-    QHBoxLayout, QGridLayout, QSpinBox, QLabel, QSizePolicy, QComboBox, QScrollArea, QMessageBox, QSpacerItem
+    QHBoxLayout, QGridLayout, QSpinBox, QLabel, QSizePolicy, QComboBox, QScrollArea, QMessageBox
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import QTimer
-from switch_control import SwitchControl
 from flim_labs import flim_labs
 from pglive.kwargs import Axis
 from pglive.sources.data_connector import DataConnector
 from pglive.sources.live_axis import LiveAxis
 from pglive.sources.live_plot import LiveLinePlot
 from pglive.sources.live_plot_widget import LivePlotWidget
-from gui_styles import GUIStyles, LogoOverlay
+from gui_styles import GUIStyles
+from gui_components.logo_utilities import LogoOverlay, TitlebarIcon
+from gui_components.switch_control import SwitchControl
+from gui_components.select_control import SelectControl
+from gui_components.input_number_control import InputNumberControl
 from messages_utilities import MessagesUtilities
 import pyqtgraph as pg
 
@@ -73,15 +80,15 @@ class PhotonsTracingWindow(QMainWindow):
         self.controls_row = QHBoxLayout()
 
         # Channels type control (USB/SMA)
-        self.conn_channel_type_control, self.conn_channel_type_input = self.setup_select_controls("Channel type:", self.selected_conn_channel, self.controls_row, self.conn_channels, self.conn_channel_type_value_change)
+        self.conn_channel_type_control, self.conn_channel_type_input = SelectControl.setup("Channel type:", self.selected_conn_channel, self.controls_row, self.conn_channels, self.conn_channel_type_value_change)
         self.conn_channel_type_input.setStyleSheet(GUIStyles.set_input_select_style())
         
         # Bin width micros control 
-        self.bin_width_micros_control, self.bin_width_micros_input = self.setup_input_number_controls("Bin width (µs):", 0, 999999, 1000, self.controls_row, self.bin_width_micros_value_change)
+        self.bin_width_micros_control, self.bin_width_micros_input = InputNumberControl.setup("Bin width (µs):", 0, 999999, 1000, self.controls_row, self.bin_width_micros_value_change)
         self.bin_width_micros_input.setStyleSheet(GUIStyles.set_input_number_style())
         
         # Update rate control (LOW/HIGH)
-        self.update_rate_control, self.update_rate_input = self.setup_select_controls("Update rate:", self.selected_update_rate, self.controls_row, self.update_rates, self.update_rate_value_change)
+        self.update_rate_control, self.update_rate_input = SelectControl.setup("Update rate:", self.selected_update_rate, self.controls_row, self.update_rates, self.update_rate_value_change)
         self.update_rate_input.setStyleSheet(GUIStyles.set_input_select_style())
    
         # Acquisition time mode switch control (Free Running/Fixed)
@@ -96,12 +103,12 @@ class PhotonsTracingWindow(QMainWindow):
         self.controls_row.addSpacing(20)
 
         # Keep points input number control (configurable when in acquisition time free running mode)
-        self.keep_points_control, self.keep_points_input = self.setup_input_number_controls("Max points:", 0, 999999, 1000, self.controls_row, self.keep_points_value_change)
+        self.keep_points_control, self.keep_points_input = InputNumberControl.setup("Max points:", 0, 999999, 1000, self.controls_row, self.keep_points_value_change)
         self.keep_points_input.setEnabled(self.acquisition_time_mode_switch.isChecked())
         self.keep_points_input.setStyleSheet(GUIStyles.set_input_number_style())
 
         # Acquisition time millis input number control (configurable when in acquisition time fixed mode)
-        self.acquisition_time_millis_control, self.acquisition_time_millis_input = self.setup_input_number_controls("Acquisition time (ms):", 0, 999999, None, self.controls_row, self.acquisition_time_millis_value_change)
+        self.acquisition_time_millis_control, self.acquisition_time_millis_input = InputNumberControl.setup("Acquisition time (ms):", 0, 999999, None, self.controls_row, self.acquisition_time_millis_value_change)
         self.acquisition_time_millis_input.setEnabled(not self.acquisition_time_mode_switch.isChecked())
         self.acquisition_time_millis_input.setStyleSheet(GUIStyles.set_input_number_style())
 
@@ -148,8 +155,8 @@ class PhotonsTracingWindow(QMainWindow):
         # Charts grid
         self.charts_grid = QGridLayout()
         self.layout.addLayout(self.charts_grid)
-
-        # Logo overlay
+   
+        # Logo overlay      
         self.logo_overlay = LogoOverlay(self)
         self.logo_overlay.show()
         self.logo_overlay.update_visibility(self)
@@ -157,39 +164,7 @@ class PhotonsTracingWindow(QMainWindow):
         self.logo_overlay.lower()
 
         # Titlebar logo icon
-        self.guibar_icon = "flimlabs-icon.png"
-        self.setWindowIcon(QIcon(self.guibar_icon))
-
-
-
-    def setup_select_controls(self, label, selectedValue, row, options, event_callback):  
-        q_label = QLabel(label)
-        control = QVBoxLayout()
-        input = QComboBox()
-        for value in options:
-            input.addItem(value)
-        input.setCurrentText(selectedValue)        
-        input.currentIndexChanged.connect(event_callback)
-        control.addWidget(q_label)
-        control.addWidget(input)
-        row.addLayout(control)
-        row.addSpacing(20)
-        return control, input
-
-
-    def setup_input_number_controls(self, label, min, max, value, row, event_callback):         
-        q_label =  QLabel(label)
-        control = QVBoxLayout()
-        input = QSpinBox()
-        input.setRange(min, max)
-        if value:
-            input.setValue(value)
-        input.valueChanged.connect(event_callback)        
-        control.addWidget(q_label)
-        control.addWidget(input)
-        row.addLayout(control)
-        row.addSpacing(20)
-        return control, input
+        TitlebarIcon.setup(self)
 
     
     def draw_checkboxes(self):

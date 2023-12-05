@@ -190,26 +190,3 @@ class GUIStyles:
             }   
                  
         """ 
-        
-
-
-
-class LogoOverlay(QWidget):
-    def __init__(self, parent=None):
-        super(LogoOverlay, self).__init__(parent)
-        self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
-        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-
-        logo_path = "flimlabs-logo.png"
-    
-        self.logo_label = QLabel(self, pixmap=QPixmap(logo_path).scaledToWidth(100))
-        layout = QVBoxLayout(self)
-        layout.addWidget(self.logo_label)
-        self.setLayout(layout)
-        self.adjustSize()
-
-    def update_position(self, window):
-        self.move(window.width() - self.width() - 10, window.height() - self.height() - 30)
-
-    def update_visibility(self, window):
-        self.setVisible(500 <= window.height() <= 2000)
