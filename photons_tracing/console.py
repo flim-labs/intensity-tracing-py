@@ -9,7 +9,7 @@ def stop():
 def process(time, _x, counts):
     seconds = round(time / 1_000_000_000, 5)
     seconds = str(seconds).zfill(5)
-    print("[" + seconds + "s] " + str(counts[1]))
+    print("[" + seconds + "s] " + str(counts[0]))
 
 
 def thread_function():
@@ -19,14 +19,19 @@ def thread_function():
 
 
 if __name__ == "__main__":
-    bin_file = flim_labs.start_photons_tracing(
-        enabled_channels=[1],
+    result = flim_labs.start_photons_tracing(
+        enabled_channels=[0],
         bin_width_micros=1000,
-        acquisition_time_millis=10000,
-        # write_bin=True,
+        acquisition_time_millis=3000,
+        write_bin=False,
+        write_data=True
     )
     x = threading.Thread(target=thread_function)
     x.start()
     x.join()
-    if bin_file != "":
-        print("File bin written in: " + bin_file)
+    # print result
+    bin_file = result.bin_file
+    data_file = result.data_file
+    print("Binary file=" + str(bin_file))
+    print("Data file=" + str(data_file))
+

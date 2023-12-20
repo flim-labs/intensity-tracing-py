@@ -21,6 +21,8 @@ from gui_components.switch_control import SwitchControl
 from gui_components.select_control import SelectControl
 from gui_components.input_number_control import InputNumberControl
 from messages_utilities import MessagesUtilities
+from gui_components.layout_utilities import draw_layout_separator
+from gui_components.link_widget import LinkWidget
 import pyqtgraph as pg
 
 
@@ -45,7 +47,8 @@ class PhotonsTracingWindow(QMainWindow):
         # depending on the draw_frequency, this will keep the last 1-10 seconds of data
         self.keep_points = 1000
         self.free_running_acquisition_time = True
-        self.enabled_channels = [1] 
+        self.enabled_channels = [] 
+        self.write_data = False
 
         self.flim_thread = None
         self.terminate_thread = False
@@ -111,14 +114,31 @@ class PhotonsTracingWindow(QMainWindow):
         self.acquisition_time_millis_control, self.acquisition_time_millis_input = InputNumberControl.setup("Acquisition time (ms):", 0, 999999, None, self.controls_row, self.acquisition_time_millis_value_change)
         self.acquisition_time_millis_input.setEnabled(not self.acquisition_time_mode_switch.isChecked())
         self.acquisition_time_millis_input.setStyleSheet(GUIStyles.set_input_number_style())
-
-        self.controls_row.addStretch(1)
+     
 
         toolbar_layout.addLayout(self.controls_row)
+        toolbar_layout.addWidget(draw_layout_separator())
    
         # ACTION BUTTONS
         buttons_row_layout = QHBoxLayout()
         buttons_row_layout.addStretch(1)
+
+        # Link to export data documentation
+        info_link_widget = LinkWidget(icon_filename='info-icon.png')
+        info_link_widget.show()
+        buttons_row_layout.addWidget(info_link_widget)
+        
+        # Export data switch control
+        self.export_data_control = QHBoxLayout()
+        export_data_label = QLabel("Export data:")
+        self.export_data_switch = SwitchControl(active_color="#FB8C00", width=70, height=30, checked = False)
+        self.export_data_switch.stateChanged.connect((lambda state: self.toggle_export_data(state)))
+        self.export_data_control.addWidget(export_data_label )
+        self.export_data_control.addSpacing(8)
+        self.export_data_control.addWidget(self.export_data_switch )
+        buttons_row_layout.addLayout(self.export_data_control)
+        self.export_data_control.addSpacing(20)
+       
 
         self.start_button = QPushButton("START")
         GUIStyles.set_start_btn_style(self.start_button)
@@ -137,6 +157,7 @@ class PhotonsTracingWindow(QMainWindow):
         self.reset_button.setEnabled(True)
         self.reset_button.clicked.connect(self.reset_button_pressed)
         buttons_row_layout.addWidget(self.reset_button)
+  
         
         toolbar_layout.addSpacing(10)
 
@@ -209,6 +230,13 @@ class PhotonsTracingWindow(QMainWindow):
              self.keep_points_input.setEnabled(False)   
              self.acquisition_time_millis_input.setEnabled(True)
 
+
+    def toggle_export_data(self, state):
+        if state:
+            self.write_data = True
+        else:
+            self.write_data = False    
+    
 
 
     def conn_channel_type_value_change(self, index): 
@@ -305,6 +333,7 @@ class PhotonsTracingWindow(QMainWindow):
 
     def reset_button_pressed(self): 
         # reset default values
+        self.write_data = False
         self.acquisition_time_millis = None
         self.keep_points = 1000
         self.bin_width_micros = 1000
@@ -449,16 +478,18 @@ class PhotonsTracingWindow(QMainWindow):
             print("Bin width micros: " + str(self.bin_width_micros))
             print("Draw frequency: " + str(self.draw_frequency))
 
-            file_bin = flim_labs.start_photons_tracing(
+            result = flim_labs.start_photons_tracing(
                 enabled_channels=self.enabled_channels,
                 bin_width_micros=self.bin_width_micros,  # E.g. 1000 = 1ms bin width
                 write_bin=False,  # True = Write raw data from card in a binary file
+                write_data=self.write_data, # True = Write raw data in a data file
                 acquisition_time_millis=acquisition_time_millis,  # E.g. 10000 = Stops after 10 seconds of acquisition
-                firmware_file=None,  # String, if None let flim decide to use intensity tracing Firmware
+                firmware_file=self.selected_firmware,  # String, if None let flim decide to use intensity tracing Firmware
             )
-
+            
+            file_bin = result.bin_file
             if file_bin != "":
-                print("File bin written in: " + file_bin)
+                print("File bin written in: " + str(file_bin))
 
             self.flim_thread = Thread(target=self.flim_read)
             self.flim_thread.start()
