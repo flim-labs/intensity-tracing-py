@@ -1,5 +1,6 @@
 import sys
 import os
+
 current_path = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_path, '..'))
 sys.path.append(project_root)
@@ -47,58 +48,65 @@ class PhotonsTracingWindow(QMainWindow):
         # depending on the draw_frequency, this will keep the last 1-10 seconds of data
         self.keep_points = 1000
         self.free_running_acquisition_time = True
-        self.enabled_channels = [] 
+        self.enabled_channels = []
         self.write_data = False
 
         self.flim_thread = None
         self.terminate_thread = False
         self.charts = []
-        
+
         GUIStyles.customize_theme(self)
         GUIStyles.set_fonts()
         self.setWindowTitle("Intensity tracing")
-       
+
         self.resize(1460, 600)
 
         scroll_area = QScrollArea()
         scroll_area.setWidgetResizable(True)
 
-
         self.layout = QVBoxLayout()
-   
 
         self.connectors = []
-        
+
         self.checkbox_layout = QGridLayout()
         self.channels_checkboxes = self.draw_checkboxes()
-        
+
         toolbar_layout = QVBoxLayout()
         toolbar_layout.addSpacing(10)
 
         self.blank_space = QWidget()
         self.blank_space.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        
 
         # CONTROLS
         self.controls_row = QHBoxLayout()
 
         # Channels type control (USB/SMA)
-        self.conn_channel_type_control, self.conn_channel_type_input = SelectControl.setup("Channel type:", self.selected_conn_channel, self.controls_row, self.conn_channels, self.conn_channel_type_value_change)
+        self.conn_channel_type_control, self.conn_channel_type_input = SelectControl.setup("Channel type:",
+                                                                                           self.selected_conn_channel,
+                                                                                           self.controls_row,
+                                                                                           self.conn_channels,
+                                                                                           self.conn_channel_type_value_change)
         self.conn_channel_type_input.setStyleSheet(GUIStyles.set_input_select_style())
-        
+
         # Bin width micros control
 
-        self.bin_width_micros_control, self.bin_width_micros_input = InputNumberControl.setup("Bin width (µs):", 0, 999999, 1000, self.controls_row, self.bin_width_micros_value_change)
+        self.bin_width_micros_control, self.bin_width_micros_input = InputNumberControl.setup("Bin width (µs):", 0,
+                                                                                              999999, 1000,
+                                                                                              self.controls_row,
+                                                                                              self.bin_width_micros_value_change)
         self.bin_width_micros_input.setStyleSheet(GUIStyles.set_input_number_style())
-        
+
         # Update rate control (LOW/HIGH)
-        self.update_rate_control, self.update_rate_input = SelectControl.setup("Update rate:", self.selected_update_rate, self.controls_row, self.update_rates, self.update_rate_value_change)
+        self.update_rate_control, self.update_rate_input = SelectControl.setup("Update rate:",
+                                                                               self.selected_update_rate,
+                                                                               self.controls_row, self.update_rates,
+                                                                               self.update_rate_value_change)
         self.update_rate_input.setStyleSheet(GUIStyles.set_input_select_style())
-   
+
         # Acquisition time mode switch control (Free Running/Fixed)
         self.acquisition_time_control = QVBoxLayout()
         acquisition_time_label = QLabel("Free running acquisition time:")
-        self.acquisition_time_mode_switch = SwitchControl(active_color="#13B6B4", checked = True)
+        self.acquisition_time_mode_switch = SwitchControl(active_color="#13B6B4", checked=True)
         self.acquisition_time_mode_switch.stateChanged.connect((lambda state: self.toggle_acquisition_time_mode(state)))
         self.acquisition_time_control.addWidget(acquisition_time_label)
         self.acquisition_time_control.addSpacing(8)
@@ -107,19 +115,21 @@ class PhotonsTracingWindow(QMainWindow):
         self.controls_row.addSpacing(20)
 
         # Keep points input number control (configurable when in acquisition time free running mode)
-        self.keep_points_control, self.keep_points_input = InputNumberControl.setup("Max points:", 0, 999999, 1000, self.controls_row, self.keep_points_value_change)
+        self.keep_points_control, self.keep_points_input = InputNumberControl.setup("Max points:", 0, 999999, 1000,
+                                                                                    self.controls_row,
+                                                                                    self.keep_points_value_change)
         self.keep_points_input.setEnabled(self.acquisition_time_mode_switch.isChecked())
         self.keep_points_input.setStyleSheet(GUIStyles.set_input_number_style())
 
         # Acquisition time millis input number control (configurable when in acquisition time fixed mode)
-        self.acquisition_time_millis_control, self.acquisition_time_millis_input = InputNumberControl.setup("Acquisition time (ms):", 0, 999999, None, self.controls_row, self.acquisition_time_millis_value_change)
+        self.acquisition_time_millis_control, self.acquisition_time_millis_input = InputNumberControl.setup(
+            "Acquisition time (ms):", 0, 999999, None, self.controls_row, self.acquisition_time_millis_value_change)
         self.acquisition_time_millis_input.setEnabled(not self.acquisition_time_mode_switch.isChecked())
         self.acquisition_time_millis_input.setStyleSheet(GUIStyles.set_input_number_style())
-     
 
         toolbar_layout.addLayout(self.controls_row)
         toolbar_layout.addWidget(draw_layout_separator())
-   
+
         # ACTION BUTTONS
         buttons_row_layout = QHBoxLayout()
         buttons_row_layout.addStretch(1)
@@ -128,18 +138,17 @@ class PhotonsTracingWindow(QMainWindow):
         info_link_widget = LinkWidget(icon_filename='info-icon.png')
         info_link_widget.show()
         buttons_row_layout.addWidget(info_link_widget)
-        
+
         # Export data switch control
         self.export_data_control = QHBoxLayout()
         export_data_label = QLabel("Export data:")
-        self.export_data_switch = SwitchControl(active_color="#FB8C00", width=70, height=30, checked = False)
+        self.export_data_switch = SwitchControl(active_color="#FB8C00", width=70, height=30, checked=False)
         self.export_data_switch.stateChanged.connect((lambda state: self.toggle_export_data(state)))
-        self.export_data_control.addWidget(export_data_label )
+        self.export_data_control.addWidget(export_data_label)
         self.export_data_control.addSpacing(8)
-        self.export_data_control.addWidget(self.export_data_switch )
+        self.export_data_control.addWidget(self.export_data_switch)
         buttons_row_layout.addLayout(self.export_data_control)
         self.export_data_control.addSpacing(20)
-       
 
         self.start_button = QPushButton("START")
         GUIStyles.set_start_btn_style(self.start_button)
@@ -158,8 +167,7 @@ class PhotonsTracingWindow(QMainWindow):
         self.reset_button.setEnabled(True)
         self.reset_button.clicked.connect(self.reset_button_pressed)
         buttons_row_layout.addWidget(self.reset_button)
-  
-        
+
         toolbar_layout.addSpacing(10)
 
         toolbar_layout.addLayout(buttons_row_layout)
@@ -177,7 +185,7 @@ class PhotonsTracingWindow(QMainWindow):
         # Charts grid
         self.charts_grid = QGridLayout()
         self.layout.addLayout(self.charts_grid)
-   
+
         # Logo overlay      
         self.logo_overlay = LogoOverlay(self)
         self.logo_overlay.show()
@@ -188,7 +196,6 @@ class PhotonsTracingWindow(QMainWindow):
         # Titlebar logo icon
         TitlebarIcon.setup(self)
 
-    
     def draw_checkboxes(self):
         channels_checkboxes = []
 
@@ -208,8 +215,6 @@ class PhotonsTracingWindow(QMainWindow):
         self.update_checkbox_layout(channels_checkboxes)
         return channels_checkboxes
 
-
-
     def toggle_channels_checkbox(self, state, index):
         if state:
             self.enabled_channels.append(index)
@@ -219,55 +224,44 @@ class PhotonsTracingWindow(QMainWindow):
         print("Enabled channels: " + str(self.enabled_channels))
         self.start_button.setEnabled(not all(not checkbox.isChecked() for checkbox in self.channels_checkboxes))
 
-    
-
     def toggle_acquisition_time_mode(self, state):
         if state:
             self.acquisition_time_millis = None
             self.keep_points_input.setEnabled(True)
             self.acquisition_time_millis_input.setEnabled(False)
         else:
-             self.keep_points = 1000
-             self.keep_points_input.setEnabled(False)   
-             self.acquisition_time_millis_input.setEnabled(True)
-
+            self.keep_points = 1000
+            self.keep_points_input.setEnabled(False)
+            self.acquisition_time_millis_input.setEnabled(True)
 
     def toggle_export_data(self, state):
         if state:
             self.write_data = True
         else:
-            self.write_data = False    
-    
+            self.write_data = False
 
-
-    def conn_channel_type_value_change(self, index): 
+    def conn_channel_type_value_change(self, index):
         self.selected_conn_channel = self.sender().currentText()
         if self.selected_conn_channel == "USB":
             self.selected_firmware = self.firmwares[0]
         else:
-            self.selected_firmware = self.firmwares[1]       
+            self.selected_firmware = self.firmwares[1]
 
-
-    def acquisition_time_millis_value_change(self, value): 
-        self.start_button.setEnabled(value != 0) 
+    def acquisition_time_millis_value_change(self, value):
+        self.start_button.setEnabled(value != 0)
         self.acquisition_time_millis = value
 
-
     def keep_points_value_change(self, value):
-        self.start_button.setEnabled(value != 0) 
-        self.keep_points = value 
+        self.start_button.setEnabled(value != 0)
+        self.keep_points = value
 
-    
     def bin_width_micros_value_change(self, value):
-        self.start_button.setEnabled(value != 0) 
-        self.bin_width_micros = value    
+        self.start_button.setEnabled(value != 0)
+        self.bin_width_micros = value
 
-    
-    def update_rate_value_change(self, index): 
+    def update_rate_value_change(self, index):
         self.selected_update_rate = self.sender().currentText()
         print(self.selected_update_rate)
-    
-
 
     def show_box_message(self, title, msg, icon):
         message_box = QMessageBox()
@@ -276,10 +270,14 @@ class PhotonsTracingWindow(QMainWindow):
         message_box.setWindowTitle(title)
         message_box.setStyleSheet(GUIStyles.set_msg_box_style())
         message_box.exec_()
-    
 
     def start_button_pressed(self):
-        warn_title, warn_msg = MessagesUtilities.invalid_inputs_handler(self.bin_width_micros, self.keep_points, self.acquisition_time_millis, self.acquisition_time_mode_switch, self.enabled_channels, self.selected_conn_channel, self.selected_update_rate)
+        warn_title, warn_msg = MessagesUtilities.invalid_inputs_handler(self.bin_width_micros, self.keep_points,
+                                                                        self.acquisition_time_millis,
+                                                                        self.acquisition_time_mode_switch,
+                                                                        self.enabled_channels,
+                                                                        self.selected_conn_channel,
+                                                                        self.selected_update_rate)
         if warn_title and warn_msg:
             self.show_box_message(warn_title, warn_msg, QMessageBox.Warning)
             return
@@ -312,8 +310,6 @@ class PhotonsTracingWindow(QMainWindow):
 
         QApplication.processEvents()
         self.start_photons_tracing()
-       
-
 
     def stop_button_pressed(self, thread_join=True):
         self.start_button.setEnabled(not all(not checkbox.isChecked() for checkbox in self.channels_checkboxes))
@@ -330,9 +326,7 @@ class PhotonsTracingWindow(QMainWindow):
         for (channel, curr_conn) in self.connectors:
             curr_conn.pause()
 
-
-
-    def reset_button_pressed(self): 
+    def reset_button_pressed(self):
         # reset default values
         self.write_data = False
         self.acquisition_time_millis = None
@@ -353,20 +347,19 @@ class PhotonsTracingWindow(QMainWindow):
         for checkbox in self.channels_checkboxes:
             checkbox.setEnabled(True)
             checkbox.setChecked(False)
-            
-        for chart in self.charts:    
+
+        for chart in self.charts:
             chart.setVisible(False)
-       
+
         QApplication.processEvents()
-        
+
         flim_labs.request_stop()
         self.terminate_thread = True
-        
+
         for (channel, curr_conn) in self.connectors:
             curr_conn.pause()
 
-
-    def set_draw_frequency(self):   
+    def set_draw_frequency(self):
         num_enabled_channels = len(self.enabled_channels)
         if self.selected_update_rate not in ["LOW", "HIGH"] and num_enabled_channels == 0:
             self.draw_frequency = 10
@@ -377,12 +370,11 @@ class PhotonsTracingWindow(QMainWindow):
         else:
             min_frequency = 21
             max_frequency = 100
-   
+
         frequency_range = max_frequency - min_frequency
         step = frequency_range / num_enabled_channels
         adjusted_frequency = max_frequency - step * (num_enabled_channels - 1)
         self.draw_frequency = max(min_frequency, min(max_frequency, adjusted_frequency))
-
 
     def generate_chart(self, channel_index):
         left_axis = LiveAxis("left", axisPen="#cecece", textPen="#FFA726")
@@ -407,19 +399,15 @@ class PhotonsTracingWindow(QMainWindow):
         connector = DataConnector(plot_curve, update_rate=self.draw_frequency, max_points=self.keep_points)
 
         plot_widget.setBackground(None)
-     
 
         return plot_widget, (self.enabled_channels[channel_index], connector)
 
-
-
-    def showEvent(self, event):  
+    def showEvent(self, event):
         super().showEvent(event)
         screen_rect = QDesktopWidget().screenGeometry()
         x = (screen_rect.width() - self.width()) // 2
         y = (screen_rect.height() - self.height()) // 2
         self.move(x, y)
-
 
     def update_checkbox_layout(self, channels_checkboxes):
         screen_width = self.width()
@@ -434,8 +422,7 @@ class PhotonsTracingWindow(QMainWindow):
 
         for i, checkbox in enumerate(channels_checkboxes):
             row, col = divmod(i, num_columns)
-            self.checkbox_layout.addWidget(checkbox, row, col)   
-  
+            self.checkbox_layout.addWidget(checkbox, row, col)
 
     def resizeEvent(self, event):
         super(PhotonsTracingWindow, self).resizeEvent(event)
@@ -443,19 +430,17 @@ class PhotonsTracingWindow(QMainWindow):
         self.logo_overlay.update_visibility(self)
         self.update_checkbox_layout(self.channels_checkboxes)
 
-
     def process_point(self, time, x, counts):
         for (channel, curr_conn) in self.connectors:
             curr_conn.cb_append_data_point(
                 y=counts[channel],
                 x=time / 1_000_000_000
             )
-            
-        if x % 1000 == 0:    
+
+        if x % 1000 == 0:
             QApplication.processEvents()
         else:
             sleep(0.000001)
-
 
     def flim_read(self):
         print("Thread: Start reading from flim queue")
@@ -464,14 +449,13 @@ class PhotonsTracingWindow(QMainWindow):
         self.start_button.setEnabled(True)
         self.stop_button.setEnabled(False)
         if self.terminate_thread:
-            return 
+            return
         self.stop_button_pressed(thread_join=False)
-
-
 
     def start_photons_tracing(self):
         try:
-            acquisition_time_millis = None if self.acquisition_time_millis in (0, None) else self.acquisition_time_millis
+            acquisition_time_millis = None if self.acquisition_time_millis in (
+            0, None) else self.acquisition_time_millis
             print("Selected firmware: " + (str(self.selected_firmware)))
             print("Free running enabled: " + str(self.acquisition_time_mode_switch.isChecked()))
             print("Acquisition time millis: " + str(acquisition_time_millis))
@@ -483,11 +467,12 @@ class PhotonsTracingWindow(QMainWindow):
                 enabled_channels=self.enabled_channels,
                 bin_width_micros=self.bin_width_micros,  # E.g. 1000 = 1ms bin width
                 write_bin=False,  # True = Write raw data from card in a binary file
-                write_data=self.write_data, # True = Write raw data in a data file
+                write_data=self.write_data,  # True = Write raw data in a data file
                 acquisition_time_millis=acquisition_time_millis,  # E.g. 10000 = Stops after 10 seconds of acquisition
-                firmware_file=self.selected_firmware,  # String, if None let flim decide to use intensity tracing Firmware
+                firmware_file=self.selected_firmware,
+                # String, if None let flim decide to use intensity tracing Firmware
             )
-            
+
             file_bin = result.bin_file
             if file_bin != "":
                 print("File bin written in: " + str(file_bin))
