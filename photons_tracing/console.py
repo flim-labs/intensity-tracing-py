@@ -19,7 +19,7 @@ def thread_function():
 
 
 if __name__ == "__main__":
-    result = flim_labs.start_photons_tracing(
+    result = flim_labs.start_intensity_tracing(
         enabled_channels=[0],
         bin_width_micros=1000,
         acquisition_time_millis=3000,

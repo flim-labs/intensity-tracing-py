@@ -86,7 +86,8 @@ class PhotonsTracingWindow(QMainWindow):
         self.conn_channel_type_control, self.conn_channel_type_input = SelectControl.setup("Channel type:", self.selected_conn_channel, self.controls_row, self.conn_channels, self.conn_channel_type_value_change)
         self.conn_channel_type_input.setStyleSheet(GUIStyles.set_input_select_style())
         
-        # Bin width micros control 
+        # Bin width micros control
+
         self.bin_width_micros_control, self.bin_width_micros_input = InputNumberControl.setup("Bin width (µs):", 0, 999999, 1000, self.controls_row, self.bin_width_micros_value_change)
         self.bin_width_micros_input.setStyleSheet(GUIStyles.set_input_number_style())
         
@@ -478,7 +479,7 @@ class PhotonsTracingWindow(QMainWindow):
             print("Bin width micros: " + str(self.bin_width_micros))
             print("Draw frequency: " + str(self.draw_frequency))
 
-            result = flim_labs.start_photons_tracing(
+            result = flim_labs.start_intensity_tracing(
                 enabled_channels=self.enabled_channels,
                 bin_width_micros=self.bin_width_micros,  # E.g. 1000 = 1ms bin width
                 write_bin=False,  # True = Write raw data from card in a binary file
