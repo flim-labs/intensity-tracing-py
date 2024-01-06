@@ -57,7 +57,7 @@ class PhotonsTracingWindow(QMainWindow):
 
         GUIStyles.customize_theme(self)
         GUIStyles.set_fonts()
-        self.setWindowTitle("Intensity tracing")
+        self.setWindowTitle("Intensity tracing v1.0")
 
         self.resize(1460, 600)
 
@@ -67,6 +67,12 @@ class PhotonsTracingWindow(QMainWindow):
         self.layout = QVBoxLayout()
 
         self.connectors = []
+
+        self.header_layout = QHBoxLayout()
+        app_guide_link_widget = LinkWidget(icon_filename='info-icon.png', text='User Guide')
+        self.header_layout.addStretch(1)
+        self.header_layout.addWidget(app_guide_link_widget)
+        self.layout.addLayout(self.header_layout)
 
         self.checkbox_layout = QGridLayout()
         self.channels_checkboxes = self.draw_checkboxes()
@@ -135,7 +141,7 @@ class PhotonsTracingWindow(QMainWindow):
         buttons_row_layout.addStretch(1)
 
         # Link to export data documentation
-        info_link_widget = LinkWidget(icon_filename='info-icon.png')
+        info_link_widget = LinkWidget(icon_filename='info-icon.png', link='https://flim-labs.github.io/products/python-flim-labs/intensity-tracing-file-format.html')
         info_link_widget.show()
         buttons_row_layout.addWidget(info_link_widget)
 

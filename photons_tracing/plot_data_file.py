@@ -1,7 +1,7 @@
 import struct
 import matplotlib.pyplot as plt
 
-file_path = 'INSERT DATA FILE PATH HERE'
+file_path = "INSERT DATA FILE PATH HERE"
 
 times = []
 
@@ -14,12 +14,21 @@ with open(file_path, 'rb') as f:
 
     # read metadata from file
     (json_length,) = struct.unpack('I', f.read(4))
+    null = None
     metadata = eval(f.read(json_length).decode("utf-8"))
 
-    print("Enabled channels: " + (", ".join(["Channel " + str(ch + 1) for ch in metadata["channels"]])))
-    print("Bin width: " + str(metadata["bin_width_micros"]) + "\u00B5s")
-    print("Acquisition time: " + str(metadata["acquisition_time_millis"] / 1000) + "s")
-    print("Laser period: " + str(metadata["laser_period_ns"]) + "ns")
+    if "channels" in metadata and metadata["channels"]:
+        print("Enabled channels: " + (", ".join(["Channel " + str(ch + 1) for ch in metadata["channels"]])))
+
+    if "bin_width_micros" in metadata and metadata["bin_width_micros"] is not None:
+        print("Bin width: " + str(metadata["bin_width_micros"]) + "\u00B5s")
+
+    if "acquisition_time_millis" in metadata and metadata["acquisition_time_millis"] is not None:
+        print("Acquisition time: " + str(metadata["acquisition_time_millis"] / 1000) + "s")
+
+    if "laser_period_ns" in metadata and metadata["laser_period_ns"] is not None:
+        print("Laser period: " + str(metadata["laser_period_ns"]) + "ns")
+
 
     channel_lines = [[] for _ in range(len(metadata["channels"]))]
 
@@ -32,6 +41,10 @@ with open(file_path, 'rb') as f:
         for i in range(len(channel_lines)):
             channel_lines[i].append(channel_values[i])
         times.append(time)
+        
+        print("Time:", time)
+        print("Channel Values:", channel_values)
+      
 
 
 for i in range(len(channel_lines)):
@@ -42,5 +55,6 @@ for i in range(len(channel_lines)):
         label="Channel " + str(metadata["channels"][i] + 1),
         linewidth=0.5
     )
+
 
 plt.show()
