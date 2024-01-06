@@ -151,7 +151,6 @@ class PhotonsTracingWindow(QMainWindow):
             self.bin_width_micros,
             self.controls_row,
             self.bin_width_micros_value_change,
-            float=False,
         )
         self.bin_width_micros_input.setStyleSheet(GUIStyles.set_input_number_style())
 
@@ -349,7 +348,7 @@ class PhotonsTracingWindow(QMainWindow):
         self.time_span = value
 
     def bin_width_micros_value_change(self, value):
-        self.start_button.setEnabled(value != 0.0)
+        self.start_button.setEnabled(value != 0)
         self.bin_width_micros = value
 
     def update_rate_value_change(self, index):
@@ -499,9 +498,7 @@ class PhotonsTracingWindow(QMainWindow):
             title="Channel " + str(self.enabled_channels[channel_index] + 1),
             y_label="Photon counts",
             axisItems={"bottom": bottom_axis, "left": left_axis},
-            x_range_controller=LiveAxisRange(
-                roll_on_tick=floor((self.keep_points / 2)), offset_left=0.1
-            ),
+            #x_range_controller=LiveAxisRange(roll_on_tick=int(self.keep_points/2))
         )
 
         plot_curve = LiveLinePlot()
