@@ -1,8 +1,7 @@
-import sys
 import os
 from PyQt5.QtCore import Qt, QUrl
 from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import QApplication, QLabel, QVBoxLayout, QHBoxLayout, QWidget
+from PyQt5.QtWidgets import  QLabel, QHBoxLayout, QWidget
 from PyQt5.QtGui import QDesktopServices
 
 current_path = os.path.dirname(os.path.abspath(__file__))
