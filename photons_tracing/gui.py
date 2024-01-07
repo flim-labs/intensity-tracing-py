@@ -498,7 +498,7 @@ class PhotonsTracingWindow(QMainWindow):
             title="Channel " + str(self.enabled_channels[channel_index] + 1),
             y_label="Photon counts",
             axisItems={"bottom": bottom_axis, "left": left_axis},
-            #x_range_controller=LiveAxisRange(roll_on_tick=int(self.keep_points/2))
+            x_range_controller=LiveAxisRange(roll_on_tick=int(self.draw_frequency * self.time_span))
         )
 
         plot_curve = LiveLinePlot()
