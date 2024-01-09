@@ -1,3 +1,4 @@
+import random
 import sys
 import os
 
@@ -76,7 +77,7 @@ class PhotonsTracingWindow(QMainWindow):
 
         GUIStyles.customize_theme(self)
         GUIStyles.set_fonts()
-        self.setWindowTitle("Intensity tracing v1.0")
+        self.setWindowTitle("Intensity tracing v1.1")
 
         self.resize(1460, 800)
 
@@ -461,8 +462,8 @@ class PhotonsTracingWindow(QMainWindow):
     def set_draw_frequency(self):
         num_enabled_channels = len(self.enabled_channels)
         if (
-            self.selected_update_rate not in ["LOW", "HIGH"]
-            and num_enabled_channels == 0
+                self.selected_update_rate not in ["LOW", "HIGH"]
+                and num_enabled_channels == 0
         ):
             self.draw_frequency = 10
             return
@@ -471,7 +472,7 @@ class PhotonsTracingWindow(QMainWindow):
             max_frequency = 20
         else:
             min_frequency = 21
-            max_frequency = 100
+            max_frequency = 50
 
         frequency_range = max_frequency - min_frequency
         step = frequency_range / num_enabled_channels
@@ -498,7 +499,7 @@ class PhotonsTracingWindow(QMainWindow):
             title="Channel " + str(self.enabled_channels[channel_index] + 1),
             y_label="Photon counts",
             axisItems={"bottom": bottom_axis, "left": left_axis},
-            x_range_controller=LiveAxisRange(roll_on_tick=int(self.draw_frequency * self.time_span))
+            x_range_controller=LiveAxisRange(roll_on_tick=1)
         )
 
         plot_curve = LiveLinePlot()
@@ -544,12 +545,18 @@ class PhotonsTracingWindow(QMainWindow):
 
     def process_point(self, time, x, counts):
         for channel, curr_conn in self.connectors:
-            curr_conn.cb_append_data_point(y=counts[channel], x=time / 1_000_000_000)
+                curr_conn.cb_append_data_point(y=counts[channel], x=time / 1_000_000_000)
 
-        if x % 1000 == 0:
-            QApplication.processEvents()
+        if self.selected_update_rate == "LOW":
+            if x % 1000 == 0:
+                QApplication.processEvents()
+            else:
+                sleep(0.000001)
         else:
-            sleep(0.000001)
+            if x % 100 == 0:
+                QApplication.processEvents()
+            else:
+                sleep(0.000001)
 
     def flim_read(self):
         print("Thread: Start reading from flim queue")
