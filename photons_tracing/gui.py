@@ -2,6 +2,8 @@ import random
 import sys
 import os
 
+from PyQt5.QtCore import QTimer
+
 current_path = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_path, ".."))
 sys.path.append(project_root)
@@ -290,6 +292,10 @@ class PhotonsTracingWindow(QMainWindow):
 
         # Titlebar logo icon
         TitlebarIcon.setup(self)
+        self.first_point = True
+
+        self.pull_from_queue_timer = QTimer()
+        self.pull_from_queue_timer.timeout.connect(self.pull_from_queue)
 
     def draw_checkboxes(self):
         channels_checkboxes = []
@@ -432,6 +438,10 @@ class PhotonsTracingWindow(QMainWindow):
 
         flim_labs.request_stop()
 
+        self.terminate_thread = True
+
+        self.pull_from_queue_timer.stop()
+
         if thread_join and self.flim_thread is not None and self.flim_thread.is_alive():
             self.flim_thread.join()
 
@@ -453,13 +463,13 @@ class PhotonsTracingWindow(QMainWindow):
         for chart in self.charts:
             self.charts_grid.removeWidget(chart)
             chart.deleteLater()
-            
+
         self.connectors.clear()
         self.charts.clear()
         QApplication.processEvents()
-        
-        
-      
+
+
+
 
     def set_draw_frequency(self):
         num_enabled_channels = len(self.enabled_channels)
@@ -545,30 +555,39 @@ class PhotonsTracingWindow(QMainWindow):
         self.logo_overlay.update_visibility(self)
         self.update_checkbox_layout(self.channels_checkboxes)
 
-    def process_point(self, time, x, counts):
-        for channel, curr_conn in self.connectors:
-            curr_conn.cb_append_data_point(y=counts[channel], x=time / 1_000_000_000)
+    def process_point(self, time, counts):
+        if self.first_point:
+            self.first_point = False
+            return
 
-        if self.selected_update_rate == "LOW":
-            if x % 1000 == 0:
-                QApplication.processEvents()
-            else:
-                sleep(0.000001)
-        else:
-            if x % 100 == 0:
-                QApplication.processEvents()
-            else:
-                sleep(0.000001)
+        for channel, curr_conn in self.connectors:
+                curr_conn.cb_append_data_point(y=counts[channel], x=time / 1_000_000_000)
+
+    def pull_from_queue(self):
+        val = flim_labs.pull_from_queue()
+        if len(val) > 0:
+            for v in val:
+                ((time,), (ch1, ch2, ch3, ch4, ch5, ch6, ch7, ch8)) = v
+                self.process_point(time, [ch1, ch2, ch3, ch4, ch5, ch6, ch7, ch8])
+            # QApplication.processEvents()
 
     def flim_read(self):
-        print("Thread: Start reading from flim queue")
-        flim_labs.read_from_queue(self.process_point)
-        print("Thread: End reading from flim queue")
-        self.start_button.setEnabled(True)
-        self.stop_button.setEnabled(False)
-        if self.terminate_thread:
-            return
-        self.stop_button_pressed(thread_join=False)
+        pass
+        # self.first_point = True
+        # while True:
+        #     val = flim_labs.pull_from_queue()
+        #     if len(val) > 0:
+        #         for v in val:
+        #             ((time,), (ch1, ch2, ch3, ch4, ch5, ch6, ch7, ch8)) = v
+        #             self.process_point(time, [ch1, ch2, ch3, ch4, ch5, ch6, ch7, ch8])
+        #         QApplication.processEvents()
+        #
+        #     if self.terminate_thread:
+        #         self.stop_button_pressed(thread_join=False)
+        #         print("Thread: End reading from flim queue")
+        #         self.start_button.setEnabled(True)
+        #         self.stop_button.setEnabled(False)
+        #         break
 
     def start_photons_tracing(self):
         try:
@@ -591,10 +610,11 @@ class PhotonsTracingWindow(QMainWindow):
             result = flim_labs.start_intensity_tracing(
                 enabled_channels=self.enabled_channels,
                 bin_width_micros=self.bin_width_micros,  # E.g. 1000 = 1ms bin width
-                write_bin=False,  # True = Write raw data from card in a binary file
-                write_data=self.write_data,  # True = Write raw data in a data file
+                write_bin=False,  # True = Write raw output from card in a binary file
+                write_data=self.write_data,  # True = Write data in a binary file
                 acquisition_time_millis=acquisition_time_millis,  # E.g. 10000 = Stops after 10 seconds of acquisition
                 firmware_file=None,
+                output_frequency_ms=100
                 # String, if None let flim decide to use intensity tracing Firmware
             )
 
@@ -605,6 +625,8 @@ class PhotonsTracingWindow(QMainWindow):
             self.flim_thread = Thread(target=self.flim_read)
             self.flim_thread.start()
             self.blank_space.hide()
+
+            self.pull_from_queue_timer.start(100)
 
         except Exception as e:
             error_title, error_msg = MessagesUtilities.error_handler(str(e))
