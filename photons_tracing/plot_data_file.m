@@ -6,7 +6,6 @@ files = dir(fullfile(data_folder, 'intensity-tracing*'));
 most_recent_file = files(idx(1)).name;
 
 file_path = fullfile(data_folder, most_recent_file);
-% file_path = "INSERT DATA FILE PATH HERE" # You can also manually insert the path to the data file here
 
 times = [];
 channel_lines = cell(1, 0);
@@ -51,7 +50,10 @@ if ~isempty(metadata.laser_period_ns)
     disp(['Laser period: ' num2str(metadata.laser_period_ns) 'ns']);
 end
 
-channel_lines = cell(1, numel(metadata.channels));
+
+active_channels = metadata.channels;
+
+channel_lines = cell(1, numel(active_channels));
 
 while true
     data = fread(fid, 40, 'uint8=>uint8');
@@ -63,8 +65,9 @@ while true
     time = typecast(uint8(data(1:8)), 'double');
     channel_values = typecast(uint8(data(9:end)), 'uint32');
 
-    for i = 1:numel(channel_lines)
-        channel_lines{i} = [channel_lines{i}, channel_values(i)];
+    for i = 1:numel(active_channels)
+        channel_idx = active_channels(i) + 1;
+        channel_lines{i} = [channel_lines{i}, channel_values(channel_idx)];
     end
 
     times = [times, time / 1e9];
@@ -76,21 +79,24 @@ figure;
 hold on;
 
 % Plot data
-
-for i = 1:numel(channel_lines)
-    plot(times, channel_lines{i}, 'LineWidth', 0.5, 'DisplayName', ['Channel ' num2str(metadata.channels(i) + 1)]);
+for i = 1:numel(active_channels)
+    plot(times, channel_lines{i}, 'LineWidth', 0.5, 'DisplayName', ['Channel ' num2str(active_channels(i) + 1)]);
 end
 
-legend('show');
-hold off;
 
 % Set plot title with metadata information
 title_str = sprintf('Bin Width: %s µs, Laser Period: %s ns',
-num2str(metadata.bin_width_micros),
-num2str(metadata.laser_period_ns));
+    num2str(metadata.bin_width_micros),
+    num2str(metadata.laser_period_ns));
 
 if ~isempty(metadata.acquisition_time_millis)
     title_str = [title_str, sprintf(', Acquisition Time: %s s', num2str(metadata.acquisition_time_millis / 1000))];
 end
 
 title(title_str);
+
+% Plot legend
+lgd = legend('show');
+set(lgd, 'Location', 'southoutside', 'Orientation', 'horizontal');
+
+hold off;
