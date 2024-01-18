@@ -85,6 +85,8 @@ class PhotonsTracingWindow(QMainWindow):
         scroll_area.setWidgetResizable(True)
 
         self.layout = QVBoxLayout()
+        self.top_utilities_layout = QVBoxLayout()
+        self.layout.addLayout(self.top_utilities_layout)
 
         self.connectors = []
 
@@ -113,7 +115,7 @@ class PhotonsTracingWindow(QMainWindow):
         self.header_layout.addStretch(1)
         self.header_layout.addWidget(self.save_conf_button)
         self.header_layout.addWidget(app_guide_link_widget)
-        self.layout.addLayout(self.header_layout)
+        self.top_utilities_layout.addLayout(self.header_layout)
 
         self.checkbox_layout = QGridLayout()
         self.channels_checkboxes = self.draw_checkboxes()
@@ -122,6 +124,7 @@ class PhotonsTracingWindow(QMainWindow):
         toolbar_layout.addSpacing(10)
 
         self.blank_space = QWidget()
+        self.blank_space.setMinimumHeight(1)
         self.blank_space.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         # CONTROLS
@@ -169,7 +172,7 @@ class PhotonsTracingWindow(QMainWindow):
         self.acquisition_time_control = QVBoxLayout()
         acquisition_time_label = QLabel("Free running acquisition time:")
         self.acquisition_time_mode_switch = SwitchControl(
-            active_color="#13B6B4", checked=True
+            active_color="#13B6B4", checked=self.free_running_acquisition_time
         )
         self.acquisition_time_mode_switch.stateChanged.connect(
             (lambda state: self.toggle_acquisition_time_mode(state))
@@ -199,7 +202,7 @@ class PhotonsTracingWindow(QMainWindow):
             "Acquisition time (s):",
             0,
             10800,
-            self.acquisition_time_millis / 1000
+            int(self.acquisition_time_millis / 1000)
             if self.acquisition_time_millis is not None
             else None,
             self.controls_row,
@@ -229,7 +232,7 @@ class PhotonsTracingWindow(QMainWindow):
         self.export_data_control = QHBoxLayout()
         export_data_label = QLabel("Export data:")
         self.export_data_switch = SwitchControl(
-            active_color="#FB8C00", width=70, height=30, checked=False
+            active_color="#FB8C00", width=70, height=30, checked=self.write_data
         )
         self.export_data_switch.stateChanged.connect(
             (lambda state: self.toggle_export_data(state))
@@ -266,8 +269,8 @@ class PhotonsTracingWindow(QMainWindow):
 
         toolbar_layout.addSpacing(10)
 
-        self.layout.addLayout(toolbar_layout)
-        self.layout.addWidget(self.blank_space)
+        self.top_utilities_layout.addLayout(toolbar_layout)
+        self.top_utilities_layout.addWidget(self.blank_space)
 
         widget = QWidget()
         widget.setLayout(self.layout)
@@ -305,7 +308,7 @@ class PhotonsTracingWindow(QMainWindow):
 
             channels_checkboxes.append(checkbox)
 
-        self.layout.addLayout(self.checkbox_layout)
+        self.top_utilities_layout.addLayout(self.checkbox_layout)
         self.update_checkbox_layout(channels_checkboxes)
         return channels_checkboxes
 
@@ -324,8 +327,10 @@ class PhotonsTracingWindow(QMainWindow):
         if state:
             self.acquisition_time_millis = None
             self.acquisition_time_input.setEnabled(False)
+            self.free_running_acquisition_time = True
         else:
             self.acquisition_time_input.setEnabled(True)
+            self.free_running_acquisition_time = False
 
     def toggle_export_data(self, state):
         if state:
@@ -402,7 +407,6 @@ class PhotonsTracingWindow(QMainWindow):
 
         self.connectors.clear()
         self.charts.clear()
-        self.blank_space.hide()
 
         for i in range(len(self.enabled_channels)):
             if i < len(self.charts):
@@ -435,35 +439,33 @@ class PhotonsTracingWindow(QMainWindow):
             curr_conn.pause()
 
     def reset_button_pressed(self):
+        flim_labs.request_stop()
+        self.terminate_thread = True
+        self.blank_space.show()
         # reset charts
         self.start_button.setEnabled(
             not all(not checkbox.isChecked() for checkbox in self.channels_checkboxes)
         )
         self.stop_button.setEnabled(False)
-
         for checkbox in self.channels_checkboxes:
             checkbox.setEnabled(True)
 
         for chart in self.charts:
-            chart.setVisible(False)
-
+            self.charts_grid.removeWidget(chart)
+            chart.deleteLater()
+            
         self.connectors.clear()
         self.charts.clear()
         QApplication.processEvents()
-
-        flim_labs.request_stop()
-        self.terminate_thread = True
-
-        for channel, curr_conn in self.connectors:
-            curr_conn.pause()
-
-        self.blank_space.show()
+        
+        
+      
 
     def set_draw_frequency(self):
         num_enabled_channels = len(self.enabled_channels)
         if (
-                self.selected_update_rate not in ["LOW", "HIGH"]
-                and num_enabled_channels == 0
+            self.selected_update_rate not in ["LOW", "HIGH"]
+            and num_enabled_channels == 0
         ):
             self.draw_frequency = 10
             return
@@ -499,7 +501,7 @@ class PhotonsTracingWindow(QMainWindow):
             title="Channel " + str(self.enabled_channels[channel_index] + 1),
             y_label="Photon counts",
             axisItems={"bottom": bottom_axis, "left": left_axis},
-            x_range_controller=LiveAxisRange(roll_on_tick=1)
+            x_range_controller=LiveAxisRange(roll_on_tick=1),
         )
 
         plot_curve = LiveLinePlot()
@@ -545,7 +547,7 @@ class PhotonsTracingWindow(QMainWindow):
 
     def process_point(self, time, x, counts):
         for channel, curr_conn in self.connectors:
-                curr_conn.cb_append_data_point(y=counts[channel], x=time / 1_000_000_000)
+            curr_conn.cb_append_data_point(y=counts[channel], x=time / 1_000_000_000)
 
         if self.selected_update_rate == "LOW":
             if x % 1000 == 0:
@@ -602,6 +604,7 @@ class PhotonsTracingWindow(QMainWindow):
 
             self.flim_thread = Thread(target=self.flim_read)
             self.flim_thread.start()
+            self.blank_space.hide()
 
         except Exception as e:
             error_title, error_msg = MessagesUtilities.error_handler(str(e))
