@@ -50,6 +50,10 @@ with open(file_path, 'rb') as f:
             channel_lines[i].append(channel_values[i])
         times.append(time / 1_000_000_000)
 
+plt.xlabel("Time (s)")
+plt.ylabel("Intensity (counts)")
+plt.title("Intensity tracing (" + str(len(times)) + " points)")
+
 for i in range(len(channel_lines)):
     channel_line = channel_lines[i]
     plt.plot(

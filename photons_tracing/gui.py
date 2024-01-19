@@ -468,14 +468,11 @@ class PhotonsTracingWindow(QMainWindow):
         self.charts.clear()
         QApplication.processEvents()
 
-
-
-
     def set_draw_frequency(self):
         num_enabled_channels = len(self.enabled_channels)
         if (
-            self.selected_update_rate not in ["LOW", "HIGH"]
-            and num_enabled_channels == 0
+                self.selected_update_rate not in ["LOW", "HIGH"]
+                and num_enabled_channels == 0
         ):
             self.draw_frequency = 10
             return
@@ -519,8 +516,9 @@ class PhotonsTracingWindow(QMainWindow):
         plot_widget.addItem(plot_curve)
         connector = DataConnector(
             plot_curve,
-            update_rate=self.draw_frequency,
-            max_points=self.keep_points,
+            # update_rate=self.draw_frequency, # todo TUX
+            update_rate=100,
+            max_points=100  # TODO self.keep_points,
         )
 
         plot_widget.setBackground(None)
@@ -555,21 +553,18 @@ class PhotonsTracingWindow(QMainWindow):
         self.logo_overlay.update_visibility(self)
         self.update_checkbox_layout(self.channels_checkboxes)
 
-    def process_point(self, time, counts):
-        if self.first_point:
-            self.first_point = False
-            return
-
-        for channel, curr_conn in self.connectors:
-                curr_conn.cb_append_data_point(y=counts[channel], x=time / 1_000_000_000)
-
     def pull_from_queue(self):
         val = flim_labs.pull_from_queue()
         if len(val) > 0:
             for v in val:
                 ((time,), (ch1, ch2, ch3, ch4, ch5, ch6, ch7, ch8)) = v
-                self.process_point(time, [ch1, ch2, ch3, ch4, ch5, ch6, ch7, ch8])
-            # QApplication.processEvents()
+                counts = [ch1, ch2, ch3, ch4, ch5, ch6, ch7, ch8]
+                if self.first_point:
+                    self.first_point = False
+                    return
+                for channel, curr_conn in self.connectors:
+                    curr_conn.cb_append_data_point(y=counts[channel], x=time / 1_000_000_000)
+        # QApplication.processEvents()
 
     def flim_read(self):
         pass
@@ -614,7 +609,7 @@ class PhotonsTracingWindow(QMainWindow):
                 write_data=self.write_data,  # True = Write data in a binary file
                 acquisition_time_millis=acquisition_time_millis,  # E.g. 10000 = Stops after 10 seconds of acquisition
                 firmware_file=None,
-                output_frequency_ms=100
+                # output_frequency_ms=100 # TODO TUX
                 # String, if None let flim decide to use intensity tracing Firmware
             )
 
@@ -626,7 +621,7 @@ class PhotonsTracingWindow(QMainWindow):
             self.flim_thread.start()
             self.blank_space.hide()
 
-            self.pull_from_queue_timer.start(100)
+            self.pull_from_queue_timer.start(30)
 
         except Exception as e:
             error_title, error_msg = MessagesUtilities.error_handler(str(e))
