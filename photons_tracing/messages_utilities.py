@@ -84,7 +84,7 @@ class MessagesUtilities:
     def range_check(bin_width_micros, time_span, acquisition_time_millis):
         bin_width_range = (1, 1000000)
         time_span_range = (1, 300)
-        acquisition_time_range = (0.5 * 1000, 10800 * 1000)
+        acquisition_time_range = (0.5 * 1000, 1800 * 1000)
 
         if (
             (
@@ -106,7 +106,7 @@ class MessagesUtilities:
         ):
             return (
                 "Values out of range",
-                "Bin width (µs) value should be between 1 and 1000000. Time span (s) value should be between 1 and 300. Acquisition time (s) should be between 0.5 and 10800.",
+                "Bin width (µs) value should be between 1 and 1000000. Time span (s) value should be between 1 and 300. Acquisition time (s) should be between 0.5 and 1800.",
             )
         else:
             return (None, None)

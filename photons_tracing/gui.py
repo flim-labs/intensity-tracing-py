@@ -63,10 +63,6 @@ class PhotonsTracingWindow(QMainWindow):
         # draw_frequency suggested range: 10-100
         # (100 requires a fast computer, 10 is suitable for most computers)
         self.draw_frequency = params_config["draw_frequency"]
-        # keep_points suggested range: 100-1000
-        # (1000 requires a fast computer, 100 is suitable for most computers)
-        # depending on the draw_frequency, this will keep the last 1-10 seconds of data
-        self.keep_points = 1000
         self.free_running_acquisition_time = params_config[
             "free_running_acquisition_time"
         ]
@@ -203,7 +199,7 @@ class PhotonsTracingWindow(QMainWindow):
         ) = InputNumberControl.setup(
             "Acquisition time (s):",
             0,
-            10800,
+            1800,
             int(self.acquisition_time_millis / 1000)
             if self.acquisition_time_millis is not None
             else None,
@@ -365,6 +361,8 @@ class PhotonsTracingWindow(QMainWindow):
 
     def update_rate_value_change(self, index):
         self.selected_update_rate = self.sender().currentText()
+        self.draw_frequency = 100 if self.selected_update_rate == 'LOW' else 25
+
         print(self.selected_update_rate)
 
     def save_conf_button_pressed(self):
@@ -397,8 +395,6 @@ class PhotonsTracingWindow(QMainWindow):
                 warn_title, warn_msg, QMessageBox.Warning, GUIStyles.set_msg_box_style()
             )
             return
-        self.set_draw_frequency()
-        self.calc_max_points()
         self.terminate_thread = False
         self.start_button.setEnabled(False)
         self.stop_button.setEnabled(True)
@@ -468,32 +464,7 @@ class PhotonsTracingWindow(QMainWindow):
         self.charts.clear()
         QApplication.processEvents()
 
-    def set_draw_frequency(self):
-        num_enabled_channels = len(self.enabled_channels)
-        if (
-                self.selected_update_rate not in ["LOW", "HIGH"]
-                and num_enabled_channels == 0
-        ):
-            self.draw_frequency = 10
-            return
-        if self.selected_update_rate == "LOW":
-            min_frequency = 5
-            max_frequency = 20
-        else:
-            min_frequency = 21
-            max_frequency = 50
 
-        frequency_range = max_frequency - min_frequency
-        step = frequency_range / num_enabled_channels
-        adjusted_frequency = max_frequency - step * (num_enabled_channels - 1)
-        self.draw_frequency = max(min_frequency, min(max_frequency, adjusted_frequency))
-
-    def calc_max_points(self):
-        bin_width_seconds = self.bin_width_micros / 1000000
-        max_points_by_bin_width = int(self.time_span / bin_width_seconds)
-        draw_interval = 1 / self.draw_frequency
-        max_points_by_frequency = int(self.time_span / draw_interval)
-        self.keep_points = min(max_points_by_bin_width, max_points_by_frequency)
 
     def generate_chart(self, channel_index):
         left_axis = LiveAxis("left", axisPen="#cecece", textPen="#FFA726")
@@ -516,8 +487,8 @@ class PhotonsTracingWindow(QMainWindow):
         plot_widget.addItem(plot_curve)
         connector = DataConnector(
             plot_curve,
-            update_rate=100, # TODO: self.draw_frequency Setting it based on UpdateRate (100=LOW, 25=HIGH)
-            max_points=100  # TODO: self.keep_points based on Draw Frequency (25ms = 40 points per seconds, 100ms = 10 points per seconds)
+            update_rate= self.draw_frequency,
+            max_points= 10 if self.selected_update_rate == 'LOW' else 40
         )
 
         plot_widget.setBackground(None)
@@ -597,9 +568,9 @@ class PhotonsTracingWindow(QMainWindow):
             )
             print("Acquisition time (ms): " + str(acquisition_time_millis))
             print("Time span (s): " + str(self.time_span))
-            print("Max points: " + str(self.keep_points))
+            print("Max points: " + str(10 if self.selected_update_rate == 'LOW' else 40))
             print("Bin width (µs): " + str(self.bin_width_micros))
-            print("Draw frequency: " + str(self.draw_frequency))
+            print("Output frequency ms: " + str(self.draw_frequency))
 
             result = flim_labs.start_intensity_tracing(
                 enabled_channels=self.enabled_channels,
@@ -608,8 +579,9 @@ class PhotonsTracingWindow(QMainWindow):
                 write_data=self.write_data,  # True = Write data in a binary file
                 acquisition_time_millis=acquisition_time_millis,  # E.g. 10000 = Stops after 10 seconds of acquisition
                 firmware_file=None,
-                # output_frequency_ms=25 # TODO: Setting it based on UpdateRate (100=LOW, 25=HIGH)
                 # String, if None let flim decide to use intensity tracing Firmware
+                output_frequency_ms=self.draw_frequency # Based on Update Rate (100=LOW, 25=HIGH)
+                
             )
 
             file_bin = result.bin_file
