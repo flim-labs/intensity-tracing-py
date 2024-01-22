@@ -181,7 +181,7 @@ class PhotonsTracingWindow(QMainWindow):
         self.controls_row.addLayout(self.acquisition_time_control)
         self.controls_row.addSpacing(20)
 
-        # Keep points input number control (configurable when in acquisition time free running mode)
+        # Time span input number control
         self.time_span_control, self.time_span_input = InputNumberControl.setup(
             "Time span (s):",
             1,
@@ -361,9 +361,9 @@ class PhotonsTracingWindow(QMainWindow):
 
     def update_rate_value_change(self, index):
         self.selected_update_rate = self.sender().currentText()
-        self.draw_frequency = 100 if self.selected_update_rate == 'LOW' else 25
+        self.draw_frequency = 10 if self.selected_update_rate == 'LOW' else 40
 
-        print(self.selected_update_rate)
+
 
     def save_conf_button_pressed(self):
         params_config = ParamsConfigHandler(
@@ -481,14 +481,14 @@ class PhotonsTracingWindow(QMainWindow):
             axisItems={"bottom": bottom_axis, "left": left_axis},
             x_range_controller=LiveAxisRange(roll_on_tick=1),
         )
-
+         
         plot_curve = LiveLinePlot()
         plot_curve.setPen(pg.mkPen(color="#a877f7"))
         plot_widget.addItem(plot_curve)
         connector = DataConnector(
             plot_curve,
             update_rate= self.draw_frequency,
-            max_points= 10 if self.selected_update_rate == 'LOW' else 40
+            max_points=  10 * self.time_span if self.selected_update_rate == 'LOW' else 40 * self.time_span
         )
 
         plot_widget.setBackground(None)
@@ -570,7 +570,8 @@ class PhotonsTracingWindow(QMainWindow):
             print("Time span (s): " + str(self.time_span))
             print("Max points: " + str(10 if self.selected_update_rate == 'LOW' else 40))
             print("Bin width (µs): " + str(self.bin_width_micros))
-            print("Output frequency ms: " + str(self.draw_frequency))
+            output_frequency_ms = 100 if self.selected_update_rate == 'LOW' else 25
+            print("Output frequency ms: " + str(output_frequency_ms))
 
             result = flim_labs.start_intensity_tracing(
                 enabled_channels=self.enabled_channels,
@@ -580,7 +581,7 @@ class PhotonsTracingWindow(QMainWindow):
                 acquisition_time_millis=acquisition_time_millis,  # E.g. 10000 = Stops after 10 seconds of acquisition
                 firmware_file=None,
                 # String, if None let flim decide to use intensity tracing Firmware
-                output_frequency_ms=self.draw_frequency # Based on Update Rate (100=LOW, 25=HIGH)
+                output_frequency_ms= output_frequency_ms # Based on Update Rate (100=LOW, 25=HIGH)
                 
             )
 
