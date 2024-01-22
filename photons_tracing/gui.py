@@ -75,7 +75,7 @@ class PhotonsTracingWindow(QMainWindow):
 
         GUIStyles.customize_theme(self)
         GUIStyles.set_fonts()
-        self.setWindowTitle("Intensity tracing v1.1")
+        self.setWindowTitle("Intensity tracing v1.2")
 
         self.resize(1460, 800)
 
@@ -568,7 +568,7 @@ class PhotonsTracingWindow(QMainWindow):
             )
             print("Acquisition time (ms): " + str(acquisition_time_millis))
             print("Time span (s): " + str(self.time_span))
-            print("Max points: " + str(10 if self.selected_update_rate == 'LOW' else 40))
+            print("Max points: " + str(10 * self.time_span if self.selected_update_rate == 'LOW' else 40 * self.time_span))
             print("Bin width (µs): " + str(self.bin_width_micros))
             output_frequency_ms = 100 if self.selected_update_rate == 'LOW' else 25
             print("Output frequency ms: " + str(output_frequency_ms))
