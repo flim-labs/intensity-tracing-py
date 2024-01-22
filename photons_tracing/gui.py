@@ -516,9 +516,8 @@ class PhotonsTracingWindow(QMainWindow):
         plot_widget.addItem(plot_curve)
         connector = DataConnector(
             plot_curve,
-            # update_rate=self.draw_frequency, # todo TUX
-            update_rate=100,
-            max_points=100  # TODO self.keep_points,
+            update_rate=100, # TODO: self.draw_frequency Setting it based on UpdateRate (100=LOW, 25=HIGH)
+            max_points=100  # TODO: self.keep_points based on Draw Frequency (25ms = 40 points per seconds, 100ms = 10 points per seconds)
         )
 
         plot_widget.setBackground(None)
@@ -609,7 +608,7 @@ class PhotonsTracingWindow(QMainWindow):
                 write_data=self.write_data,  # True = Write data in a binary file
                 acquisition_time_millis=acquisition_time_millis,  # E.g. 10000 = Stops after 10 seconds of acquisition
                 firmware_file=None,
-                # output_frequency_ms=100 # TODO TUX
+                # output_frequency_ms=25 # TODO: Setting it based on UpdateRate (100=LOW, 25=HIGH)
                 # String, if None let flim decide to use intensity tracing Firmware
             )
 
