@@ -1,4 +1,3 @@
-import random
 import sys
 import os
 
@@ -7,9 +6,6 @@ from PyQt5.QtCore import QTimer
 current_path = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_path, ".."))
 sys.path.append(project_root)
-from threading import Thread
-from time import sleep
-from math import ceil, floor
 from PyQt5.QtWidgets import (
     QMainWindow,
     QDesktopWidget,
@@ -60,8 +56,6 @@ class PhotonsTracingWindow(QMainWindow):
         self.bin_width_micros = params_config["bin_width_micros"]
         self.time_span = params_config["time_span"]
         self.acquisition_time_millis = params_config["acquisition_time_millis"]
-        # draw_frequency suggested range: 10-100
-        # (100 requires a fast computer, 10 is suitable for most computers)
         self.draw_frequency = params_config["draw_frequency"]
         self.free_running_acquisition_time = params_config[
             "free_running_acquisition_time"
@@ -69,8 +63,6 @@ class PhotonsTracingWindow(QMainWindow):
         self.enabled_channels = params_config["enabled_channels"]
         self.write_data = params_config["write_data"]
 
-        self.flim_thread = None
-        self.terminate_thread = False
         self.charts = []
 
         GUIStyles.customize_theme(self)
@@ -91,12 +83,9 @@ class PhotonsTracingWindow(QMainWindow):
         # Header row: save parameters configuration / Link to User Guide
         self.header_layout = QHBoxLayout()
 
-        flim_header_icon = QLabel(
-            self,
-            pixmap=QPixmap(
-                os.path.join(project_root, "assets", "flimlabs-logo.png")
-            ).scaledToWidth(60),
-        )
+        flim_header_icon = QLabel(self, pixmap=QPixmap(
+            os.path.join(project_root, "assets", "flimlabs-logo.png")
+        ).scaledToWidth(60))
         header_title = QLabel("INTENSITY TRACING")
         header_title.setStyleSheet(GUIStyles.set_main_title_style())
         save_icon = QIcon(os.path.join(project_root, "assets", "save-icon.png"))
@@ -363,8 +352,6 @@ class PhotonsTracingWindow(QMainWindow):
         self.selected_update_rate = self.sender().currentText()
         self.draw_frequency = 10 if self.selected_update_rate == 'LOW' else 40
 
-
-
     def save_conf_button_pressed(self):
         params_config = ParamsConfigHandler(
             self.selected_update_rate,
@@ -395,7 +382,6 @@ class PhotonsTracingWindow(QMainWindow):
                 warn_title, warn_msg, QMessageBox.Warning, GUIStyles.set_msg_box_style()
             )
             return
-        self.terminate_thread = False
         self.start_button.setEnabled(False)
         self.stop_button.setEnabled(True)
         for checkbox in self.channels_checkboxes:
@@ -423,7 +409,7 @@ class PhotonsTracingWindow(QMainWindow):
         QApplication.processEvents()
         self.start_photons_tracing()
 
-    def stop_button_pressed(self, thread_join=True):
+    def stop_button_pressed(self):
         self.start_button.setEnabled(
             not all(not checkbox.isChecked() for checkbox in self.channels_checkboxes)
         )
@@ -434,19 +420,13 @@ class PhotonsTracingWindow(QMainWindow):
 
         flim_labs.request_stop()
 
-        self.terminate_thread = True
-
         self.pull_from_queue_timer.stop()
-
-        if thread_join and self.flim_thread is not None and self.flim_thread.is_alive():
-            self.flim_thread.join()
 
         for channel, curr_conn in self.connectors:
             curr_conn.pause()
 
     def reset_button_pressed(self):
         flim_labs.request_stop()
-        self.terminate_thread = True
         self.blank_space.show()
         # reset charts
         self.start_button.setEnabled(
@@ -464,8 +444,6 @@ class PhotonsTracingWindow(QMainWindow):
         self.charts.clear()
         QApplication.processEvents()
 
-
-
     def generate_chart(self, channel_index):
         left_axis = LiveAxis("left", axisPen="#cecece", textPen="#FFA726")
         bottom_axis = LiveAxis(
@@ -481,14 +459,14 @@ class PhotonsTracingWindow(QMainWindow):
             axisItems={"bottom": bottom_axis, "left": left_axis},
             x_range_controller=LiveAxisRange(roll_on_tick=1),
         )
-         
+
         plot_curve = LiveLinePlot()
         plot_curve.setPen(pg.mkPen(color="#a877f7"))
         plot_widget.addItem(plot_curve)
         connector = DataConnector(
             plot_curve,
-            update_rate= self.draw_frequency,
-            max_points=  10 * self.time_span if self.selected_update_rate == 'LOW' else 40 * self.time_span
+            update_rate=self.draw_frequency,
+            max_points=10 * self.time_span if self.selected_update_rate == 'LOW' else 40 * self.time_span
         )
 
         plot_widget.setBackground(None)
@@ -527,32 +505,22 @@ class PhotonsTracingWindow(QMainWindow):
         val = flim_labs.pull_from_queue()
         if len(val) > 0:
             for v in val:
+                if v == ('end',):  # End of acquisition
+                    self.stop_button_pressed()
+                    self.start_button.setEnabled(True)
+                    self.stop_button.setEnabled(False)
+                    self.first_point = True
+                    break
+
+                adjustment = 25000 / self.bin_width_micros
                 ((time,), (ch1, ch2, ch3, ch4, ch5, ch6, ch7, ch8)) = v
                 counts = [ch1, ch2, ch3, ch4, ch5, ch6, ch7, ch8]
                 if self.first_point:
                     self.first_point = False
                     return
                 for channel, curr_conn in self.connectors:
-                    curr_conn.cb_append_data_point(y=counts[channel], x=time / 1_000_000_000)
+                    curr_conn.cb_append_data_point(y=counts[channel] / adjustment, x=time / 1_000_000_000)
         # QApplication.processEvents()
-
-    def flim_read(self):
-        pass
-        # self.first_point = True
-        # while True:
-        #     val = flim_labs.pull_from_queue()
-        #     if len(val) > 0:
-        #         for v in val:
-        #             ((time,), (ch1, ch2, ch3, ch4, ch5, ch6, ch7, ch8)) = v
-        #             self.process_point(time, [ch1, ch2, ch3, ch4, ch5, ch6, ch7, ch8])
-        #         QApplication.processEvents()
-        #
-        #     if self.terminate_thread:
-        #         self.stop_button_pressed(thread_join=False)
-        #         print("Thread: End reading from flim queue")
-        #         self.start_button.setEnabled(True)
-        #         self.stop_button.setEnabled(False)
-        #         break
 
     def start_photons_tracing(self):
         try:
@@ -568,7 +536,8 @@ class PhotonsTracingWindow(QMainWindow):
             )
             print("Acquisition time (ms): " + str(acquisition_time_millis))
             print("Time span (s): " + str(self.time_span))
-            print("Max points: " + str(10 * self.time_span if self.selected_update_rate == 'LOW' else 40 * self.time_span))
+            print("Max points: " + str(
+                10 * self.time_span if self.selected_update_rate == 'LOW' else 40 * self.time_span))
             print("Bin width (µs): " + str(self.bin_width_micros))
             output_frequency_ms = 100 if self.selected_update_rate == 'LOW' else 25
             print("Output frequency ms: " + str(output_frequency_ms))
@@ -581,16 +550,13 @@ class PhotonsTracingWindow(QMainWindow):
                 acquisition_time_millis=acquisition_time_millis,  # E.g. 10000 = Stops after 10 seconds of acquisition
                 firmware_file=None,
                 # String, if None let flim decide to use intensity tracing Firmware
-                output_frequency_ms= output_frequency_ms # Based on Update Rate (100=LOW, 25=HIGH)
-                
+                # output_frequency_ms=output_frequency_ms  # Based on Update Rate (100=LOW, 25=HIGH)
             )
 
             file_bin = result.bin_file
             if file_bin != "":
                 print("File bin written in: " + str(file_bin))
 
-            self.flim_thread = Thread(target=self.flim_read)
-            self.flim_thread.start()
             self.blank_space.hide()
 
             self.pull_from_queue_timer.start(30)
