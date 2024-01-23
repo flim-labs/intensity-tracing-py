@@ -519,7 +519,7 @@ class PhotonsTracingWindow(QMainWindow):
                     self.first_point = False
                     return
                 for channel, curr_conn in self.connectors:
-                    curr_conn.cb_append_data_point(y=counts[channel] / adjustment, x=time / 1_000_000_000)
+                    curr_conn.cb_append_data_point(y=(counts[channel] / adjustment), x=time / 1_000_000_000)
         # QApplication.processEvents()
 
     def start_photons_tracing(self):

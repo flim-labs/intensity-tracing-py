@@ -17,7 +17,7 @@ times = []
 
 with open(file_path, 'rb') as f:
     # first 4 bytes must be IT01
-    if f.read(4) != b'IT01':
+    if f.read(4) != b'IT02':
         print("Invalid data file")
         exit(0)
 
@@ -40,19 +40,30 @@ with open(file_path, 'rb') as f:
 
     channel_lines = [[] for _ in range(len(metadata["channels"]))]
 
+    number_of_channels = len(metadata["channels"])
+    channel_values_unpack_string = 'I' * number_of_channels
+    time = 0
+    bin_width_seconds = metadata["bin_width_micros"] / 1000000;
+
     while True:
-        data = f.read(40)
+        data = f.read(4 * number_of_channels)
         if not data:
             break
-        (time,) = struct.unpack('d', data[:8])
-        channel_values = struct.unpack('IIIIIIII', data[8:])
+        channel_values = struct.unpack(channel_values_unpack_string, data)
+        if time == 0:
+            time += 1
+            continue
         for i in range(len(channel_lines)):
             channel_lines[i].append(channel_values[i])
-        times.append(time / 1_000_000_000)
+        time += 1
+        times.append(time * bin_width_seconds)
 
 plt.xlabel("Time (s)")
 plt.ylabel("Intensity (counts)")
-plt.title("Intensity tracing (" + str(len(times)) + " points)")
+plt.title("Intensity tracing")
+plt.grid(True)
+# background dark
+
 
 for i in range(len(channel_lines)):
     channel_line = channel_lines[i]
@@ -60,7 +71,7 @@ for i in range(len(channel_lines)):
         times,
         channel_line,
         label="Channel " + str(metadata["channels"][i] + 1),
-        linewidth=0.5,
+        linewidth=0.5
     )
 
 plt.show()
