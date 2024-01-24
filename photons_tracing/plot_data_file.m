@@ -56,8 +56,6 @@ channel_lines = cell(1, number_of_channels);
 bin_width_seconds = metadata.bin_width_micros / 1e6;
 times = []
 
-fread(fid, 4 * number_of_channels + 8);
-
 while true
     data = fread(fid, 4 * number_of_channels + 8);
 
