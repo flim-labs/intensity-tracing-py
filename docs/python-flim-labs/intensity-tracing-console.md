@@ -5,7 +5,7 @@
 </div>
 <div align="center">
   <a href="https://www.flimlabs.com/">
-    <img src="../../assets/images/shared/flimlabs-logo.png" alt="Logo" width="120" height="120">
+    <img src="../assets/images/shared/flimlabs-logo.png" alt="Logo" width="120" height="120">
   </a>
 </div>
 <br>
@@ -26,7 +26,7 @@
 ## Console usage
 
 <div align="center">
-    <img src="../../assets/images/python/intensity-tracing-console.png" alt="GUI" width="100%">
+    <img src="../assets/images/python/intensity-tracing-console.png" alt="GUI" width="100%">
 </div>
 
 The [Intensity Tracing](https://github.com/flim-labs/intensity-tracing-py) Console mode provides live-streaming data representation directly in the console, without an interface intermediary and charts data visualization processes.

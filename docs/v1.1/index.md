@@ -5,7 +5,7 @@
 </div>
 <div align="center">
   <a href="https://www.flimlabs.com/">
-    <img src="../../../assets/images/shared/flimlabs-logo.png" alt="Logo" width="120" height="120">
+    <img src="../assets/images/shared/flimlabs-logo.png" alt="Logo" width="120" height="120">
   </a>
 </div>
 <br>
@@ -36,7 +36,7 @@
 ## Introduction
 
 Welcome to [FLIM LABS Intensity Tracing](https://github.com/flim-labs/intensity-tracing-py) _v1.1_ usage guide. In this documentation section, you will find all the necessary information for the proper use of the application's **graphical user interface** (GUI).
-For a general introduction to the aims and technical requirements of the project, read the [Intensity Tracing Homepage](../index.md). You can also follow the [Console mode](../../python-flim-labs/intensity-tracing-console.md) and [Data export](../../python-flim-labs/intensity-tracing-file-format.md) dedicated guides links.
+For a general introduction to the aims and technical requirements of the project, read the [Intensity Tracing Homepage](../index.md). You can also follow the [Console mode](../python-flim-labs/intensity-tracing-console.md) and [Data export](../python-flim-labs/intensity-tracing-file-format.md) dedicated guides links.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -45,7 +45,7 @@ For a general introduction to the aims and technical requirements of the project
 ## GUI Usage
 
 <div align="center">
-    <img src="../../../assets/images/python/intensity-tracing-gui-1.1.png" alt="GUI" width="100%">
+    <img src="../assets/images/python/intensity-tracing-gui-1.1.png" alt="GUI" width="100%">
 </div>
 
 The GUI mode provides advanced functionality for configuring analysis **parameters** and displaying live-streamed photon data. It allows simultaneous acquisition from up to **8 channels**, offering real-time data visualization in the form of plots:
@@ -132,7 +132,7 @@ def calc_max_points(self):
 ### Save Parameters Configuration
 
 <div align="center">
-    <img src="../../../assets/images/python/intensity-tracing-save-config-v1.1.gif" alt="GUI" width="100%">
+    <img src="../assets/images/python/intensity-tracing-save-config-v1.1.gif" alt="GUI" width="100%">
 </div>
 
 Users can locally **save their parameter configuration** by clicking the ``SAVE CONFIGURATION`` button in the top-right corner of the GUI. The saved parameters include:
@@ -177,7 +177,7 @@ Here an example of the saved _json_ structure:
 
 For a detailed guide about console mode usage follow this link:
 
-- [Intensity Tracing Console guide ](../../python-flim-labs/intensity-tracing-console.md)
+- [Intensity Tracing Console guide ](../python-flim-labs/intensity-tracing-console.md)
 
  <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -185,7 +185,7 @@ For a detailed guide about console mode usage follow this link:
 
 The application GUI allows the user to export the analysis data in `binary file format`. For a detailed guide about data export and binary file structure see:
 
-- [Intensity Tracing Data Export guide ](../../python-flim-labs/intensity-tracing-file-format.md)
+- [Intensity Tracing Data Export guide ](../python-flim-labs/intensity-tracing-file-format.md)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

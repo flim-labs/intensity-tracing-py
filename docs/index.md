@@ -8,7 +8,7 @@
 </div>
 <div align="center">
   <a href="https://www.flimlabs.com/">
-    <img src="../../assets/images/shared/flimlabs-logo.png" alt="Logo" width="120" height="120">
+    <img src="./assets/images/shared/flimlabs-logo.png" alt="Logo" width="120" height="120">
   </a>
 </div>
 <br>
@@ -116,8 +116,8 @@ To be able to run this project locally on your machine you need to satisfy these
 Navigate to the following links to view detailed application usage guides:
 
 - [Intensity Tracing GUI guide](./v1.2/index.md)
-- [Intensity Tracing Console guide ](../python-flim-labs/intensity-tracing-console.md)
-- [Intensity Tracing Data export guide](../python-flim-labs/intensity-tracing-file-format.md)
+- [Intensity Tracing Console guide ](./python-flim-labs/intensity-tracing-console.md)
+- [Intensity Tracing Data export guide](./python-flim-labs/intensity-tracing-file-format.md)
 
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>

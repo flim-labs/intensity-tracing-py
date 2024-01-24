@@ -7,7 +7,7 @@
 </div>
 <div align="center">
   <a href="https://www.flimlabs.com/">
-    <img src="../../assets/images/shared/flimlabs-logo.png" alt="Logo" width="120" height="120">
+    <img src="../assets/images/shared/flimlabs-logo.png" alt="Logo" width="120" height="120">
   </a>
 </div>
 <br>
@@ -44,7 +44,7 @@ The [Intensity Tracing](https://github.com/flim-labs/intensity-tracing-py) tool 
 ## File Format
 
 <div align="center">
-    <img src="../../assets/images/python/exported-data-visualization.png" alt="GUI" width="100%">
+    <img src="../assets/images/python/exported-data-visualization.png" alt="GUI" width="100%">
 </div>
 
 To plot and visualize previously exported raw data (with GUI or console mode)  you can launch the```plot_data_file.py``` script. 
@@ -89,7 +89,7 @@ file_path = 'C:\\Users\\YOUR_USER\\.flim-labs\\data'
 
 ## Download Example Files
 
-By clicking on this [link](../../assets/data/intensity-tracing-export-data-example.zip) you can download a compressed folder containing an example _Python script_, a _binary file of exported data_ and a _requirements.txt_ file with the needed libraries.
+By clicking on this [link](../assets/data/intensity-tracing-export-data-example.zip) you can download a compressed folder containing an example _Python script_, a _binary file of exported data_ and a _requirements.txt_ file with the needed libraries.
 
 Here the steps to make your tests:
 
