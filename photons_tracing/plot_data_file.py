@@ -11,6 +11,7 @@ def get_recent_intensity_tracing_file():
 
 
 file_path = get_recent_intensity_tracing_file()
+print("Using data file: " + file_path)
 # file_path = "INSERT DATA FILE PATH HERE" # You can also manually insert the path to the data file here
 
 times = []
