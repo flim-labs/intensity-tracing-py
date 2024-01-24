@@ -14,8 +14,18 @@ def process(time, _x, counts):
 
 def thread_function():
     print("Thread: Start reading from queue")
-    flim_labs.read_from_queue(process)
-    print("Thread: End reading from queue")
+    continue_reading = True
+    while continue_reading:
+        val = flim_labs.pull_from_queue()
+
+        if len(val) > 0:
+            for v in val:
+                if v == ('end',):
+                    print("Experiment ended")
+                    continue_reading = False
+                    break
+                ((time,), (ch1, ch2, ch3, ch4, ch5, ch6, ch7, ch8)) = v
+                print("Time=" + str(time) + " Channel 1=" + str(ch1))
 
 
 if __name__ == "__main__":
@@ -34,4 +44,3 @@ if __name__ == "__main__":
     data_file = result.data_file
     print("Binary file=" + str(bin_file))
     print("Data file=" + str(data_file))
-

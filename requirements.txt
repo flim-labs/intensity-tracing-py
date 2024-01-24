@@ -1,4 +1,4 @@
 PyQt5
-flim-labs==1.0.7
+flim-labs==1.0.9
 pglive
 matplotlib
