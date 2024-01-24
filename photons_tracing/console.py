@@ -14,10 +14,16 @@ def process(time, _x, counts):
 
 def thread_function():
     print("Thread: Start reading from queue")
-    while True:
+    continue_reading = True
+    while continue_reading:
         val = flim_labs.pull_from_queue()
+
         if len(val) > 0:
             for v in val:
+                if v == ('end',):
+                    print("Experiment ended")
+                    continue_reading = False
+                    break
                 ((time,), (ch1, ch2, ch3, ch4, ch5, ch6, ch7, ch8)) = v
                 print("Time=" + str(time) + " Channel 1=" + str(ch1))
 
