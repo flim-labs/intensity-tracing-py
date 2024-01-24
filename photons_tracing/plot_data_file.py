@@ -42,21 +42,19 @@ with open(file_path, 'rb') as f:
 
     number_of_channels = len(metadata["channels"])
     channel_values_unpack_string = 'I' * number_of_channels
-    time = 0
-    bin_width_seconds = metadata["bin_width_micros"] / 1000000;
+    bin_width_seconds = metadata["bin_width_micros"] / 1000000
 
+    f.read(4 * number_of_channels + 8)
     while True:
-        data = f.read(4 * number_of_channels)
+        data = f.read(4 * number_of_channels + 8)
         if not data:
             break
-        channel_values = struct.unpack(channel_values_unpack_string, data)
-        if time == 0:
-            time += 1
-            continue
+        (time,) = struct.unpack('d', data[:8])
+        channel_values = struct.unpack(channel_values_unpack_string, data[8:])
         for i in range(len(channel_lines)):
             channel_lines[i].append(channel_values[i])
-        time += 1
-        times.append(time * bin_width_seconds)
+
+        times.append(time / 1_000_000_000)
 
 plt.xlabel("Time (s)")
 plt.ylabel("Intensity (counts)")
