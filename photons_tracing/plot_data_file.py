@@ -44,13 +44,13 @@ with open(file_path, 'rb') as f:
     channel_values_unpack_string = 'I' * number_of_channels
     bin_width_seconds = metadata["bin_width_micros"] / 1000000
 
-    f.read(4 * number_of_channels + 8)
     while True:
         data = f.read(4 * number_of_channels + 8)
         if not data:
             break
         (time,) = struct.unpack('d', data[:8])
         channel_values = struct.unpack(channel_values_unpack_string, data[8:])
+
         for i in range(len(channel_lines)):
             channel_lines[i].append(channel_values[i])
 
