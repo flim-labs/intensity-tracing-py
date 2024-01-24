@@ -53,7 +53,7 @@ with open(file_path, 'rb') as f:
 
         for i in range(len(channel_lines)):
             channel_lines[i].append(channel_values[i])
-
+            
         times.append(time / 1_000_000_000)
 
 plt.xlabel("Time (s)")

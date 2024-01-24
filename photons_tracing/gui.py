@@ -210,7 +210,7 @@ class PhotonsTracingWindow(QMainWindow):
         # Link to export data documentation
         info_link_widget = LinkWidget(
             icon_filename="info-icon.png",
-            link="https://flim-labs.github.io/intensity-tracing-py/products/python-flim-labs/intensity-tracing-file-format.html",
+            link="https://flim-labs.github.io/intensity-tracing-py/python-flim-labs/intensity-tracing-file-format.html",
         )
         info_link_widget.show()
         buttons_row_layout.addWidget(info_link_widget)
