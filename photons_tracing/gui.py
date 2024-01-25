@@ -463,12 +463,16 @@ class PhotonsTracingWindow(QMainWindow):
         plot_curve = LiveLinePlot()
         plot_curve.setPen(pg.mkPen(color="#a877f7"))
         plot_widget.addItem(plot_curve)
+
+        self.time_span = self.time_span_input.value()
         connector = DataConnector(
             plot_curve,
-            update_rate=self.draw_frequency,
-            max_points=10 * self.time_span if self.selected_update_rate == 'LOW' else 40 * self.time_span
+            update_rate=40,
+            max_points=30 * self.time_span,
+            plot_rate=40,
         )
 
+        # plot_widget.showGrid(x=True, y=True, alpha=0.5)
         plot_widget.setBackground(None)
 
         return plot_widget, (self.enabled_channels[channel_index], connector)
@@ -536,8 +540,7 @@ class PhotonsTracingWindow(QMainWindow):
             )
             print("Acquisition time (ms): " + str(acquisition_time_millis))
             print("Time span (s): " + str(self.time_span))
-            print("Max points: " + str(
-                10 * self.time_span if self.selected_update_rate == 'LOW' else 40 * self.time_span))
+            print("Max points: " + str(40 * self.time_span))
             print("Bin width (µs): " + str(self.bin_width_micros))
             output_frequency_ms = 100 if self.selected_update_rate == 'LOW' else 25
             print("Output frequency ms: " + str(output_frequency_ms))
