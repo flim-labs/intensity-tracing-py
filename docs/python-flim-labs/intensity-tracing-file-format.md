@@ -53,18 +53,22 @@ This script reads binary data from the local saved file and utilizes the ```matp
 Here a detailed explanation of the exported binary data file structure:
 
 ##### Header (4 bytes):
+<<<<<<< HEAD
+The first 4 bytes of the file must be ```IT02```. This serves as a validation check to ensure the correct format of the file. If the check fails, the script prints "Invalid data file" and exits.
+=======
 The first 4 bytes of the file must be ```IT01```. This serves as a validation check to ensure the correct format of the file. If the check fails, the script prints "Invalid data file" and exits.
+>>>>>>> be029fb86e4a79acd0bfb6cf3ac258e81f0143e1
 
 ##### Metadata Section (Variable length):
 Following the header, metadata is stored in the file. This includes:
 - ```JSON length (4 bytes)```: an unsigned integer representing the length of the JSON metadata.
 - ```JSON metadata```: this is a variable-length string that contains information about the data, including _enabled channels_, _bin width_, _acquisition time_, and _laser period_. This information is printed to the console.
 
-##### Data Records (40 bytes each):
+##### Data Records (Variable length):
 
-After the metadata, the script enters a loop to read and process data in chunks of 40 bytes. Each chunk represents a data record containing:
+After the metadata, the script enters a loop to read and process data in chunks of variable length, depending on the number of active channels. Each chunk represents a data record containing:
 - ```Timestamp (8 bytes)```: A double representing the photons' data acquisition time in seconds.
-- ```Channel Values (32 bytes)```: 8 unsigned integers (4 bytes each) representing photon counts for each channel at the corresponding timestamp.
+- ```Channel Values (variable length)```: variable number of unsigned integers (4 bytes each) representing photon counts for each active channel at the corresponding timestamp.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
