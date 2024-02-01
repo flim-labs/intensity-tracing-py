@@ -1,5 +1,8 @@
+import queue
 import sys
 import os
+import threading
+import time
 
 from PyQt5.QtCore import QTimer
 
@@ -40,6 +43,13 @@ from gui_components.layout_utilities import draw_layout_separator
 from gui_components.link_widget import LinkWidget
 from gui_components.box_message import BoxMessage
 from params_configuration import ParamsConfigHandler
+
+REALTIME_MS = 100
+REALTIME_ADJUSTMENT = REALTIME_MS * 1000
+REALTIME_HZ = 1000 / REALTIME_MS
+REALTIME_SECS = REALTIME_MS / 1000
+
+NS_IN_S = 1_000_000_000
 
 
 class PhotonsTracingWindow(QMainWindow):
@@ -277,10 +287,15 @@ class PhotonsTracingWindow(QMainWindow):
 
         # Titlebar logo icon
         TitlebarIcon.setup(self)
-        self.first_point = True
 
         self.pull_from_queue_timer = QTimer()
         self.pull_from_queue_timer.timeout.connect(self.pull_from_queue)
+
+        self.realtime_queue_thread = None
+        self.realtime_queue_worker_stop = False
+
+        self.realtime_points = 0
+        self.realtime_queue = queue.Queue()
 
     def draw_checkboxes(self):
         channels_checkboxes = []
@@ -410,6 +425,7 @@ class PhotonsTracingWindow(QMainWindow):
         self.start_photons_tracing()
 
     def stop_button_pressed(self):
+
         self.start_button.setEnabled(
             not all(not checkbox.isChecked() for checkbox in self.channels_checkboxes)
         )
@@ -421,6 +437,8 @@ class PhotonsTracingWindow(QMainWindow):
         flim_labs.request_stop()
 
         self.pull_from_queue_timer.stop()
+        self.realtime_queue_worker_stop = True
+        self.realtime_queue.queue.clear()
 
         for channel, curr_conn in self.connectors:
             curr_conn.pause()
@@ -467,9 +485,9 @@ class PhotonsTracingWindow(QMainWindow):
         self.time_span = self.time_span_input.value()
         connector = DataConnector(
             plot_curve,
-            update_rate=40,
-            max_points=30 * self.time_span,
-            plot_rate=40,
+            update_rate=REALTIME_HZ,
+            max_points=int(REALTIME_HZ) * self.time_span,
+            plot_rate=REALTIME_HZ,
         )
 
         # plot_widget.showGrid(x=True, y=True, alpha=0.5)
@@ -513,31 +531,41 @@ class PhotonsTracingWindow(QMainWindow):
                     self.stop_button_pressed()
                     self.start_button.setEnabled(True)
                     self.stop_button.setEnabled(False)
-                    self.first_point = True
                     break
-
-                adjustment = 25000 / self.bin_width_micros
+                adjustment = 10000 / self.bin_width_micros
                 ((time,), (ch1, ch2, ch3, ch4, ch5, ch6, ch7, ch8)) = v
                 counts = [ch1, ch2, ch3, ch4, ch5, ch6, ch7, ch8]
-                if self.first_point:
-                    self.first_point = False
-                    return
-                for channel, curr_conn in self.connectors:
-                    curr_conn.cb_append_data_point(y=(counts[channel] / adjustment), x=time / 1_000_000_000)
+                self.realtime_points += 1
+
+                self.realtime_queue.put((time, counts))
+
+                # for channel, curr_conn in self.connectors:
+                #     curr_conn.cb_append_data_point(y=(counts[channel] / adjustment), x=time / NS_IN_S)
         # QApplication.processEvents()
+        # print("Points: " + str(self.realtime_points))
+
+    def realtime_queue_worker(self):
+        while self.realtime_queue_worker_stop is False:
+            (current_time_ns, counts) = self.realtime_queue.get()
+            adjustment = REALTIME_ADJUSTMENT / self.bin_width_micros
+            for channel, curr_conn in self.connectors:
+                curr_conn.cb_append_data_point(y=(counts[channel] / adjustment), x=current_time_ns / NS_IN_S)
+            time.sleep(REALTIME_SECS)
+        else:
+            print("Realtime queue worker stopped")
+            self.realtime_queue.queue.clear()
+            self.realtime_queue_worker_stop = False
 
     def start_photons_tracing(self):
         try:
+            self.realtime_points = 0
             acquisition_time_millis = (
                 None
                 if self.acquisition_time_millis in (0, None)
                 else self.acquisition_time_millis
             )
             print("Selected firmware: " + (str(self.selected_firmware)))
-            print(
-                "Free running enabled: "
-                + str(self.acquisition_time_mode_switch.isChecked())
-            )
+            print("Free running enabled: " + str(self.acquisition_time_mode_switch.isChecked()))
             print("Acquisition time (ms): " + str(acquisition_time_millis))
             print("Time span (s): " + str(self.time_span))
             print("Max points: " + str(40 * self.time_span))
@@ -551,10 +579,14 @@ class PhotonsTracingWindow(QMainWindow):
                 write_bin=False,  # True = Write raw output from card in a binary file
                 write_data=self.write_data,  # True = Write data in a binary file
                 acquisition_time_millis=acquisition_time_millis,  # E.g. 10000 = Stops after 10 seconds of acquisition
-                firmware_file=None,
+                # firmware_file="test/intensity_tracing_extreme_mirror_extreme.flim",
                 # String, if None let flim decide to use intensity tracing Firmware
                 # output_frequency_ms=output_frequency_ms  # Based on Update Rate (100=LOW, 25=HIGH)
             )
+
+            self.realtime_queue_worker_stop = False
+            self.realtime_queue_thread = threading.Thread(target=self.realtime_queue_worker)
+            self.realtime_queue_thread.start()
 
             file_bin = result.bin_file
             if file_bin != "":
@@ -562,7 +594,7 @@ class PhotonsTracingWindow(QMainWindow):
 
             self.blank_space.hide()
 
-            self.pull_from_queue_timer.start(30)
+            self.pull_from_queue_timer.start(1)
 
         except Exception as e:
             error_title, error_msg = MessagesUtilities.error_handler(str(e))
