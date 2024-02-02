@@ -44,7 +44,7 @@ from gui_components.link_widget import LinkWidget
 from gui_components.box_message import BoxMessage
 from params_configuration import ParamsConfigHandler
 
-REALTIME_MS = 100
+REALTIME_MS = 10
 REALTIME_ADJUSTMENT = REALTIME_MS * 1000
 REALTIME_HZ = 1000 / REALTIME_MS
 REALTIME_SECS = REALTIME_MS / 1000
@@ -436,9 +436,11 @@ class PhotonsTracingWindow(QMainWindow):
 
         flim_labs.request_stop()
 
-        self.pull_from_queue_timer.stop()
-        self.realtime_queue_worker_stop = True
         self.realtime_queue.queue.clear()
+        self.realtime_queue_worker_stop = True
+        self.realtime_queue_thread.join()
+        self.pull_from_queue_timer.stop()
+
 
         for channel, curr_conn in self.connectors:
             curr_conn.pause()
@@ -546,11 +548,16 @@ class PhotonsTracingWindow(QMainWindow):
 
     def realtime_queue_worker(self):
         while self.realtime_queue_worker_stop is False:
-            (current_time_ns, counts) = self.realtime_queue.get()
+            try:
+                (current_time_ns, counts) = self.realtime_queue.get(timeout=REALTIME_MS / 1000)
+            except queue.Empty:
+                continue
             adjustment = REALTIME_ADJUSTMENT / self.bin_width_micros
             for channel, curr_conn in self.connectors:
                 curr_conn.cb_append_data_point(y=(counts[channel] / adjustment), x=current_time_ns / NS_IN_S)
-            time.sleep(REALTIME_SECS)
+            QApplication.processEvents()
+            time.sleep(REALTIME_SECS / 2)
+            # time.sleep(0.001)
         else:
             print("Realtime queue worker stopped")
             self.realtime_queue.queue.clear()
