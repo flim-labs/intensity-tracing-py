@@ -52,11 +52,13 @@ REALTIME_SECS = REALTIME_MS / 1000
 
 NS_IN_S = 1_000_000_000
 
+
 def human_format(number):
     units = ['', 'K', 'M', 'G', 'T', 'P']
     k = 1000.0
     magnitude = int(floor(log(number, k)))
-    return '%.2f%s' % (number / k**magnitude, units[magnitude])
+    return '%.2f%s' % (number / k ** magnitude, units[magnitude])
+
 
 class PhotonsTracingWindow(QMainWindow):
     def __init__(self, params_config):
@@ -536,8 +538,6 @@ class PhotonsTracingWindow(QMainWindow):
             cps_label.hide()
 
         return plot_widget, (self.enabled_channels[channel_index], connector), cps_label
-
-
 
     def showEvent(self, event):
         super().showEvent(event)
