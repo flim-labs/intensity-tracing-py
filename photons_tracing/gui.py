@@ -43,6 +43,7 @@ from gui_components.layout_utilities import draw_layout_separator
 from gui_components.link_widget import LinkWidget
 from gui_components.box_message import BoxMessage
 from params_configuration import ParamsConfigHandler
+from math import log, floor
 
 REALTIME_MS = 10
 REALTIME_ADJUSTMENT = REALTIME_MS * 1000
@@ -50,6 +51,15 @@ REALTIME_HZ = 1000 / REALTIME_MS
 REALTIME_SECS = REALTIME_MS / 1000
 
 NS_IN_S = 1_000_000_000
+
+
+def human_format(number):
+    if number == 0:
+        return '0'
+    units = ['', 'K', 'M', 'G', 'T', 'P']
+    k = 1000.0
+    magnitude = int(floor(log(number, k)))
+    return '%.2f%s' % (number / k ** magnitude, units[magnitude])
 
 
 class PhotonsTracingWindow(QMainWindow):
@@ -75,6 +85,7 @@ class PhotonsTracingWindow(QMainWindow):
         self.write_data = params_config["write_data"]
 
         self.charts = []
+        self.cps = []
 
         GUIStyles.customize_theme(self)
         GUIStyles.set_fonts()
@@ -237,7 +248,7 @@ class PhotonsTracingWindow(QMainWindow):
         # Link to export data documentation
         info_link_widget = LinkWidget(
             icon_filename="info-icon.png",
-            link="https://intensity-tracing-py/products/python-flim-labs/intensity-tracing-file-format.html",
+            link="https://flim-labs.github.io/intensity-tracing-py/python-flim-labs/intensity-tracing-file-format.html",
         )
         info_link_widget.show()
         buttons_row_layout.addWidget(info_link_widget)
@@ -311,7 +322,6 @@ class PhotonsTracingWindow(QMainWindow):
         self.realtime_queue_thread = None
         self.realtime_queue_worker_stop = False
 
-        self.realtime_points = 0
         self.realtime_queue = queue.Queue()
 
     def draw_checkboxes(self):
@@ -355,12 +365,11 @@ class PhotonsTracingWindow(QMainWindow):
             self.acquisition_time_input.setEnabled(True)
             self.free_running_acquisition_time = False
 
-
     def toggle_show_cps(self, state):
         if state:
             self.show_cps = True
         else:
-            self.show_cps = False          
+            self.show_cps = False
 
     def toggle_export_data(self, state):
         if state:
@@ -435,22 +444,23 @@ class PhotonsTracingWindow(QMainWindow):
 
         self.connectors.clear()
         self.charts.clear()
+        self.cps.clear()
 
         for i in range(len(self.enabled_channels)):
             if i < len(self.charts):
                 self.charts[i].show()
             else:
-                (chart, connector) = self.generate_chart(i)
+                (chart, connector, cps) = self.generate_chart(i)
                 row, col = divmod(i, 2)
                 self.charts_grid.addWidget(chart, row, col)
                 self.charts.append(chart)
+                self.cps.append(cps)
                 self.connectors.append(connector)
 
         QApplication.processEvents()
         self.start_photons_tracing()
 
     def stop_button_pressed(self):
-
         self.start_button.setEnabled(
             not all(not checkbox.isChecked() for checkbox in self.channels_checkboxes)
         )
@@ -521,13 +531,15 @@ class PhotonsTracingWindow(QMainWindow):
         plot_widget.setBackground(None)
 
         # cps indicator
-        if self.show_cps:
-             cps_label = QLabel("100 CPS", plot_widget)
-             cps_label.setStyleSheet(GUIStyles.set_cps_label_style())
-             cps_label.move(60, 5)
-          
+        cps_label = QLabel("0 CPS", plot_widget)
+        cps_label.setFixedWidth(200)
+        cps_label.setStyleSheet(GUIStyles.set_cps_label_style())
+        cps_label.move(60, 5)
 
-        return plot_widget, (self.enabled_channels[channel_index], connector)
+        if not self.show_cps:
+            cps_label.hide()
+
+        return plot_widget, (self.enabled_channels[channel_index], connector), cps_label
 
     def showEvent(self, event):
         super().showEvent(event)
@@ -566,30 +578,31 @@ class PhotonsTracingWindow(QMainWindow):
                     self.start_button.setEnabled(True)
                     self.stop_button.setEnabled(False)
                     break
-                adjustment = 10000 / self.bin_width_micros
-                ((time,), (ch1, ch2, ch3, ch4, ch5, ch6, ch7, ch8)) = v
+                ((current_time,), (ch1, ch2, ch3, ch4, ch5, ch6, ch7, ch8)) = v
                 counts = [ch1, ch2, ch3, ch4, ch5, ch6, ch7, ch8]
-                self.realtime_points += 1
-
-                self.realtime_queue.put((time, counts))
-
-                # for channel, curr_conn in self.connectors:
-                #     curr_conn.cb_append_data_point(y=(counts[channel] / adjustment), x=time / NS_IN_S)
-        # QApplication.processEvents()
-        # print("Points: " + str(self.realtime_points))
+                self.realtime_queue.put((current_time, counts))
 
     def realtime_queue_worker(self):
+        cps_counts = [0] * 8
+        next_second = 1
         while self.realtime_queue_worker_stop is False:
             try:
                 (current_time_ns, counts) = self.realtime_queue.get(timeout=REALTIME_MS / 1000)
             except queue.Empty:
                 continue
             adjustment = REALTIME_ADJUSTMENT / self.bin_width_micros
+            seconds = current_time_ns / NS_IN_S
             for channel, curr_conn in self.connectors:
-                curr_conn.cb_append_data_point(y=(counts[channel] / adjustment), x=current_time_ns / NS_IN_S)
+                curr_conn.cb_append_data_point(y=(counts[channel] / adjustment), x=seconds)
+                cps_counts[channel] += counts[channel] / adjustment
+                if seconds >= next_second:
+                    self.cps[channel].setText(human_format(round(cps_counts[channel])) + " CPS")
+                    cps_counts[channel] = 0
+            if seconds >= next_second:
+                next_second += 1
+
             QApplication.processEvents()
             time.sleep(REALTIME_SECS / 2)
-            # time.sleep(0.001)
         else:
             print("Realtime queue worker stopped")
             self.realtime_queue.queue.clear()
@@ -597,7 +610,6 @@ class PhotonsTracingWindow(QMainWindow):
 
     def start_photons_tracing(self):
         try:
-            self.realtime_points = 0
             acquisition_time_millis = (
                 None
                 if self.acquisition_time_millis in (0, None)
@@ -618,9 +630,9 @@ class PhotonsTracingWindow(QMainWindow):
                 write_bin=False,  # True = Write raw output from card in a binary file
                 write_data=self.write_data,  # True = Write data in a binary file
                 acquisition_time_millis=acquisition_time_millis,  # E.g. 10000 = Stops after 10 seconds of acquisition
-                # firmware_file="test/intensity_tracing_extreme_mirror_extreme.flim",
+                firmware_file=self.selected_firmware,
                 # String, if None let flim decide to use intensity tracing Firmware
-                # output_frequency_ms=output_frequency_ms  # Based on Update Rate (100=LOW, 25=HIGH)
+                output_frequency_ms=output_frequency_ms  # Based on Update Rate (100=LOW, 25=HIGH)
             )
 
             self.realtime_queue_worker_stop = False

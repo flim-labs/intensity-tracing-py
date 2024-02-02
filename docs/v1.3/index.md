@@ -91,7 +91,7 @@ This recalibration on the data visualization side doesn't affect the acquisition
 ### Save Parameters Configuration
 
 <div align="center">
-    <img src="../assets/images/python/intensity-tracing-save-config-v1.1.gif" alt="GUI" width="100%">
+    <img src="../assets/images/python/intensity-tracing-save-config-v1.3.gif" alt="GUI" width="100%">
 </div>
 
 Users can locally **save their parameter configuration** by clicking the ``SAVE CONFIGURATION`` button in the top-right corner of the GUI. The saved parameters include:
