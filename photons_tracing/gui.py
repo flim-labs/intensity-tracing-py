@@ -54,6 +54,8 @@ NS_IN_S = 1_000_000_000
 
 
 def human_format(number):
+    if number == 0:
+        return '0'
     units = ['', 'K', 'M', 'G', 'T', 'P']
     k = 1000.0
     magnitude = int(floor(log(number, k)))
