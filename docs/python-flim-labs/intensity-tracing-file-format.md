@@ -53,11 +53,7 @@ This script reads binary data from the local saved file and utilizes the ```matp
 Here a detailed explanation of the exported binary data file structure:
 
 ##### Header (4 bytes):
-<<<<<<< HEAD
 The first 4 bytes of the file must be ```IT02```. This serves as a validation check to ensure the correct format of the file. If the check fails, the script prints "Invalid data file" and exits.
-=======
-The first 4 bytes of the file must be ```IT01```. This serves as a validation check to ensure the correct format of the file. If the check fails, the script prints "Invalid data file" and exits.
->>>>>>> be029fb86e4a79acd0bfb6cf3ac258e81f0143e1
 
 ##### Metadata Section (Variable length):
 Following the header, metadata is stored in the file. This includes:
