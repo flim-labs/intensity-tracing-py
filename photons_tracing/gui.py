@@ -25,7 +25,7 @@ from PyQt5.QtWidgets import (
     QMessageBox,
 )
 import pyqtgraph as pg
-from PyQt5.QtGui import QIcon, QPixmap
+from PyQt5.QtGui import QIcon, QPixmap, QFont
 from flim_labs import flim_labs
 from pglive.kwargs import Axis
 from pglive.sources.data_connector import DataConnector
@@ -71,13 +71,14 @@ class PhotonsTracingWindow(QMainWindow):
             "free_running_acquisition_time"
         ]
         self.enabled_channels = params_config["enabled_channels"]
+        self.show_cps = params_config["show_cps"]
         self.write_data = params_config["write_data"]
 
         self.charts = []
 
         GUIStyles.customize_theme(self)
         GUIStyles.set_fonts()
-        self.setWindowTitle("Intensity tracing v1.2")
+        self.setWindowTitle("Intensity tracing v1.3")
 
         self.resize(1460, 800)
 
@@ -217,6 +218,22 @@ class PhotonsTracingWindow(QMainWindow):
         buttons_row_layout = QHBoxLayout()
         buttons_row_layout.addStretch(1)
 
+        # Show cps
+        self.show_cps_control = QHBoxLayout()
+        show_cps_label = QLabel("Show CPS:")
+        self.show_cps_switch = SwitchControl(
+            active_color="#8d4ef2", width=70, height=30, checked=self.show_cps
+        )
+        self.show_cps_switch.stateChanged.connect(
+            (lambda state: self.toggle_show_cps(state))
+        )
+
+        self.show_cps_control.addWidget(show_cps_label)
+        self.show_cps_control.addSpacing(8)
+        self.show_cps_control.addWidget(self.show_cps_switch)
+        buttons_row_layout.addLayout(self.show_cps_control)
+        self.show_cps_control.addSpacing(8)
+
         # Link to export data documentation
         info_link_widget = LinkWidget(
             icon_filename="info-icon.png",
@@ -338,6 +355,13 @@ class PhotonsTracingWindow(QMainWindow):
             self.acquisition_time_input.setEnabled(True)
             self.free_running_acquisition_time = False
 
+
+    def toggle_show_cps(self, state):
+        if state:
+            self.show_cps = True
+        else:
+            self.show_cps = False          
+
     def toggle_export_data(self, state):
         if state:
             self.write_data = True
@@ -379,6 +403,7 @@ class PhotonsTracingWindow(QMainWindow):
             self.free_running_acquisition_time,
             self.write_data,
             self.enabled_channels,
+            self.show_cps
         )
         params_config.save()
 
@@ -494,6 +519,13 @@ class PhotonsTracingWindow(QMainWindow):
 
         # plot_widget.showGrid(x=True, y=True, alpha=0.5)
         plot_widget.setBackground(None)
+
+        # cps indicator
+        if self.show_cps:
+             cps_label = QLabel("100 CPS", plot_widget)
+             cps_label.setStyleSheet(GUIStyles.set_cps_label_style())
+             cps_label.move(60, 5)
+          
 
         return plot_widget, (self.enabled_channels[channel_index], connector)
 
