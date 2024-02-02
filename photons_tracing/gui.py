@@ -1,5 +1,8 @@
+import queue
 import sys
 import os
+import threading
+import time
 
 from PyQt5.QtCore import QTimer
 
@@ -22,7 +25,7 @@ from PyQt5.QtWidgets import (
     QMessageBox,
 )
 import pyqtgraph as pg
-from PyQt5.QtGui import QIcon, QPixmap
+from PyQt5.QtGui import QIcon, QPixmap, QFont
 from flim_labs import flim_labs
 from pglive.kwargs import Axis
 from pglive.sources.data_connector import DataConnector
@@ -40,6 +43,23 @@ from gui_components.layout_utilities import draw_layout_separator
 from gui_components.link_widget import LinkWidget
 from gui_components.box_message import BoxMessage
 from params_configuration import ParamsConfigHandler
+from math import log, floor
+
+REALTIME_MS = 10
+REALTIME_ADJUSTMENT = REALTIME_MS * 1000
+REALTIME_HZ = 1000 / REALTIME_MS
+REALTIME_SECS = REALTIME_MS / 1000
+
+NS_IN_S = 1_000_000_000
+
+
+def human_format(number):
+    if number == 0:
+        return '0'
+    units = ['', 'K', 'M', 'G', 'T', 'P']
+    k = 1000.0
+    magnitude = int(floor(log(number, k)))
+    return '%.2f%s' % (number / k ** magnitude, units[magnitude])
 
 
 class PhotonsTracingWindow(QMainWindow):
@@ -61,13 +81,15 @@ class PhotonsTracingWindow(QMainWindow):
             "free_running_acquisition_time"
         ]
         self.enabled_channels = params_config["enabled_channels"]
+        self.show_cps = params_config.get("show_cps", False)
         self.write_data = params_config["write_data"]
 
         self.charts = []
+        self.cps = []
 
         GUIStyles.customize_theme(self)
         GUIStyles.set_fonts()
-        self.setWindowTitle("Intensity tracing v1.2")
+        self.setWindowTitle("Intensity tracing v1.3")
 
         self.resize(1460, 800)
 
@@ -207,6 +229,22 @@ class PhotonsTracingWindow(QMainWindow):
         buttons_row_layout = QHBoxLayout()
         buttons_row_layout.addStretch(1)
 
+        # Show cps
+        self.show_cps_control = QHBoxLayout()
+        show_cps_label = QLabel("Show CPS:")
+        self.show_cps_switch = SwitchControl(
+            active_color="#8d4ef2", width=70, height=30, checked=self.show_cps
+        )
+        self.show_cps_switch.stateChanged.connect(
+            (lambda state: self.toggle_show_cps(state))
+        )
+
+        self.show_cps_control.addWidget(show_cps_label)
+        self.show_cps_control.addSpacing(8)
+        self.show_cps_control.addWidget(self.show_cps_switch)
+        buttons_row_layout.addLayout(self.show_cps_control)
+        self.show_cps_control.addSpacing(8)
+
         # Link to export data documentation
         info_link_widget = LinkWidget(
             icon_filename="info-icon.png",
@@ -277,10 +315,14 @@ class PhotonsTracingWindow(QMainWindow):
 
         # Titlebar logo icon
         TitlebarIcon.setup(self)
-        self.first_point = True
 
         self.pull_from_queue_timer = QTimer()
         self.pull_from_queue_timer.timeout.connect(self.pull_from_queue)
+
+        self.realtime_queue_thread = None
+        self.realtime_queue_worker_stop = False
+
+        self.realtime_queue = queue.Queue()
 
     def draw_checkboxes(self):
         channels_checkboxes = []
@@ -323,6 +365,12 @@ class PhotonsTracingWindow(QMainWindow):
             self.acquisition_time_input.setEnabled(True)
             self.free_running_acquisition_time = False
 
+    def toggle_show_cps(self, state):
+        if state:
+            self.show_cps = True
+        else:
+            self.show_cps = False
+
     def toggle_export_data(self, state):
         if state:
             self.write_data = True
@@ -364,6 +412,7 @@ class PhotonsTracingWindow(QMainWindow):
             self.free_running_acquisition_time,
             self.write_data,
             self.enabled_channels,
+            self.show_cps
         )
         params_config.save()
 
@@ -395,15 +444,17 @@ class PhotonsTracingWindow(QMainWindow):
 
         self.connectors.clear()
         self.charts.clear()
+        self.cps.clear()
 
         for i in range(len(self.enabled_channels)):
             if i < len(self.charts):
                 self.charts[i].show()
             else:
-                (chart, connector) = self.generate_chart(i)
+                (chart, connector, cps) = self.generate_chart(i)
                 row, col = divmod(i, 2)
                 self.charts_grid.addWidget(chart, row, col)
                 self.charts.append(chart)
+                self.cps.append(cps)
                 self.connectors.append(connector)
 
         QApplication.processEvents()
@@ -420,6 +471,10 @@ class PhotonsTracingWindow(QMainWindow):
 
         flim_labs.request_stop()
 
+        self.realtime_queue.queue.clear()
+        self.realtime_queue_worker_stop = True
+        if self.realtime_queue_thread is not None:
+            self.realtime_queue_thread.join()
         self.pull_from_queue_timer.stop()
 
         for channel, curr_conn in self.connectors:
@@ -467,15 +522,24 @@ class PhotonsTracingWindow(QMainWindow):
         self.time_span = self.time_span_input.value()
         connector = DataConnector(
             plot_curve,
-            update_rate=40,
-            max_points=30 * self.time_span,
-            plot_rate=40,
+            update_rate=REALTIME_HZ,
+            max_points=int(REALTIME_HZ) * self.time_span,
+            plot_rate=REALTIME_HZ,
         )
 
         # plot_widget.showGrid(x=True, y=True, alpha=0.5)
         plot_widget.setBackground(None)
 
-        return plot_widget, (self.enabled_channels[channel_index], connector)
+        # cps indicator
+        cps_label = QLabel("0 CPS", plot_widget)
+        cps_label.setFixedWidth(200)
+        cps_label.setStyleSheet(GUIStyles.set_cps_label_style())
+        cps_label.move(60, 5)
+
+        if not self.show_cps:
+            cps_label.hide()
+
+        return plot_widget, (self.enabled_channels[channel_index], connector), cps_label
 
     def showEvent(self, event):
         super().showEvent(event)
@@ -513,18 +577,36 @@ class PhotonsTracingWindow(QMainWindow):
                     self.stop_button_pressed()
                     self.start_button.setEnabled(True)
                     self.stop_button.setEnabled(False)
-                    self.first_point = True
                     break
-
-                adjustment = 25000 / self.bin_width_micros
-                ((time,), (ch1, ch2, ch3, ch4, ch5, ch6, ch7, ch8)) = v
+                ((current_time,), (ch1, ch2, ch3, ch4, ch5, ch6, ch7, ch8)) = v
                 counts = [ch1, ch2, ch3, ch4, ch5, ch6, ch7, ch8]
-                if self.first_point:
-                    self.first_point = False
-                    return
-                for channel, curr_conn in self.connectors:
-                    curr_conn.cb_append_data_point(y=(counts[channel] / adjustment), x=time / 1_000_000_000)
-        # QApplication.processEvents()
+                self.realtime_queue.put((current_time, counts))
+
+    def realtime_queue_worker(self):
+        cps_counts = [0] * 8
+        next_second = 1
+        while self.realtime_queue_worker_stop is False:
+            try:
+                (current_time_ns, counts) = self.realtime_queue.get(timeout=REALTIME_MS / 1000)
+            except queue.Empty:
+                continue
+            adjustment = REALTIME_ADJUSTMENT / self.bin_width_micros
+            seconds = current_time_ns / NS_IN_S
+            for channel, curr_conn in self.connectors:
+                curr_conn.cb_append_data_point(y=(counts[channel] / adjustment), x=seconds)
+                cps_counts[channel] += counts[channel] / adjustment
+                if seconds >= next_second:
+                    self.cps[channel].setText(human_format(round(cps_counts[channel])) + " CPS")
+                    cps_counts[channel] = 0
+            if seconds >= next_second:
+                next_second += 1
+
+            QApplication.processEvents()
+            time.sleep(REALTIME_SECS / 2)
+        else:
+            print("Realtime queue worker stopped")
+            self.realtime_queue.queue.clear()
+            self.realtime_queue_worker_stop = False
 
     def start_photons_tracing(self):
         try:
@@ -534,10 +616,7 @@ class PhotonsTracingWindow(QMainWindow):
                 else self.acquisition_time_millis
             )
             print("Selected firmware: " + (str(self.selected_firmware)))
-            print(
-                "Free running enabled: "
-                + str(self.acquisition_time_mode_switch.isChecked())
-            )
+            print("Free running enabled: " + str(self.acquisition_time_mode_switch.isChecked()))
             print("Acquisition time (ms): " + str(acquisition_time_millis))
             print("Time span (s): " + str(self.time_span))
             print("Max points: " + str(40 * self.time_span))
@@ -556,13 +635,17 @@ class PhotonsTracingWindow(QMainWindow):
                 output_frequency_ms=output_frequency_ms  # Based on Update Rate (100=LOW, 25=HIGH)
             )
 
+            self.realtime_queue_worker_stop = False
+            self.realtime_queue_thread = threading.Thread(target=self.realtime_queue_worker)
+            self.realtime_queue_thread.start()
+
             file_bin = result.bin_file
             if file_bin != "":
                 print("File bin written in: " + str(file_bin))
 
             self.blank_space.hide()
 
-            self.pull_from_queue_timer.start(30)
+            self.pull_from_queue_timer.start(1)
 
         except Exception as e:
             error_title, error_msg = MessagesUtilities.error_handler(str(e))

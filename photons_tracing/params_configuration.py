@@ -23,6 +23,7 @@ class ParamsConfigHandler:
         free_running_acquisition_time=True,
         write_data=True,
         enabled_channels=[0],
+        show_cps=False
     ):
         self.config = {
             "selected_update_rate": selected_update_rate,
@@ -35,6 +36,7 @@ class ParamsConfigHandler:
             "free_running_acquisition_time": free_running_acquisition_time,
             "write_data": write_data,
             "enabled_channels": enabled_channels,
+            "show_cps": show_cps,
         }
 
     def save(self):
