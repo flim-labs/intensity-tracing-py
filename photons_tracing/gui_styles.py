@@ -234,3 +234,14 @@ class GUIStyles:
             }   
                  
         """
+
+    @staticmethod        
+    def set_cps_label_style():
+        return """
+            QLabel{
+                color: white;
+                font-weight: 700;
+                font-family: "Montserrat";
+                font-size: 26px;
+            }
+        """    
