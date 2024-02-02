@@ -248,7 +248,7 @@ class PhotonsTracingWindow(QMainWindow):
         # Link to export data documentation
         info_link_widget = LinkWidget(
             icon_filename="info-icon.png",
-            link="https://intensity-tracing-py/products/python-flim-labs/intensity-tracing-file-format.html",
+            link="https://flim-labs.github.io/intensity-tracing-py/python-flim-labs/intensity-tracing-file-format.html",
         )
         info_link_widget.show()
         buttons_row_layout.addWidget(info_link_widget)
@@ -630,9 +630,9 @@ class PhotonsTracingWindow(QMainWindow):
                 write_bin=False,  # True = Write raw output from card in a binary file
                 write_data=self.write_data,  # True = Write data in a binary file
                 acquisition_time_millis=acquisition_time_millis,  # E.g. 10000 = Stops after 10 seconds of acquisition
-                # firmware_file="test/intensity_tracing_extreme_mirror_extreme.flim",
+                firmware_file=self.selected_firmware,
                 # String, if None let flim decide to use intensity tracing Firmware
-                # output_frequency_ms=output_frequency_ms  # Based on Update Rate (100=LOW, 25=HIGH)
+                output_frequency_ms=output_frequency_ms  # Based on Update Rate (100=LOW, 25=HIGH)
             )
 
             self.realtime_queue_worker_stop = False
