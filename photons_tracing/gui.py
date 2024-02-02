@@ -438,9 +438,9 @@ class PhotonsTracingWindow(QMainWindow):
 
         self.realtime_queue.queue.clear()
         self.realtime_queue_worker_stop = True
-        self.realtime_queue_thread.join()
+        if self.realtime_queue_thread is not None:
+            self.realtime_queue_thread.join()
         self.pull_from_queue_timer.stop()
-
 
         for channel, curr_conn in self.connectors:
             curr_conn.pause()
