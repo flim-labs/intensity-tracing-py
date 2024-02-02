@@ -141,8 +141,8 @@ Here the steps to make your tests:
 
 For more details about the project follow these links:
 
-- [Intensity Tracing introduction](../index.md)
-- [Intensity Tracing GUI guide](../v1.2/index.md)
+- [Intensity Tracing introduction](../intensity-tracing/index.md)
+- [Intensity Tracing GUI guide](../intensity-tracing/v1.3/index.md)
 - [Intensity Tracing Console guide ](./intensity-tracing-console.md)
 
 

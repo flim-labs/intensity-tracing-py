@@ -1,5 +1,10 @@
 # Intensity Tracing Changelog
 
+## Version 1.3
+- Ring buffer adaptations and realtime improvements
+- User can visualize cps value on charts
+
+
 ## Version 1.2
 - Improve data processing and implement QTimer
 - Recalibration of GUI parameters related to max points on the chart and draw frequency to prevent overload
