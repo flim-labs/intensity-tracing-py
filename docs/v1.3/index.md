@@ -45,7 +45,7 @@ For a general introduction to the aims and technical requirements of the project
 ## GUI Usage
 
 <div align="center">
-    <img src="../assets/images/python/intensity-tracing-gui-1.1.png" alt="GUI" width="100%">
+    <img src="../assets/images/python/intensity-tracing-gui-1.3.png" alt="GUI" width="100%">
 </div>
 
 The GUI mode provides advanced functionality for configuring analysis **parameters** and displaying live-streamed photon data. It allows simultaneous acquisition from up to **8 channels**, offering real-time data visualization in the form of plots:
@@ -66,7 +66,7 @@ Here a table summary of the configurable parameters:
 | `acquisition_time_millis`       | number/None | Set the data acquisition duration. Range: _1-1800s_                                              | None      | The acquisition duration is indeterminate (None) if _free_running_acquisition_time_ is set to True.                                                                                  |
 | `output_frequency_ms`       | number | Set the frequency, in milliseconds (time interval between successive acquired data points int the exported .bin data file).                                     |       | If ```selected_update_rate``` is configured as _LOW_,  ```output_frequency_ms``` is set to _100ms_. When set to _HIGH_, it is configured to _25ms_.                                                                              |
 | `write_data`                    | boolean     | Set export data option to True/False                                                              | False     | if set to _True_, the acquired raw data will be exported locally to the computer                                                                                                     |
-| `show_cps`                    | boolean     | Set show cps option to True/False                                                              | False     | if set to _True_, user can visualize cps value (average photon count per second) on charts for each active channel                                                                                                     |
+| `show_cps`                    | boolean     | Set show cps option to True/False                                                              | False     | if set to _True_, user can visualize cps value (average photon count per second) on charts for each active channel   |                                                                                                  
 <br/>
 
 
