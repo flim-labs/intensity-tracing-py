@@ -523,7 +523,7 @@ class PhotonsTracingWindow(QMainWindow):
         connector = DataConnector(
             plot_curve,
             update_rate=REALTIME_HZ,
-            max_points=int(REALTIME_HZ) * self.time_span,
+            max_points=int(REALTIME_HZ / 2) * self.time_span,
             plot_rate=REALTIME_HZ,
         )
 
@@ -630,7 +630,7 @@ class PhotonsTracingWindow(QMainWindow):
                 write_bin=False,  # True = Write raw output from card in a binary file
                 write_data=self.write_data,  # True = Write data in a binary file
                 acquisition_time_millis=acquisition_time_millis,  # E.g. 10000 = Stops after 10 seconds of acquisition
-                firmware_file=self.selected_firmware,
+                firmware_file="test/intensity_tracing_extreme_mirror_extreme.flim",  # self.selected_firmware,
                 # String, if None let flim decide to use intensity tracing Firmware
                 output_frequency_ms=output_frequency_ms  # Based on Update Rate (100=LOW, 25=HIGH)
             )
