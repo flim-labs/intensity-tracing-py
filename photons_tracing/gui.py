@@ -71,7 +71,7 @@ class PhotonsTracingWindow(QMainWindow):
             "free_running_acquisition_time"
         ]
         self.enabled_channels = params_config["enabled_channels"]
-        self.show_cps = params_config["show_cps"]
+        self.show_cps = params_config.get("show_cps", False)
         self.write_data = params_config["write_data"]
 
         self.charts = []
