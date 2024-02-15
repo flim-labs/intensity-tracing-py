@@ -510,10 +510,14 @@ class PhotonsTracingWindow(QMainWindow):
         )
         plot_widget = LivePlotWidget(
             title="Channel " + str(self.enabled_channels[channel_index] + 1),
-            y_label="Photon counts",
+            y_label="AVG. Photon counts",
+            orientation='vertical',
             axisItems={"bottom": bottom_axis, "left": left_axis},
             x_range_controller=LiveAxisRange(roll_on_tick=1),
         )
+
+        plot_widget.getAxis('left').setLabel('AVG. Photon counts', color='#cecece', orientation='vertical')
+
 
         plot_curve = LiveLinePlot()
         plot_curve.setPen(pg.mkPen(color="#a877f7"))
