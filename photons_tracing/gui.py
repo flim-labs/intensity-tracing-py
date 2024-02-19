@@ -26,6 +26,7 @@ from PyQt5.QtWidgets import (
 )
 import pyqtgraph as pg
 from PyQt5.QtGui import QIcon, QPixmap, QFont
+from PyQt5.QtCore import Qt
 from flim_labs import flim_labs
 from pglive.kwargs import Axis
 from pglive.sources.data_connector import DataConnector
@@ -38,6 +39,7 @@ from gui_components.logo_utilities import LogoOverlay, TitlebarIcon
 from gui_components.switch_control import SwitchControl
 from gui_components.select_control import SelectControl
 from gui_components.input_number_control import InputNumberControl
+from gui_components.gradient_text import GradientText
 from messages_utilities import MessagesUtilities
 from gui_components.layout_utilities import draw_layout_separator
 from gui_components.link_widget import LinkWidget
@@ -104,23 +106,19 @@ class PhotonsTracingWindow(QMainWindow):
 
         # Header row: save parameters configuration / Link to User Guide
         self.header_layout = QHBoxLayout()
-
-        flim_header_icon = QLabel(self, pixmap=QPixmap(
-            os.path.join(project_root, "assets", "flimlabs-logo.png")
-        ).scaledToWidth(60))
-        header_title = QLabel("INTENSITY TRACING")
-        header_title.setStyleSheet(GUIStyles.set_main_title_style())
+      
         save_icon = QIcon(os.path.join(project_root, "assets", "save-icon.png"))
         self.save_conf_button = QPushButton("SAVE CONFIGURATION")
         self.save_conf_button.setIcon(save_icon)
+        self.save_conf_button.setCursor(Qt.CursorShape.PointingHandCursor)
         GUIStyles.set_config_btn_style(self.save_conf_button)
         self.save_conf_button.clicked.connect(self.save_conf_button_pressed)
 
         app_guide_link_widget = LinkWidget(
             icon_filename="info-icon.png", text="User Guide"
         )
-        self.header_layout.addWidget(flim_header_icon)
-        self.header_layout.addWidget(header_title)
+        app_guide_link_widget.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.header_layout.addLayout(self.create_logo_and_title())
         self.header_layout.addStretch(1)
         self.header_layout.addWidget(self.save_conf_button)
         self.header_layout.addWidget(app_guide_link_widget)
@@ -250,6 +248,7 @@ class PhotonsTracingWindow(QMainWindow):
             icon_filename="info-icon.png",
             link="https://flim-labs.github.io/intensity-tracing-py/python-flim-labs/intensity-tracing-file-format.html",
         )
+        info_link_widget.setCursor(Qt.CursorShape.PointingHandCursor)
         info_link_widget.show()
         buttons_row_layout.addWidget(info_link_widget)
 
@@ -270,6 +269,7 @@ class PhotonsTracingWindow(QMainWindow):
 
         self.start_button = QPushButton("START")
         GUIStyles.set_start_btn_style(self.start_button)
+        self.start_button.setCursor(Qt.CursorShape.PointingHandCursor)
         self.start_button.clicked.connect(self.start_button_pressed)
         self.start_button.setEnabled(
             not all(not checkbox.isChecked() for checkbox in self.channels_checkboxes)
@@ -277,12 +277,14 @@ class PhotonsTracingWindow(QMainWindow):
         buttons_row_layout.addWidget(self.start_button)
 
         self.stop_button = QPushButton("STOP")
+        self.stop_button.setCursor(Qt.CursorShape.PointingHandCursor)
         GUIStyles.set_stop_btn_style(self.stop_button)
         self.stop_button.setEnabled(False)
         self.stop_button.clicked.connect(self.stop_button_pressed)
         buttons_row_layout.addWidget(self.stop_button)
 
         self.reset_button = QPushButton("RESET")
+        self.reset_button.setCursor(Qt.CursorShape.PointingHandCursor)
         GUIStyles.set_reset_btn_style(self.reset_button)
         self.reset_button.setEnabled(True)
         self.reset_button.clicked.connect(self.reset_button_pressed)
@@ -323,6 +325,30 @@ class PhotonsTracingWindow(QMainWindow):
         self.realtime_queue_worker_stop = False
 
         self.realtime_queue = queue.Queue()
+
+
+    def create_logo_and_title(self):   
+        row = QHBoxLayout()
+        pixmap = QPixmap(
+            os.path.join(project_root, "assets", "flimlabs-logo.png")
+        ).scaledToWidth(60)
+        ctl = QLabel(pixmap=pixmap)
+        row.addWidget(ctl)
+
+        row.addSpacing(10)
+
+        ctl = GradientText(self,
+                           text="INTENSITY TRACING",
+                           colors=[(0.5, "#23F3AB"), (1.0, "#8d4ef2")],
+                           stylesheet=GUIStyles.set_main_title_style())
+        ctl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        row.addWidget(ctl)
+
+        ctl = QWidget()
+        ctl.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        row.addWidget(ctl)
+        return row   
+
 
     def draw_checkboxes(self):
         channels_checkboxes = []
