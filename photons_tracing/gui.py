@@ -3,12 +3,15 @@ import sys
 import os
 import threading
 import time
+import json
 
-from PyQt5.QtCore import QTimer
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_path, ".."))
 sys.path.append(project_root)
+
+from PyQt5.QtCore import QTimer, Qt, QSettings
+
 from PyQt5.QtWidgets import (
     QMainWindow,
     QDesktopWidget,
@@ -26,7 +29,6 @@ from PyQt5.QtWidgets import (
 )
 import pyqtgraph as pg
 from PyQt5.QtGui import QIcon, QPixmap, QFont
-from PyQt5.QtCore import Qt
 from flim_labs import flim_labs
 from pglive.kwargs import Axis
 from pglive.sources.data_connector import DataConnector
@@ -44,8 +46,9 @@ from messages_utilities import MessagesUtilities
 from gui_components.layout_utilities import draw_layout_separator
 from gui_components.link_widget import LinkWidget
 from gui_components.box_message import BoxMessage
-from params_configuration import ParamsConfigHandler
+from settings import *
 from math import log, floor
+
 
 REALTIME_MS = 10
 REALTIME_ADJUSTMENT = REALTIME_MS * 1000
@@ -65,26 +68,28 @@ def human_format(number):
 
 
 class PhotonsTracingWindow(QMainWindow):
-    def __init__(self, params_config):
+    def __init__(self):
         super(PhotonsTracingWindow, self).__init__()
+
+        # Initialize settings config
+        self.settings = self.init_settings()
 
         ##### GUI PARAMS #####
         self.firmwares = ["intensity_tracing_usb.flim", "intensity_tracing_sma.flim"]
         self.update_rates = ["LOW", "HIGH"]
-        self.selected_update_rate = params_config["selected_update_rate"]
+        self.selected_update_rate = self.settings.value(SETTINGS_UPDATE_RATE, DEFAULT_UPDATE_RATE)
         self.conn_channels = ["USB", "SMA"]
-        self.selected_conn_channel = params_config["selected_conn_channel"]
-        self.selected_firmware = params_config["selected_firmware"]
-        self.bin_width_micros = params_config["bin_width_micros"]
-        self.time_span = params_config["time_span"]
-        self.acquisition_time_millis = params_config["acquisition_time_millis"]
-        self.draw_frequency = params_config["draw_frequency"]
-        self.free_running_acquisition_time = params_config[
-            "free_running_acquisition_time"
-        ]
-        self.enabled_channels = params_config["enabled_channels"]
-        self.show_cps = params_config.get("show_cps", False)
-        self.write_data = params_config["write_data"]
+        self.selected_conn_channel = self.settings.value(SETTINGS_CONN_CHANNEL, DEFAULT_CONN_CHANNEL)
+        self.selected_firmware = self.settings.value(SETTINGS_FIRMWARE, DEFAULT_FIRMWARE)
+        self.bin_width_micros = int(self.settings.value(SETTINGS_BIN_WIDTH_MICROS, DEFAULT_BIN_WIDTH_MICROS))
+        self.time_span = int(self.settings.value(SETTINGS_TIME_SPAN, DEFAULT_TIME_SPAN))
+        default_acquisition_time_millis = self.settings.value(SETTINGS_ACQUISITION_TIME_MILLIS)
+        self.acquisition_time_millis = int(default_acquisition_time_millis) if default_acquisition_time_millis is not None else DEFAULT_ACQUISITION_TIME_MILLIS
+        self.draw_frequency = int(self.settings.value(SETTINGS_DRAW_FREQUENCY, DEFAULT_DRAW_FREQUENCY))
+        self.free_running_acquisition_time = self.settings.value(SETTINGS_FREE_RUNNING_MODE, DEFAULT_FREE_RUNNING_MODE) == 'true'
+        self.enabled_channels = json.loads(self.settings.value(SETTINGS_ENABLED_CHANNELS, DEFAULT_ENABLED_CHANNELS))
+        self.show_cps = self.settings.value(SETTINGS_SHOW_CPS, DEFAULT_SHOW_CPS) == 'true' 
+        self.write_data = self.settings.value(SETTINGS_WRITE_DATA, DEFAULT_WRITE_DATA) == 'true'
 
         self.charts = []
         self.cps = []
@@ -104,15 +109,8 @@ class PhotonsTracingWindow(QMainWindow):
 
         self.connectors = []
 
-        # Header row: save parameters configuration / Link to User Guide
+        # Header row: Link to User Guide
         self.header_layout = QHBoxLayout()
-      
-        save_icon = QIcon(os.path.join(project_root, "assets", "save-icon.png"))
-        self.save_conf_button = QPushButton("SAVE CONFIGURATION")
-        self.save_conf_button.setIcon(save_icon)
-        self.save_conf_button.setCursor(Qt.CursorShape.PointingHandCursor)
-        GUIStyles.set_config_btn_style(self.save_conf_button)
-        self.save_conf_button.clicked.connect(self.save_conf_button_pressed)
 
         app_guide_link_widget = LinkWidget(
             icon_filename="info-icon.png", text="User Guide"
@@ -120,7 +118,6 @@ class PhotonsTracingWindow(QMainWindow):
         app_guide_link_widget.setCursor(Qt.CursorShape.PointingHandCursor)
         self.header_layout.addLayout(self.create_logo_and_title())
         self.header_layout.addStretch(1)
-        self.header_layout.addWidget(self.save_conf_button)
         self.header_layout.addWidget(app_guide_link_widget)
         self.top_utilities_layout.addLayout(self.header_layout)
 
@@ -378,6 +375,7 @@ class PhotonsTracingWindow(QMainWindow):
             self.enabled_channels.remove(index)
         self.enabled_channels.sort()
         print("Enabled channels: " + str(self.enabled_channels))
+        self.settings.setValue(SETTINGS_ENABLED_CHANNELS, json.dumps(self.enabled_channels))
         self.start_button.setEnabled(
             not all(not checkbox.isChecked() for checkbox in self.channels_checkboxes)
         )
@@ -387,60 +385,57 @@ class PhotonsTracingWindow(QMainWindow):
             self.acquisition_time_millis = None
             self.acquisition_time_input.setEnabled(False)
             self.free_running_acquisition_time = True
+            self.settings.setValue(SETTINGS_FREE_RUNNING_MODE, True)
         else:
             self.acquisition_time_input.setEnabled(True)
             self.free_running_acquisition_time = False
+            self.settings.setValue(SETTINGS_FREE_RUNNING_MODE, False)
 
     def toggle_show_cps(self, state):
         if state:
             self.show_cps = True
+            self.settings.setValue(SETTINGS_SHOW_CPS, True)
         else:
             self.show_cps = False
+            self.settings.setValue(SETTINGS_SHOW_CPS, False)
 
     def toggle_export_data(self, state):
         if state:
             self.write_data = True
+            self.settings.setValue(SETTINGS_WRITE_DATA, True)
         else:
             self.write_data = False
+            self.settings.setValue(SETTINGS_WRITE_DATA, False)
 
     def conn_channel_type_value_change(self, index):
         self.selected_conn_channel = self.sender().currentText()
         if self.selected_conn_channel == "USB":
             self.selected_firmware = self.firmwares[0]
         else:
-            self.selected_firmware = self.firmwares[1]
+            self.selected_firmware = self.firmwares[1]   
+        self.settings.setValue(SETTINGS_FIRMWARE, self.selected_firmware) 
+        self.settings.setValue(SETTINGS_CONN_CHANNEL, self.selected_conn_channel)     
 
     def acquisition_time_value_change(self, value):
         self.start_button.setEnabled(value != 0)
         self.acquisition_time_millis = value * 1000  # convert s to ms
+        self.settings.setValue(SETTINGS_ACQUISITION_TIME_MILLIS, self.acquisition_time_millis)
 
     def time_span_value_change(self, value):
         self.start_button.setEnabled(value != 0)
         self.time_span = value
+        self.settings.setValue(SETTINGS_TIME_SPAN, value)
 
     def bin_width_micros_value_change(self, value):
         self.start_button.setEnabled(value != 0)
         self.bin_width_micros = value
+        self.settings.setValue(SETTINGS_BIN_WIDTH_MICROS, value)
 
     def update_rate_value_change(self, index):
         self.selected_update_rate = self.sender().currentText()
         self.draw_frequency = 10 if self.selected_update_rate == 'LOW' else 40
-
-    def save_conf_button_pressed(self):
-        params_config = ParamsConfigHandler(
-            self.selected_update_rate,
-            self.selected_conn_channel,
-            self.selected_firmware,
-            self.bin_width_micros,
-            self.time_span,
-            self.acquisition_time_millis,
-            self.draw_frequency,
-            self.free_running_acquisition_time,
-            self.write_data,
-            self.enabled_channels,
-            self.show_cps
-        )
-        params_config.save()
+        self.settings.setValue(SETTINGS_UPDATE_RATE, self.selected_update_rate)
+        self.settings.setValue(SETTINGS_DRAW_FREQUENCY, self.draw_frequency)
 
     def start_button_pressed(self):
         warn_title, warn_msg = MessagesUtilities.invalid_inputs_handler(
@@ -685,12 +680,16 @@ class PhotonsTracingWindow(QMainWindow):
                 GUIStyles.set_msg_box_style(),
             )
 
+    @staticmethod 
+    def init_settings():
+        settings = QSettings('settings.ini', QSettings.Format.IniFormat)
+        return settings
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    params_config = ParamsConfigHandler().load()
 
-    window = PhotonsTracingWindow(params_config)
+    window = PhotonsTracingWindow()
     window.show()
     exit_code = app.exec()
     window.stop_button_pressed()
