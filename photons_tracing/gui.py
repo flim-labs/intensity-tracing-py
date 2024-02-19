@@ -47,6 +47,7 @@ from gui_components.layout_utilities import draw_layout_separator
 from gui_components.link_widget import LinkWidget
 from gui_components.box_message import BoxMessage
 from settings import *
+from helpers import format_size
 from math import log, floor
 
 
@@ -93,6 +94,7 @@ class PhotonsTracingWindow(QMainWindow):
 
         self.charts = []
         self.cps = []
+     
 
         GUIStyles.customize_theme(self)
         GUIStyles.set_fonts()
@@ -118,6 +120,47 @@ class PhotonsTracingWindow(QMainWindow):
         app_guide_link_widget.setCursor(Qt.CursorShape.PointingHandCursor)
         self.header_layout.addLayout(self.create_logo_and_title())
         self.header_layout.addStretch(1)
+        
+        # Link to export data documentation
+        info_link_widget = LinkWidget(
+            icon_filename="info-icon.png",
+            link="https://flim-labs.github.io/intensity-tracing-py/python-flim-labs/intensity-tracing-file-format.html",
+        )
+        info_link_widget.setCursor(Qt.CursorShape.PointingHandCursor)
+        info_link_widget.show()
+        self.header_layout.addWidget(info_link_widget)
+
+        # Export data switch control
+        self.export_data_control = QHBoxLayout()
+        export_data_label = QLabel("Export data:")
+        self.export_data_switch = SwitchControl(
+            active_color="#FB8C00", width=70, height=30, checked=self.write_data
+        )
+        self.export_data_switch.stateChanged.connect(
+            (lambda state: self.toggle_export_data(state))
+        )
+        self.export_data_control.addWidget(export_data_label)
+        self.export_data_control.addSpacing(8)
+        self.export_data_control.addWidget(self.export_data_switch)
+        self.header_layout.addLayout(self.export_data_control)
+        self.export_data_control.addSpacing(10)
+
+        self.file_size_info_layout = QHBoxLayout()
+        
+        self.show_bin_file_size_helper = self.settings.value(SETTINGS_WRITE_DATA, DEFAULT_WRITE_DATA) == 'true'
+        self.bin_file_size = ''
+        self.bin_file_size_label = QLabel("Exported file size: " + str(self.bin_file_size))
+        self.bin_file_size_label.setStyleSheet("QLabel { color : #FFA726; }")
+
+        self.file_size_info_layout.addWidget(self.bin_file_size_label)
+        self.header_layout.addLayout(self.file_size_info_layout)
+        self.file_size_info_layout.addSpacing(20)
+        
+        self.bin_file_size_label.show() if self.write_data is True else self.bin_file_size_label.hide()
+
+        self.calc_exported_file_size()
+
+
         self.header_layout.addWidget(app_guide_link_widget)
         self.top_utilities_layout.addLayout(self.header_layout)
 
@@ -239,31 +282,7 @@ class PhotonsTracingWindow(QMainWindow):
         self.show_cps_control.addWidget(self.show_cps_switch)
         buttons_row_layout.addLayout(self.show_cps_control)
         self.show_cps_control.addSpacing(8)
-
-        # Link to export data documentation
-        info_link_widget = LinkWidget(
-            icon_filename="info-icon.png",
-            link="https://flim-labs.github.io/intensity-tracing-py/python-flim-labs/intensity-tracing-file-format.html",
-        )
-        info_link_widget.setCursor(Qt.CursorShape.PointingHandCursor)
-        info_link_widget.show()
-        buttons_row_layout.addWidget(info_link_widget)
-
-        # Export data switch control
-        self.export_data_control = QHBoxLayout()
-        export_data_label = QLabel("Export data:")
-        self.export_data_switch = SwitchControl(
-            active_color="#FB8C00", width=70, height=30, checked=self.write_data
-        )
-        self.export_data_switch.stateChanged.connect(
-            (lambda state: self.toggle_export_data(state))
-        )
-        self.export_data_control.addWidget(export_data_label)
-        self.export_data_control.addSpacing(8)
-        self.export_data_control.addWidget(self.export_data_switch)
-        buttons_row_layout.addLayout(self.export_data_control)
-        self.export_data_control.addSpacing(20)
-
+     
         self.start_button = QPushButton("START")
         GUIStyles.set_start_btn_style(self.start_button)
         self.start_button.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -375,6 +394,7 @@ class PhotonsTracingWindow(QMainWindow):
             self.enabled_channels.remove(index)
         self.enabled_channels.sort()
         print("Enabled channels: " + str(self.enabled_channels))
+        self.calc_exported_file_size()
         self.settings.setValue(SETTINGS_ENABLED_CHANNELS, json.dumps(self.enabled_channels))
         self.start_button.setEnabled(
             not all(not checkbox.isChecked() for checkbox in self.channels_checkboxes)
@@ -390,6 +410,7 @@ class PhotonsTracingWindow(QMainWindow):
             self.acquisition_time_input.setEnabled(True)
             self.free_running_acquisition_time = False
             self.settings.setValue(SETTINGS_FREE_RUNNING_MODE, False)
+        self.calc_exported_file_size()    
 
     def toggle_show_cps(self, state):
         if state:
@@ -403,9 +424,13 @@ class PhotonsTracingWindow(QMainWindow):
         if state:
             self.write_data = True
             self.settings.setValue(SETTINGS_WRITE_DATA, True)
+            self.bin_file_size_label.show()
+            self.calc_exported_file_size()
         else:
             self.write_data = False
             self.settings.setValue(SETTINGS_WRITE_DATA, False)
+            self.bin_file_size_label.hide()
+            
 
     def conn_channel_type_value_change(self, index):
         self.selected_conn_channel = self.sender().currentText()
@@ -420,6 +445,7 @@ class PhotonsTracingWindow(QMainWindow):
         self.start_button.setEnabled(value != 0)
         self.acquisition_time_millis = value * 1000  # convert s to ms
         self.settings.setValue(SETTINGS_ACQUISITION_TIME_MILLIS, self.acquisition_time_millis)
+        self.calc_exported_file_size()
 
     def time_span_value_change(self, value):
         self.start_button.setEnabled(value != 0)
@@ -430,6 +456,7 @@ class PhotonsTracingWindow(QMainWindow):
         self.start_button.setEnabled(value != 0)
         self.bin_width_micros = value
         self.settings.setValue(SETTINGS_BIN_WIDTH_MICROS, value)
+        self.calc_exported_file_size()
 
     def update_rate_value_change(self, index):
         self.selected_update_rate = self.sender().currentText()
@@ -592,6 +619,16 @@ class PhotonsTracingWindow(QMainWindow):
         self.logo_overlay.update_position(self)
         self.logo_overlay.update_visibility(self)
         self.update_checkbox_layout(self.channels_checkboxes)
+
+    def calc_exported_file_size(self):
+        if  self.free_running_acquisition_time is True or self.acquisition_time_millis is None:
+            self.bin_file_size = 'XXXMB' 
+        else:
+            file_size_MB = int((self.acquisition_time_millis / 1000) * len(self.enabled_channels) * (self.bin_width_micros / 1000))
+            self.bin_file_size = format_size(file_size_MB * 1024 * 1024) 
+            
+        self.bin_file_size_label.setText("File size: " + str(self.bin_file_size))        
+
 
     def pull_from_queue(self):
         val = flim_labs.pull_from_queue()
