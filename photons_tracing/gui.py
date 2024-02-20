@@ -3,12 +3,16 @@ import sys
 import os
 import threading
 import time
+import json
 
 from PyQt5.QtCore import QTimer,QPoint, Qt, QSize
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_path, ".."))
 sys.path.append(project_root)
+
+from PyQt5.QtCore import QTimer, Qt, QSettings
+
 from PyQt5.QtWidgets import (
     QMainWindow,
     QDesktopWidget,
@@ -43,12 +47,15 @@ from gui_components.logo_utilities import LogoOverlay, TitlebarIcon
 from gui_components.switch_control import SwitchControl
 from gui_components.select_control import SelectControl
 from gui_components.input_number_control import InputNumberControl
+from gui_components.gradient_text import GradientText
 from messages_utilities import MessagesUtilities
 from gui_components.layout_utilities import draw_layout_separator
 from gui_components.link_widget import LinkWidget
 from gui_components.box_message import BoxMessage
-from params_configuration import ParamsConfigHandler
+from settings import *
+from helpers import format_size
 from math import log, floor
+
 
 REALTIME_MS = 10
 REALTIME_ADJUSTMENT = REALTIME_MS * 1000
@@ -70,35 +77,32 @@ def human_format(number):
 
 
 class PhotonsTracingWindow(QMainWindow):
-
-
-    
-    def __init__(self, params_config):
+    def __init__(self, params_config=None):
         super(PhotonsTracingWindow, self).__init__()
 
-
-        
+        # Initialize settings config
+        self.settings = self.init_settings()
 
         ##### GUI PARAMS #####
         self.firmwares = ["intensity_tracing_usb.flim", "intensity_tracing_sma.flim"]
         self.update_rates = ["LOW", "HIGH"]
-        self.selected_update_rate = params_config["selected_update_rate"]
+        self.selected_update_rate = self.settings.value(SETTINGS_UPDATE_RATE, DEFAULT_UPDATE_RATE)
         self.conn_channels = ["USB", "SMA"]
-        self.selected_conn_channel = params_config["selected_conn_channel"]
-        self.selected_firmware = params_config["selected_firmware"]
-        self.bin_width_micros = params_config["bin_width_micros"]
-        self.time_span = params_config["time_span"]
-        self.acquisition_time_millis = params_config["acquisition_time_millis"]
-        self.draw_frequency = params_config["draw_frequency"]
-        self.free_running_acquisition_time = params_config[
-            "free_running_acquisition_time"
-        ]
-        self.enabled_channels = params_config["enabled_channels"]
-        self.show_cps = params_config.get("show_cps", False)
-        self.write_data = params_config["write_data"]
+        self.selected_conn_channel = self.settings.value(SETTINGS_CONN_CHANNEL, DEFAULT_CONN_CHANNEL)
+        self.selected_firmware = self.settings.value(SETTINGS_FIRMWARE, DEFAULT_FIRMWARE)
+        self.bin_width_micros = int(self.settings.value(SETTINGS_BIN_WIDTH_MICROS, DEFAULT_BIN_WIDTH_MICROS))
+        self.time_span = int(self.settings.value(SETTINGS_TIME_SPAN, DEFAULT_TIME_SPAN))
+        default_acquisition_time_millis = self.settings.value(SETTINGS_ACQUISITION_TIME_MILLIS)
+        self.acquisition_time_millis = int(default_acquisition_time_millis) if default_acquisition_time_millis is not None else DEFAULT_ACQUISITION_TIME_MILLIS
+        self.draw_frequency = int(self.settings.value(SETTINGS_DRAW_FREQUENCY, DEFAULT_DRAW_FREQUENCY))
+        self.free_running_acquisition_time = self.settings.value(SETTINGS_FREE_RUNNING_MODE, DEFAULT_FREE_RUNNING_MODE) == 'true'
+        self.enabled_channels = json.loads(self.settings.value(SETTINGS_ENABLED_CHANNELS, DEFAULT_ENABLED_CHANNELS))
+        self.show_cps = self.settings.value(SETTINGS_SHOW_CPS, DEFAULT_SHOW_CPS) == 'true' 
+        self.write_data = self.settings.value(SETTINGS_WRITE_DATA, DEFAULT_WRITE_DATA) == 'true'
 
         self.charts = []
         self.cps = []
+     
 
         GUIStyles.customize_theme(self)
         GUIStyles.set_fonts()
@@ -115,27 +119,56 @@ class PhotonsTracingWindow(QMainWindow):
 
         self.connectors = []
 
-        # Header row: save parameters configuration / Link to User Guide
+        # Header row: Link to User Guide
         self.header_layout = QHBoxLayout()
-
-        flim_header_icon = QLabel(self, pixmap=QPixmap(
-            os.path.join(project_root, "assets", "flimlabs-logo.png")
-        ).scaledToWidth(60))
-        header_title = QLabel("INTENSITY TRACING")
-        header_title.setStyleSheet(GUIStyles.set_main_title_style())
-        save_icon = QIcon(os.path.join(project_root, "assets", "save-icon.png"))
-        self.save_conf_button = QPushButton("SAVE CONFIGURATION")
-        self.save_conf_button.setIcon(save_icon)
-        GUIStyles.set_config_btn_style(self.save_conf_button)
-        self.save_conf_button.clicked.connect(self.save_conf_button_pressed)
 
         app_guide_link_widget = LinkWidget(
             icon_filename="info-icon.png", text="User Guide"
         )
-        self.header_layout.addWidget(flim_header_icon)
-        self.header_layout.addWidget(header_title)
+        app_guide_link_widget.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.header_layout.addLayout(self.create_logo_and_title())
         self.header_layout.addStretch(1)
-        self.header_layout.addWidget(self.save_conf_button)
+        
+        # Link to export data documentation
+        info_link_widget = LinkWidget(
+            icon_filename="info-icon.png",
+            link="https://flim-labs.github.io/intensity-tracing-py/python-flim-labs/intensity-tracing-file-format.html",
+        )
+        info_link_widget.setCursor(Qt.CursorShape.PointingHandCursor)
+        info_link_widget.show()
+        self.header_layout.addWidget(info_link_widget)
+
+        # Export data switch control
+        self.export_data_control = QHBoxLayout()
+        export_data_label = QLabel("Export data:")
+        self.export_data_switch = SwitchControl(
+            active_color="#FB8C00", width=70, height=30, checked=self.write_data
+        )
+        self.export_data_switch.stateChanged.connect(
+            (lambda state: self.toggle_export_data(state))
+        )
+        self.export_data_control.addWidget(export_data_label)
+        self.export_data_control.addSpacing(8)
+        self.export_data_control.addWidget(self.export_data_switch)
+        self.header_layout.addLayout(self.export_data_control)
+        self.export_data_control.addSpacing(10)
+
+        self.file_size_info_layout = QHBoxLayout()
+        
+        self.show_bin_file_size_helper = self.settings.value(SETTINGS_WRITE_DATA, DEFAULT_WRITE_DATA) == 'true'
+        self.bin_file_size = ''
+        self.bin_file_size_label = QLabel("Exported file size: " + str(self.bin_file_size))
+        self.bin_file_size_label.setStyleSheet("QLabel { color : #FFA726; }")
+
+        self.file_size_info_layout.addWidget(self.bin_file_size_label)
+        self.header_layout.addLayout(self.file_size_info_layout)
+        self.file_size_info_layout.addSpacing(20)
+        
+        self.bin_file_size_label.show() if self.write_data is True else self.bin_file_size_label.hide()
+
+        self.calc_exported_file_size()
+
+
         self.header_layout.addWidget(app_guide_link_widget)
         self.top_utilities_layout.addLayout(self.header_layout)
 
@@ -258,29 +291,6 @@ class PhotonsTracingWindow(QMainWindow):
         buttons_row_layout.addLayout(self.show_cps_control)
         self.show_cps_control.addSpacing(8)
 
-        # Link to export data documentation
-        info_link_widget = LinkWidget(
-            icon_filename="info-icon.png",
-            link="https://flim-labs.github.io/intensity-tracing-py/python-flim-labs/intensity-tracing-file-format.html",
-        )
-        info_link_widget.show()
-        buttons_row_layout.addWidget(info_link_widget)
-
-        # Export data switch control
-        self.export_data_control = QHBoxLayout()
-        export_data_label = QLabel("Export data:")
-        self.export_data_switch = SwitchControl(
-            active_color="#FB8C00", width=70, height=30, checked=self.write_data
-        )
-        self.export_data_switch.stateChanged.connect(
-            (lambda state: self.toggle_export_data(state))
-        )
-        self.export_data_control.addWidget(export_data_label)
-        self.export_data_control.addSpacing(8)
-        self.export_data_control.addWidget(self.export_data_switch)
-        buttons_row_layout.addLayout(self.export_data_control)
-        self.export_data_control.addSpacing(20)
-
          #Download button
         self.download_button = QPushButton("DOWNLOAD ")
         self.download_button.setEnabled(self.write_data)
@@ -305,9 +315,10 @@ class PhotonsTracingWindow(QMainWindow):
         self.python_action.triggered.connect(self.download_python)
         
         buttons_row_layout.addWidget(self.download_button)
-
+     
         self.start_button = QPushButton("START")
         GUIStyles.set_start_btn_style(self.start_button)
+        self.start_button.setCursor(Qt.CursorShape.PointingHandCursor)
         self.start_button.clicked.connect(self.start_button_pressed)
         self.start_button.setEnabled(
             not all(not checkbox.isChecked() for checkbox in self.channels_checkboxes)
@@ -315,12 +326,14 @@ class PhotonsTracingWindow(QMainWindow):
         buttons_row_layout.addWidget(self.start_button)
 
         self.stop_button = QPushButton("STOP")
+        self.stop_button.setCursor(Qt.CursorShape.PointingHandCursor)
         GUIStyles.set_stop_btn_style(self.stop_button)
         self.stop_button.setEnabled(False)
         self.stop_button.clicked.connect(self.stop_button_pressed)
         buttons_row_layout.addWidget(self.stop_button)
 
         self.reset_button = QPushButton("RESET")
+        self.reset_button.setCursor(Qt.CursorShape.PointingHandCursor)
         GUIStyles.set_reset_btn_style(self.reset_button)
         self.reset_button.setEnabled(True)
         self.reset_button.clicked.connect(self.reset_button_pressed)
@@ -362,6 +375,30 @@ class PhotonsTracingWindow(QMainWindow):
 
         self.realtime_queue = queue.Queue()
 
+
+    def create_logo_and_title(self):   
+        row = QHBoxLayout()
+        pixmap = QPixmap(
+            os.path.join(project_root, "assets", "flimlabs-logo.png")
+        ).scaledToWidth(60)
+        ctl = QLabel(pixmap=pixmap)
+        row.addWidget(ctl)
+
+        row.addSpacing(10)
+
+        ctl = GradientText(self,
+                           text="INTENSITY TRACING",
+                           colors=[(0.5, "#23F3AB"), (1.0, "#8d4ef2")],
+                           stylesheet=GUIStyles.set_main_title_style())
+        ctl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        row.addWidget(ctl)
+
+        ctl = QWidget()
+        ctl.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        row.addWidget(ctl)
+        return row   
+
+
     def draw_checkboxes(self):
         channels_checkboxes = []
 
@@ -390,6 +427,8 @@ class PhotonsTracingWindow(QMainWindow):
             self.enabled_channels.remove(index)
         self.enabled_channels.sort()
         print("Enabled channels: " + str(self.enabled_channels))
+        self.calc_exported_file_size()
+        self.settings.setValue(SETTINGS_ENABLED_CHANNELS, json.dumps(self.enabled_channels))
         self.start_button.setEnabled(
             not all(not checkbox.isChecked() for checkbox in self.channels_checkboxes)
         )
@@ -399,62 +438,66 @@ class PhotonsTracingWindow(QMainWindow):
             self.acquisition_time_millis = None
             self.acquisition_time_input.setEnabled(False)
             self.free_running_acquisition_time = True
+            self.settings.setValue(SETTINGS_FREE_RUNNING_MODE, True)
         else:
             self.acquisition_time_input.setEnabled(True)
             self.free_running_acquisition_time = False
+            self.settings.setValue(SETTINGS_FREE_RUNNING_MODE, False)
+        self.calc_exported_file_size()    
 
     def toggle_show_cps(self, state):
         if state:
             self.show_cps = True
+            self.settings.setValue(SETTINGS_SHOW_CPS, True)
         else:
             self.show_cps = False
+            self.settings.setValue(SETTINGS_SHOW_CPS, False)
 
     def toggle_export_data(self, state):
         if state:
             self.write_data = True
             self.download_button.setEnabled(self.write_data)
+            self.settings.setValue(SETTINGS_WRITE_DATA, True)
+            self.bin_file_size_label.show()
+            self.calc_exported_file_size()
         else:
             self.write_data = False
             self.download_button.setEnabled(self.write_data)
+            self.settings.setValue(SETTINGS_WRITE_DATA, False)
+            self.bin_file_size_label.hide()
+            
 
     def conn_channel_type_value_change(self, index):
         self.selected_conn_channel = self.sender().currentText()
         if self.selected_conn_channel == "USB":
             self.selected_firmware = self.firmwares[0]
         else:
-            self.selected_firmware = self.firmwares[1]
+            self.selected_firmware = self.firmwares[1]   
+        self.settings.setValue(SETTINGS_FIRMWARE, self.selected_firmware) 
+        self.settings.setValue(SETTINGS_CONN_CHANNEL, self.selected_conn_channel)     
 
     def acquisition_time_value_change(self, value):
         self.start_button.setEnabled(value != 0)
         self.acquisition_time_millis = value * 1000  # convert s to ms
+        self.settings.setValue(SETTINGS_ACQUISITION_TIME_MILLIS, self.acquisition_time_millis)
+        self.calc_exported_file_size()
 
     def time_span_value_change(self, value):
         self.start_button.setEnabled(value != 0)
         self.time_span = value
+        self.settings.setValue(SETTINGS_TIME_SPAN, value)
 
     def bin_width_micros_value_change(self, value):
         self.start_button.setEnabled(value != 0)
         self.bin_width_micros = value
+        self.settings.setValue(SETTINGS_BIN_WIDTH_MICROS, value)
+        self.calc_exported_file_size()
 
     def update_rate_value_change(self, index):
         self.selected_update_rate = self.sender().currentText()
         self.draw_frequency = 10 if self.selected_update_rate == 'LOW' else 40
-
-    def save_conf_button_pressed(self):
-        params_config = ParamsConfigHandler(
-            self.selected_update_rate,
-            self.selected_conn_channel,
-            self.selected_firmware,
-            self.bin_width_micros,
-            self.time_span,
-            self.acquisition_time_millis,
-            self.draw_frequency,
-            self.free_running_acquisition_time,
-            self.write_data,
-            self.enabled_channels,
-            self.show_cps
-        )
-        params_config.save()
+        self.settings.setValue(SETTINGS_UPDATE_RATE, self.selected_update_rate)
+        self.settings.setValue(SETTINGS_DRAW_FREQUENCY, self.draw_frequency)
 
     def start_button_pressed(self):
         warn_title, warn_msg = MessagesUtilities.invalid_inputs_handler(
@@ -613,6 +656,16 @@ class PhotonsTracingWindow(QMainWindow):
         self.logo_overlay.update_visibility(self)
         self.update_checkbox_layout(self.channels_checkboxes)
 
+    def calc_exported_file_size(self):
+        if  self.free_running_acquisition_time is True or self.acquisition_time_millis is None:
+            self.bin_file_size = 'XXXMB' 
+        else:
+            file_size_MB = int((self.acquisition_time_millis / 1000) * len(self.enabled_channels) * (self.bin_width_micros / 1000))
+            self.bin_file_size = format_size(file_size_MB * 1024 * 1024) 
+            
+        self.bin_file_size_label.setText("File size: " + str(self.bin_file_size))        
+
+
     def pull_from_queue(self):
         val = flim_labs.pull_from_queue()
         if len(val) > 0:
@@ -710,12 +763,16 @@ class PhotonsTracingWindow(QMainWindow):
        ExportPythonUtilities.download_python(self)
 
 
- 
+    @staticmethod 
+    def init_settings():
+        settings = QSettings('settings.ini', QSettings.Format.IniFormat)
+        return settings
+
+
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    params_config = ParamsConfigHandler().load()
 
-    window = PhotonsTracingWindow(params_config)
+    window = PhotonsTracingWindow()
     window.show()
     exit_code = app.exec()
     window.stop_button_pressed()
