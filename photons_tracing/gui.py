@@ -168,12 +168,17 @@ class PhotonsTracingWindow(QMainWindow):
         self.bin_file_size_label.show() if self.write_data is True else self.bin_file_size_label.hide()
 
         self.calc_exported_file_size()
+        
+        
 
 
         #Download button
         self.download_button = QPushButton("DOWNLOAD ")
+
+    
+
         self.download_button.setEnabled(self.write_data and self.acquisition_stopped)
-        self.download_button.setIcon(QIcon('../assets/arrow-down-icon-white.png'))
+        self.set_download_button_icon()   
         self.download_button.setStyleSheet(GUIStyles.button_style("#8d4ef2", "#8d4ef2", "#a179ff", "#6b3da5", "100px"))
 
         self.download_button.setLayoutDirection(Qt.RightToLeft)  # This will flip the text and icon
@@ -461,12 +466,14 @@ class PhotonsTracingWindow(QMainWindow):
         if state:
             self.write_data = True
             self.download_button.setEnabled(self.write_data and self.acquisition_stopped)
+            self.set_download_button_icon()
             self.settings.setValue(SETTINGS_WRITE_DATA, True)
             self.bin_file_size_label.show()
             self.calc_exported_file_size()
         else:
             self.write_data = False
             self.download_button.setEnabled(self.write_data and self.acquisition_stopped)
+            self.set_download_button_icon()
             self.settings.setValue(SETTINGS_WRITE_DATA, False)
             self.bin_file_size_label.hide()
             
@@ -506,6 +513,7 @@ class PhotonsTracingWindow(QMainWindow):
     def start_button_pressed(self):
         self.acquisition_stopped=False
         self.download_button.setEnabled(self.write_data and self.acquisition_stopped)
+        self.set_download_button_icon()
         warn_title, warn_msg = MessagesUtilities.invalid_inputs_handler(
             self.bin_width_micros,
             self.time_span,
@@ -552,6 +560,7 @@ class PhotonsTracingWindow(QMainWindow):
     def stop_button_pressed(self):
         self.acquisition_stopped = True
         self.download_button.setEnabled(self.write_data and self.acquisition_stopped)
+        self.set_download_button_icon()
         self.start_button.setEnabled(
             not all(not checkbox.isChecked() for checkbox in self.channels_checkboxes)
         )
@@ -774,7 +783,14 @@ class PhotonsTracingWindow(QMainWindow):
        self.download_button.setEnabled(False)
        self.download_button.setEnabled(True)
 
-
+    def set_download_button_icon(self):
+            if self.download_button.isEnabled():
+                print('isenabled')
+                self.download_button.setIcon(QIcon('../assets/arrow-down-icon-white.png'))
+            else:
+                print('notenabled')
+                self.download_button.setIcon(QIcon('../assets/arrow-down-icon-grey.png'))
+         
 
     @staticmethod 
     def init_settings():
