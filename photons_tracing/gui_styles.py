@@ -254,10 +254,12 @@ class GUIStyles:
         """    
     @staticmethod        
     def set_context_menu_style(base,selected,pressed):
-        return f"""                                         
+        return f"""
+
         QWidget {{
             background-color: #181818;  
         }}
+        
         QMenu {{
 
             margin: 0;   
@@ -265,6 +267,7 @@ class GUIStyles:
             border-radius: 20px;
             background: #181818;       
         }}
+
         QMenu::item {{
             background-color: {base}; 
             color: white; 
@@ -277,7 +280,6 @@ class GUIStyles:
             font-weight: bold;
             padding:10px 13px 10px 10px;
             min-width:120px
-
         }}
 
         QMenu::item:selected {{

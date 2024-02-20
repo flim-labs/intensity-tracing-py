@@ -97,7 +97,7 @@ class PhotonsTracingWindow(QMainWindow):
         self.enabled_channels = json.loads(self.settings.value(SETTINGS_ENABLED_CHANNELS, DEFAULT_ENABLED_CHANNELS))
         self.show_cps = self.settings.value(SETTINGS_SHOW_CPS, DEFAULT_SHOW_CPS) == 'true' 
         self.write_data = self.settings.value(SETTINGS_WRITE_DATA, DEFAULT_WRITE_DATA) == 'true'
-
+        self.acquisition_stopped = False
         self.charts = []
         self.cps = []
      
@@ -172,7 +172,7 @@ class PhotonsTracingWindow(QMainWindow):
 
         #Download button
         self.download_button = QPushButton("DOWNLOAD ")
-        self.download_button.setEnabled(self.write_data)
+        self.download_button.setEnabled(self.write_data and self.acquisition_stopped)
         self.download_button.setIcon(QIcon('../assets/arrow-down-icon-white.png'))
         self.download_button.setStyleSheet(GUIStyles.button_style("#8d4ef2", "#8d4ef2", "#a179ff", "#6b3da5", "100px"))
 
@@ -460,13 +460,13 @@ class PhotonsTracingWindow(QMainWindow):
     def toggle_export_data(self, state):
         if state:
             self.write_data = True
-            self.download_button.setEnabled(self.write_data)
+            self.download_button.setEnabled(self.write_data and self.acquisition_stopped)
             self.settings.setValue(SETTINGS_WRITE_DATA, True)
             self.bin_file_size_label.show()
             self.calc_exported_file_size()
         else:
             self.write_data = False
-            self.download_button.setEnabled(self.write_data)
+            self.download_button.setEnabled(self.write_data and self.acquisition_stopped)
             self.settings.setValue(SETTINGS_WRITE_DATA, False)
             self.bin_file_size_label.hide()
             
@@ -504,6 +504,8 @@ class PhotonsTracingWindow(QMainWindow):
         self.settings.setValue(SETTINGS_DRAW_FREQUENCY, self.draw_frequency)
 
     def start_button_pressed(self):
+        self.acquisition_stopped=False
+        self.download_button.setEnabled(self.write_data and self.acquisition_stopped)
         warn_title, warn_msg = MessagesUtilities.invalid_inputs_handler(
             self.bin_width_micros,
             self.time_span,
@@ -548,6 +550,8 @@ class PhotonsTracingWindow(QMainWindow):
         self.start_photons_tracing()
 
     def stop_button_pressed(self):
+        self.acquisition_stopped = True
+        self.download_button.setEnabled(self.write_data and self.acquisition_stopped)
         self.start_button.setEnabled(
             not all(not checkbox.isChecked() for checkbox in self.channels_checkboxes)
         )
