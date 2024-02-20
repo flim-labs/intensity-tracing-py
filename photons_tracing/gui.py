@@ -5,13 +5,11 @@ import threading
 import time
 import json
 
-from PyQt5.QtCore import QTimer,QPoint, Qt, QSize
+from PyQt5.QtCore import QTimer,QPoint, Qt, QSize, QSettings
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_path, ".."))
 sys.path.append(project_root)
-
-from PyQt5.QtCore import QTimer, Qt, QSettings
 
 from PyQt5.QtWidgets import (
     QMainWindow,

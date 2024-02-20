@@ -35,7 +35,7 @@ class ExportMatlabUtilities:
                     if not skip_function:
                         if 'metadata =' in line:
                             line = line+ f"\nfile_path = '{binFileName}'\n"
-                
+                        new_content.append(line)
                 
                 with open(f"{fileName}.m", 'w') as file:
                     file.writelines(new_content)
