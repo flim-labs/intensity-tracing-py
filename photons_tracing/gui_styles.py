@@ -65,6 +65,11 @@ class GUIStyles:
                 border: 2px solid {color_hover};
             }}
 
+            QPushButton:focus {{
+                background-color: {color_pressed};
+                border: 2px solid {color_pressed};
+            }}
+
             QPushButton:pressed {{
                 background-color: {color_pressed};
                 border: 2px solid {color_pressed};
@@ -248,29 +253,38 @@ class GUIStyles:
             }
         """    
     @staticmethod        
-    def set_context_menu_style():
-        return """                                         
-        QWidget {
+    def set_context_menu_style(base,selected,pressed):
+        return f"""                                         
+        QWidget {{
             background-color: #181818;  
-        }
-        QMenu {
+        }}
+        QMenu {{
 
             margin: 0;   
             padding: 5px;
             border-radius: 20px;
             background: #181818;       
-        }
-        QMenu::item {
-            background-color: #FF0000; 
+        }}
+        QMenu::item {{
+            background-color: {base}; 
             color: white; 
             height: 20px;
             width: 60px;
             margin: 5px 0px 5px 0px;
-        
             border-radius: 4px;   
-                                                padding:10px 50px 10px 30px;
-        }
-        QMenu::item:selected { 
-            background-color: #CC0000;  
-        }
+            font-family: "Montserrat";
+            font-size: 14px;
+            font-weight: bold;
+            padding:10px 13px 10px 10px;
+            min-width:120px
+
+        }}
+
+        QMenu::item:selected {{
+            background-color: {selected};  
+         }}
+        QMenu::item:pressed {{
+            background-color: {pressed};  
+         }}
+
         """

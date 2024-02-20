@@ -119,13 +119,16 @@ class PhotonsTracingWindow(QMainWindow):
 
         # Header row: Link to User Guide
         self.header_layout = QHBoxLayout()
-
+        
         app_guide_link_widget = LinkWidget(
             icon_filename="info-icon.png", text="User Guide"
         )
         app_guide_link_widget.setCursor(Qt.CursorShape.PointingHandCursor)
         self.header_layout.addLayout(self.create_logo_and_title())
         self.header_layout.addStretch(1)
+
+        
+
         
         # Link to export data documentation
         info_link_widget = LinkWidget(
@@ -165,6 +168,32 @@ class PhotonsTracingWindow(QMainWindow):
         self.bin_file_size_label.show() if self.write_data is True else self.bin_file_size_label.hide()
 
         self.calc_exported_file_size()
+
+
+        #Download button
+        self.download_button = QPushButton("DOWNLOAD ")
+        self.download_button.setEnabled(self.write_data)
+        self.download_button.setIcon(QIcon('../assets/arrow-down-icon-white.png'))
+        self.download_button.setStyleSheet(GUIStyles.button_style("#8d4ef2", "#8d4ef2", "#a179ff", "#6b3da5", "100px"))
+
+        self.download_button.setLayoutDirection(Qt.RightToLeft)  # This will flip the text and icon
+        self.download_button.setIconSize(QSize(16, 16)) 
+        self.download_button.clicked.connect(self.show_download_options)
+
+        # Context menu
+        self.download_menu = QMenu()
+        self.matlab_action = QAction("MATLAB FORMAT", self)
+        self.python_action = QAction("PYTHON FORMAT", self)
+
+        self.download_menu.setStyleSheet(GUIStyles.set_context_menu_style("#8d4ef2", "#a179ff", "#6b3da5"))
+        self.download_menu.addAction(self.matlab_action)
+        self.download_menu.addAction(self.python_action)
+        
+        
+        self.matlab_action.triggered.connect(self.download_matlab)
+        self.python_action.triggered.connect(self.download_python)
+        
+        self.header_layout.addWidget(self.download_button)
 
 
         self.header_layout.addWidget(app_guide_link_widget)
@@ -289,30 +318,7 @@ class PhotonsTracingWindow(QMainWindow):
         buttons_row_layout.addLayout(self.show_cps_control)
         self.show_cps_control.addSpacing(8)
 
-         #Download button
-        self.download_button = QPushButton("DOWNLOAD ")
-        self.download_button.setEnabled(self.write_data)
-        self.download_button.setIcon(QIcon('../assets/arrow-down-icon-white.png'))
-        self.download_button.setStyleSheet(GUIStyles.button_style("#CC0000", "#CC0000", "#FF0000", "#990000", "100px"))
-
-        self.download_button.setLayoutDirection(Qt.RightToLeft)  # This will flip the text and icon
-        self.download_button.setIconSize(QSize(16, 16)) 
-        self.download_button.clicked.connect(self.show_download_options)
-
-        # Context menu
-        self.download_menu = QMenu()
-        self.matlab_action = QAction("MATLAB    ", self)
-        self.python_action = QAction("PYTHON    ", self)
-
-        self.download_menu.setStyleSheet(GUIStyles.set_context_menu_style())
-        self.download_menu.addAction(self.matlab_action)
-        self.download_menu.addAction(self.python_action)
         
-        
-        self.matlab_action.triggered.connect(self.download_matlab)
-        self.python_action.triggered.connect(self.download_python)
-        
-        buttons_row_layout.addWidget(self.download_button)
      
         self.start_button = QPushButton("START")
         GUIStyles.set_start_btn_style(self.start_button)
@@ -756,9 +762,14 @@ class PhotonsTracingWindow(QMainWindow):
 
     def download_matlab(self):
        ExportMatlabUtilities.download_matlab(self)
+       self.download_button.setEnabled(False)
+       self.download_button.setEnabled(True)
 
     def download_python(self):
        ExportPythonUtilities.download_python(self)
+       self.download_button.setEnabled(False)
+       self.download_button.setEnabled(True)
+
 
 
     @staticmethod 
