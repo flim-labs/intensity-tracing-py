@@ -27,7 +27,8 @@ from PyQt5.QtWidgets import (
     QAction,
 )
 
-from export_python_utilities import ExportPdfUtilities
+from export_python_utilities import ExportPythonUtilities
+from export_matlab_utilities import ExportMatlabUtilities
 import pyqtgraph as pg
 from PyQt5.QtGui import QIcon, QPixmap, QFont
 from flim_labs import flim_labs
@@ -280,8 +281,9 @@ class PhotonsTracingWindow(QMainWindow):
         buttons_row_layout.addLayout(self.export_data_control)
         self.export_data_control.addSpacing(20)
 
-         # Crea il pulsante "Download" con lo stile rosso
+         #Download button
         self.download_button = QPushButton("DOWNLOAD ")
+        self.download_button.setEnabled(self.write_data)
         self.download_button.setIcon(QIcon('../assets/arrow-down-icon-white.png'))
         self.download_button.setStyleSheet(GUIStyles.button_style("#CC0000", "#CC0000", "#FF0000", "#990000", "100px"))
 
@@ -289,7 +291,7 @@ class PhotonsTracingWindow(QMainWindow):
         self.download_button.setIconSize(QSize(16, 16)) 
         self.download_button.clicked.connect(self.show_download_options)
 
-        # Crea il menu contestuale per il pulsante "Download"
+        # Context menu
         self.download_menu = QMenu()
         self.matlab_action = QAction("MATLAB    ", self)
         self.python_action = QAction("PYTHON    ", self)
@@ -298,11 +300,10 @@ class PhotonsTracingWindow(QMainWindow):
         self.download_menu.addAction(self.matlab_action)
         self.download_menu.addAction(self.python_action)
         
-        # Connetti le azioni a specifiche funzioni (se necessario)
+        
         self.matlab_action.triggered.connect(self.download_matlab)
         self.python_action.triggered.connect(self.download_python)
-
-        # Aggiungi il pulsante "Download" al layout prima del pulsante "START"
+        
         buttons_row_layout.addWidget(self.download_button)
 
         self.start_button = QPushButton("START")
@@ -411,8 +412,10 @@ class PhotonsTracingWindow(QMainWindow):
     def toggle_export_data(self, state):
         if state:
             self.write_data = True
+            self.download_button.setEnabled(self.write_data)
         else:
             self.write_data = False
+            self.download_button.setEnabled(self.write_data)
 
     def conn_channel_type_value_change(self, index):
         self.selected_conn_channel = self.sender().currentText()
@@ -701,11 +704,10 @@ class PhotonsTracingWindow(QMainWindow):
       self.download_menu.exec_(self.download_button.mapToGlobal(QPoint(0, self.download_button.height())))
 
     def download_matlab(self):
-
-        QMessageBox.information(self, "Download MATLAB", "La funzione di download per MATLAB è stata attivata!")
+       ExportMatlabUtilities.download_matlab(self)
 
     def download_python(self):
-       ExportPdfUtilities.download_python(self)
+       ExportPythonUtilities.download_python(self)
 
 
  
