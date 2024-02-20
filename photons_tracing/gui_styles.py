@@ -58,6 +58,7 @@ class GUIStyles:
                 font-weight: bold;
             }}
 
+        
             QPushButton:hover {{
                 background-color: {color_hover};
                 border: 2px solid {color_hover};
@@ -234,7 +235,7 @@ class GUIStyles:
             }   
                  
         """
-
+     
     @staticmethod        
     def set_cps_label_style():
         return """
@@ -245,3 +246,30 @@ class GUIStyles:
                 font-size: 26px;
             }
         """    
+    @staticmethod        
+    def set_context_menu_style():
+        return """                                         
+        QWidget {
+            background-color: #181818;  
+        }
+        QMenu {
+
+            margin: 0;   
+            padding: 5px;
+            border-radius: 20px;
+            background: #181818;       
+        }
+        QMenu::item {
+            background-color: #FF0000; 
+            color: white; 
+            height: 20px;
+            width: 60px;
+            margin: 5px 0px 5px 0px;
+        
+            border-radius: 4px;   
+                                                padding:10px 50px 10px 30px;
+        }
+        QMenu::item:selected { 
+            background-color: #CC0000;  
+        }
+        """

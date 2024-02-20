@@ -4,7 +4,7 @@ import os
 import threading
 import time
 
-from PyQt5.QtCore import QTimer
+from PyQt5.QtCore import QTimer,QPoint, Qt, QSize
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_path, ".."))
@@ -23,7 +23,11 @@ from PyQt5.QtWidgets import (
     QSizePolicy,
     QScrollArea,
     QMessageBox,
+    QMenu,
+    QAction,
 )
+
+from export_python_utilities import ExportPdfUtilities
 import pyqtgraph as pg
 from PyQt5.QtGui import QIcon, QPixmap, QFont
 from flim_labs import flim_labs
@@ -62,9 +66,17 @@ def human_format(number):
     return '%.2f%s' % (number / k ** magnitude, units[magnitude])
 
 
+
+
 class PhotonsTracingWindow(QMainWindow):
+
+
+    
     def __init__(self, params_config):
         super(PhotonsTracingWindow, self).__init__()
+
+
+        
 
         ##### GUI PARAMS #####
         self.firmwares = ["intensity_tracing_usb.flim", "intensity_tracing_sma.flim"]
@@ -267,6 +279,31 @@ class PhotonsTracingWindow(QMainWindow):
         self.export_data_control.addWidget(self.export_data_switch)
         buttons_row_layout.addLayout(self.export_data_control)
         self.export_data_control.addSpacing(20)
+
+         # Crea il pulsante "Download" con lo stile rosso
+        self.download_button = QPushButton("DOWNLOAD ")
+        self.download_button.setIcon(QIcon('../assets/arrow-down-icon-white.png'))
+        self.download_button.setStyleSheet(GUIStyles.button_style("#CC0000", "#CC0000", "#FF0000", "#990000", "100px"))
+
+        self.download_button.setLayoutDirection(Qt.RightToLeft)  # This will flip the text and icon
+        self.download_button.setIconSize(QSize(16, 16)) 
+        self.download_button.clicked.connect(self.show_download_options)
+
+        # Crea il menu contestuale per il pulsante "Download"
+        self.download_menu = QMenu()
+        self.matlab_action = QAction("MATLAB    ", self)
+        self.python_action = QAction("PYTHON    ", self)
+
+        self.download_menu.setStyleSheet(GUIStyles.set_context_menu_style())
+        self.download_menu.addAction(self.matlab_action)
+        self.download_menu.addAction(self.python_action)
+        
+        # Connetti le azioni a specifiche funzioni (se necessario)
+        self.matlab_action.triggered.connect(self.download_matlab)
+        self.python_action.triggered.connect(self.download_python)
+
+        # Aggiungi il pulsante "Download" al layout prima del pulsante "START"
+        buttons_row_layout.addWidget(self.download_button)
 
         self.start_button = QPushButton("START")
         GUIStyles.set_start_btn_style(self.start_button)
@@ -660,7 +697,18 @@ class PhotonsTracingWindow(QMainWindow):
                 GUIStyles.set_msg_box_style(),
             )
 
+    def show_download_options(self):    
+      self.download_menu.exec_(self.download_button.mapToGlobal(QPoint(0, self.download_button.height())))
 
+    def download_matlab(self):
+
+        QMessageBox.information(self, "Download MATLAB", "La funzione di download per MATLAB è stata attivata!")
+
+    def download_python(self):
+       ExportPdfUtilities.download_python(self)
+
+
+ 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     params_config = ParamsConfigHandler().load()
