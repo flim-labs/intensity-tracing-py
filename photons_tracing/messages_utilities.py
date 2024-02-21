@@ -19,7 +19,7 @@ class MessagesUtilities:
         if "SavedConfiguration" in info_msg:
             return ("Configuration successfully saved", custom_content)
         elif "SavedScriptFile" in info_msg:
-            return ("Files successfully saved", f"Script and data files have been saved successfully")    
+            return ("Files successfully saved", "Script and data files have been saved successfully")    
         else:
             return (None, None)
 

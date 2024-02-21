@@ -44,32 +44,14 @@ from gui_components.select_control import SelectControl
 from gui_components.input_number_control import InputNumberControl
 from gui_components.gradient_text import GradientText
 from messages_utilities import MessagesUtilities
-from gui_components.layout_utilities import draw_layout_separator
+from gui_components.layout_utilities import draw_layout_separator, init_ui, create_logo_overlay
 from gui_components.link_widget import LinkWidget
 from gui_components.box_message import BoxMessage
 from settings import *
-from helpers import format_size
-from math import log, floor
+from format_utilities import FormatUtils
 from file_utilities import FileUtils, MatlabScriptUtils, PythonScriptUtils
-
-
-REALTIME_MS = 10
-REALTIME_ADJUSTMENT = REALTIME_MS * 1000
-REALTIME_HZ = 1000 / REALTIME_MS
-REALTIME_SECS = REALTIME_MS / 1000
-
-NS_IN_S = 1_000_000_000
-
-
-def human_format(number):
-    if number == 0:
-        return '0'
-    units = ['', 'K', 'M', 'G', 'T', 'P']
-    k = 1000.0
-    magnitude = int(floor(log(number, k)))
-    return '%.2f%s' % (number / k ** magnitude, units[magnitude])
-
-
+from gui_components.controls_bar import ControlsBar
+from gui_components.top_bar import TopBar
 
 
 class PhotonsTracingWindow(QMainWindow):
@@ -81,299 +63,46 @@ class PhotonsTracingWindow(QMainWindow):
 
         ##### GUI PARAMS #####
         self.firmwares = ["intensity_tracing_usb.flim", "intensity_tracing_sma.flim"]
+
         self.update_rates = ["LOW", "HIGH"]
         self.selected_update_rate = self.settings.value(SETTINGS_UPDATE_RATE, DEFAULT_UPDATE_RATE)
+
         self.conn_channels = ["USB", "SMA"]
         self.selected_conn_channel = self.settings.value(SETTINGS_CONN_CHANNEL, DEFAULT_CONN_CHANNEL)
         self.selected_firmware = self.settings.value(SETTINGS_FIRMWARE, DEFAULT_FIRMWARE)
+
         self.bin_width_micros = int(self.settings.value(SETTINGS_BIN_WIDTH_MICROS, DEFAULT_BIN_WIDTH_MICROS))
         self.time_span = int(self.settings.value(SETTINGS_TIME_SPAN, DEFAULT_TIME_SPAN))
+        
         default_acquisition_time_millis = self.settings.value(SETTINGS_ACQUISITION_TIME_MILLIS)
         self.acquisition_time_millis = int(default_acquisition_time_millis) if default_acquisition_time_millis is not None else DEFAULT_ACQUISITION_TIME_MILLIS
+
         self.draw_frequency = int(self.settings.value(SETTINGS_DRAW_FREQUENCY, DEFAULT_DRAW_FREQUENCY))
-        self.free_running_acquisition_time = self.settings.value(SETTINGS_FREE_RUNNING_MODE, DEFAULT_FREE_RUNNING_MODE) == 'true'
-        self.enabled_channels = json.loads(self.settings.value(SETTINGS_ENABLED_CHANNELS, DEFAULT_ENABLED_CHANNELS))
-        self.show_cps = self.settings.value(SETTINGS_SHOW_CPS, DEFAULT_SHOW_CPS) == 'true' 
-        self.write_data = self.settings.value(SETTINGS_WRITE_DATA, DEFAULT_WRITE_DATA) == 'true'
+
+        self.free_running_acquisition_time = self.settings.value(SETTINGS_FREE_RUNNING_MODE, DEFAULT_FREE_RUNNING_MODE) in ['true', True]
+
+        self.enabled_channels = json.loads(str(self.settings.value(SETTINGS_ENABLED_CHANNELS, DEFAULT_ENABLED_CHANNELS)))
+
+        self.show_cps = self.settings.value(SETTINGS_SHOW_CPS, DEFAULT_SHOW_CPS) in ['true', True]
+
+        self.write_data = self.settings.value(SETTINGS_WRITE_DATA, DEFAULT_WRITE_DATA) in ['true', True]
         self.acquisition_stopped = False
+
+
         self.charts = []
         self.cps = []
-     
-
-        GUIStyles.customize_theme(self)
-        GUIStyles.set_fonts()
-        self.setWindowTitle("Intensity tracing v1.3")
-
-        self.resize(1460, 800)
-
-        scroll_area = QScrollArea()
-        scroll_area.setWidgetResizable(True)
-
-        self.layout = QVBoxLayout()
-        self.top_utilities_layout = QVBoxLayout()
-        self.layout.addLayout(self.top_utilities_layout)
-
         self.connectors = []
+        self.control_inputs = {}
 
-        # Header row: Link to User Guide
-        self.header_layout = QHBoxLayout()
-        
-        app_guide_link_widget = LinkWidget(
-            icon_filename="info-icon.png", text="User Guide"
-        )
-        app_guide_link_widget.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.header_layout.addLayout(self.create_logo_and_title())
-        self.header_layout.addStretch(1)
-
-        
-
-        
-        # Link to export data documentation
-        info_link_widget = LinkWidget(
-            icon_filename="info-icon.png",
-            link="https://flim-labs.github.io/intensity-tracing-py/python-flim-labs/intensity-tracing-file-format.html",
-        )
-        info_link_widget.setCursor(Qt.CursorShape.PointingHandCursor)
-        info_link_widget.show()
-        self.header_layout.addWidget(info_link_widget)
-
-        # Export data switch control
-        self.export_data_control = QHBoxLayout()
-        export_data_label = QLabel("Export data:")
-        self.export_data_switch = SwitchControl(
-            active_color="#FB8C00", width=70, height=30, checked=self.write_data
-        )
-        self.export_data_switch.stateChanged.connect(
-            (lambda state: self.toggle_export_data(state))
-        )
-        self.export_data_control.addWidget(export_data_label)
-        self.export_data_control.addSpacing(8)
-        self.export_data_control.addWidget(self.export_data_switch)
-        self.header_layout.addLayout(self.export_data_control)
-        self.export_data_control.addSpacing(10)
-
-        self.file_size_info_layout = QHBoxLayout()
-        
-        self.show_bin_file_size_helper = self.settings.value(SETTINGS_WRITE_DATA, DEFAULT_WRITE_DATA) == 'true'
-        self.bin_file_size = ''
-        self.bin_file_size_label = QLabel("Exported file size: " + str(self.bin_file_size))
-        self.bin_file_size_label.setStyleSheet("QLabel { color : #FFA726; }")
-
-        self.file_size_info_layout.addWidget(self.bin_file_size_label)
-        self.header_layout.addLayout(self.file_size_info_layout)
-        self.file_size_info_layout.addSpacing(20)
-        
-        self.bin_file_size_label.show() if self.write_data is True else self.bin_file_size_label.hide()
-
-        self.calc_exported_file_size()
-        
-        
-
-
-        #Download button
-        self.download_button = QPushButton("DOWNLOAD ")
-
-    
-
-        self.download_button.setEnabled(self.write_data and self.acquisition_stopped)
-        self.set_download_button_icon()   
-        self.download_button.setStyleSheet(GUIStyles.button_style("#8d4ef2", "#8d4ef2", "#a179ff", "#6b3da5", "100px"))
-
-        self.download_button.setLayoutDirection(Qt.RightToLeft)  # This will flip the text and icon
-        self.download_button.setIconSize(QSize(16, 16)) 
-        self.download_button.clicked.connect(self.show_download_options)
-
-        # Context menu
-        self.download_menu = QMenu()
-        self.matlab_action = QAction("MATLAB FORMAT", self)
-        self.python_action = QAction("PYTHON FORMAT", self)
-
-        self.download_menu.setStyleSheet(GUIStyles.set_context_menu_style("#8d4ef2", "#a179ff", "#6b3da5"))
-        self.download_menu.addAction(self.matlab_action)
-        self.download_menu.addAction(self.python_action)
-        
-        
-        self.matlab_action.triggered.connect(self.download_matlab)
-        self.python_action.triggered.connect(self.download_python)
-        
-        self.header_layout.addWidget(self.download_button)
-
-
-        self.header_layout.addWidget(app_guide_link_widget)
-        self.top_utilities_layout.addLayout(self.header_layout)
-
-        self.checkbox_layout = QGridLayout()
-        self.channels_checkboxes = self.draw_checkboxes()
-
-        toolbar_layout = QVBoxLayout()
-        toolbar_layout.addSpacing(10)
-
+        self.channel_checkbox_layout = QGridLayout()
+        self.top_utilities_layout = QVBoxLayout()
+        self.channels_checkboxes = []
         self.blank_space = QWidget()
-        self.blank_space.setMinimumHeight(1)
-        self.blank_space.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-
-        # CONTROLS
-        self.controls_row = QHBoxLayout()
-
-        # Channels type control (USB/SMA)
-        (
-            self.conn_channel_type_control,
-            self.conn_channel_type_input,
-        ) = SelectControl.setup(
-            "Channel type:",
-            self.selected_conn_channel,
-            self.controls_row,
-            self.conn_channels,
-            self.conn_channel_type_value_change,
-        )
-        self.conn_channel_type_input.setStyleSheet(GUIStyles.set_input_select_style())
-
-        # Bin width micros control
-
-        (
-            self.bin_width_micros_control,
-            self.bin_width_micros_input,
-        ) = InputNumberControl.setup(
-            "Bin width (µs):",
-            1,
-            1000000,
-            self.bin_width_micros,
-            self.controls_row,
-            self.bin_width_micros_value_change,
-        )
-        self.bin_width_micros_input.setStyleSheet(GUIStyles.set_input_number_style())
-
-        # Update rate control (LOW/HIGH)
-        self.update_rate_control, self.update_rate_input = SelectControl.setup(
-            "Update rate:",
-            self.selected_update_rate,
-            self.controls_row,
-            self.update_rates,
-            self.update_rate_value_change,
-        )
-        self.update_rate_input.setStyleSheet(GUIStyles.set_input_select_style())
-
-        # Acquisition time mode switch control (Free Running/Fixed)
-        self.acquisition_time_control = QVBoxLayout()
-        acquisition_time_label = QLabel("Free running acquisition time:")
-        self.acquisition_time_mode_switch = SwitchControl(
-            active_color="#13B6B4", checked=self.free_running_acquisition_time
-        )
-        self.acquisition_time_mode_switch.stateChanged.connect(
-            (lambda state: self.toggle_acquisition_time_mode(state))
-        )
-        self.acquisition_time_control.addWidget(acquisition_time_label)
-        self.acquisition_time_control.addSpacing(8)
-        self.acquisition_time_control.addWidget(self.acquisition_time_mode_switch)
-        self.controls_row.addLayout(self.acquisition_time_control)
-        self.controls_row.addSpacing(20)
-
-        # Time span input number control
-        self.time_span_control, self.time_span_input = InputNumberControl.setup(
-            "Time span (s):",
-            1,
-            300,
-            self.time_span,
-            self.controls_row,
-            self.time_span_value_change,
-        )
-        self.time_span_input.setStyleSheet(GUIStyles.set_input_number_style())
-
-        # Acquisition time millis input number control (configurable when in acquisition time fixed mode)
-        (
-            self.acquisition_time_control,
-            self.acquisition_time_input,
-        ) = InputNumberControl.setup(
-            "Acquisition time (s):",
-            0,
-            1800,
-            int(self.acquisition_time_millis / 1000)
-            if self.acquisition_time_millis is not None
-            else None,
-            self.controls_row,
-            self.acquisition_time_value_change,
-        )
-        self.acquisition_time_input.setEnabled(
-            not self.acquisition_time_mode_switch.isChecked()
-        )
-        self.acquisition_time_input.setStyleSheet(GUIStyles.set_input_number_style())
-
-        toolbar_layout.addLayout(self.controls_row)
-        toolbar_layout.addWidget(draw_layout_separator())
-
-        # ACTION BUTTONS
-        buttons_row_layout = QHBoxLayout()
-        buttons_row_layout.addStretch(1)
-
-        # Show cps
-        self.show_cps_control = QHBoxLayout()
-        show_cps_label = QLabel("Show CPS:")
-        self.show_cps_switch = SwitchControl(
-            active_color="#8d4ef2", width=70, height=30, checked=self.show_cps
-        )
-        self.show_cps_switch.stateChanged.connect(
-            (lambda state: self.toggle_show_cps(state))
-        )
-
-        self.show_cps_control.addWidget(show_cps_label)
-        self.show_cps_control.addSpacing(8)
-        self.show_cps_control.addWidget(self.show_cps_switch)
-        buttons_row_layout.addLayout(self.show_cps_control)
-        self.show_cps_control.addSpacing(8)
-
         
-     
-        self.start_button = QPushButton("START")
-        GUIStyles.set_start_btn_style(self.start_button)
-        self.start_button.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.start_button.clicked.connect(self.start_button_pressed)
-        self.start_button.setEnabled(
-            not all(not checkbox.isChecked() for checkbox in self.channels_checkboxes)
-        )
-        buttons_row_layout.addWidget(self.start_button)
-
-        self.stop_button = QPushButton("STOP")
-        self.stop_button.setCursor(Qt.CursorShape.PointingHandCursor)
-        GUIStyles.set_stop_btn_style(self.stop_button)
-        self.stop_button.setEnabled(False)
-        self.stop_button.clicked.connect(self.stop_button_pressed)
-        buttons_row_layout.addWidget(self.stop_button)
-
-        self.reset_button = QPushButton("RESET")
-        self.reset_button.setCursor(Qt.CursorShape.PointingHandCursor)
-        GUIStyles.set_reset_btn_style(self.reset_button)
-        self.reset_button.setEnabled(True)
-        self.reset_button.clicked.connect(self.reset_button_pressed)
-        buttons_row_layout.addWidget(self.reset_button)
-
-        toolbar_layout.addSpacing(10)
-
-        toolbar_layout.addLayout(buttons_row_layout)
-
-        toolbar_layout.addSpacing(10)
-
-        self.top_utilities_layout.addLayout(toolbar_layout)
-        self.top_utilities_layout.addWidget(self.blank_space)
-
-        widget = QWidget()
-        widget.setLayout(self.layout)
-        scroll_area.setWidget(widget)
-        self.setCentralWidget(scroll_area)
-
-        # Charts grid
-        self.charts_grid = QGridLayout()
-        self.layout.addLayout(self.charts_grid)
-
-        # Logo overlay
-        self.logo_overlay = LogoOverlay(self)
-        self.logo_overlay.show()
-        self.logo_overlay.update_visibility(self)
-        self.logo_overlay.update_position(self.logo_overlay)
-        self.logo_overlay.lower()
-
-        # Titlebar logo icon
-        TitlebarIcon.setup(self)
-
+        self.bin_file_size = ''
+        self.bin_file_size_label = QLabel("")
+      
+        
         self.pull_from_queue_timer = QTimer()
         self.pull_from_queue_timer.timeout.connect(self.pull_from_queue)
 
@@ -381,38 +110,202 @@ class PhotonsTracingWindow(QMainWindow):
         self.realtime_queue_worker_stop = False
 
         self.realtime_queue = queue.Queue()
+        
+        self.init_ui() 
+        
+    
+    @staticmethod 
+    def init_settings():
+        settings = QSettings('settings.ini', QSettings.Format.IniFormat)
+        return settings
 
 
-    def create_logo_and_title(self):   
-        row = QHBoxLayout()
-        pixmap = QPixmap(
-            os.path.join(project_root, "assets", "flimlabs-logo.png")
-        ).scaledToWidth(60)
-        ctl = QLabel(pixmap=pixmap)
-        row.addWidget(ctl)
+    def init_ui(self):
+        self.create_top_utilities_layout()
+        main_layout, logo_overlay, charts_grid = init_ui(self, self.top_utilities_layout) 
+        self.main_layout = main_layout
+        self.logo_overlay = logo_overlay
+        self.charts_grid = charts_grid
 
-        row.addSpacing(10)
 
-        ctl = GradientText(self,
-                           text="INTENSITY TRACING",
-                           colors=[(0.5, "#23F3AB"), (1.0, "#8d4ef2")],
-                           stylesheet=GUIStyles.set_main_title_style())
-        ctl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        row.addWidget(ctl)
+    def create_top_utilities_layout(self):    
+        self.top_utilities_layout = QVBoxLayout()
+        header_layout = self.create_header_layout() 
+        self.top_utilities_layout.addLayout(header_layout)
+        
+        channel_checkbox_layout = self.create_channels_controls_layout()
+        self.channel_checkbox_layout = channel_checkbox_layout
+        
+        controls_layout = self.create_controls_layout()
+        self.top_utilities_layout.addLayout(controls_layout)
+        
+        self.top_utilities_layout.addWidget(self.blank_space)
+     
 
-        ctl = QWidget()
-        ctl.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
-        row.addWidget(ctl)
-        return row   
+    def create_header_layout(self): 
+        title_row = self.create_logo_and_title()
+        info_link_widget, export_data_control = self.create_export_data_input()
+        file_size_info_layout = self.create_file_size_info_row()
+        download_button, download_menu = self.create_download_files_menu()
+        header_layout = TopBar.create_header_layout(
+            title_row,
+            file_size_info_layout,
+            info_link_widget,
+            export_data_control,
+            download_button,
+            download_menu
+        )
+        return header_layout
 
+
+    def create_export_data_input(self): 
+        info_link_widget, export_data_control = TopBar.create_export_data_input(self.write_data, self.toggle_export_data) 
+        return info_link_widget, export_data_control
+
+
+    def create_file_size_info_row(self):
+        file_size_info_layout = TopBar.create_file_size_info_row(
+            self.bin_file_size, 
+            self.bin_file_size_label, 
+            self.write_data, 
+            self.calc_exported_file_size)     
+        return file_size_info_layout    
+
+
+    def create_download_files_menu(self):
+        download_button, download_menu = TopBar.create_download_files_menu(
+            self,
+            self.write_data,
+            self.acquisition_stopped,
+            self.show_download_options,
+            self.download_matlab,
+            self.download_python
+        )
+        self.control_inputs[DOWNLOAD_BUTTON] = download_button
+        self.control_inputs[DOWNLOAD_MENU] = download_menu
+        self.set_download_button_icon() 
+        
+        return download_button, download_menu
+        
+ 
+    def create_channels_controls_layout(self):    
+        channel_checkbox_layout = QGridLayout()
+        self.channel_checkbox_layout = channel_checkbox_layout
+        self.channels_checkboxes = self.draw_checkboxes()
+        return channel_checkbox_layout
+
+
+    def create_controls_layout(self): 
+        controls_row = self.create_controls() 
+        buttons_row_layout = self.create_buttons()  
+        blank_space, controls_layout = ControlsBar.init_gui_controls_layout(controls_row, buttons_row_layout)
+        self.blank_space = blank_space
+        return controls_layout
+
+
+    def create_controls(self):    
+        controls_row = QHBoxLayout()
+        self.create_channel_type_control(controls_row)
+        self.create_bin_width_control(controls_row)
+        self.create_update_rate_control(controls_row)
+        running_mode_control = self.create_running_mode_control()
+        controls_row.addLayout(running_mode_control)
+        controls_row.addSpacing(15)
+        self.create_time_span_control(controls_row)
+        self.create_acquisition_time_control(controls_row)
+        return controls_row
+
+
+    def create_buttons(self):
+        show_cps_control =  self.create_show_cps_control()  
+
+        buttons_row_layout, start_button, stop_button, reset_button = ControlsBar.create_buttons(
+            show_cps_control,
+            self.start_button_pressed,
+            self.stop_button_pressed,
+            self.reset_button_pressed,
+            self.channels_checkboxes
+        )
+        self.control_inputs[START_BUTTON] = start_button
+        self.control_inputs[STOP_BUTTON] = stop_button
+        self.control_inputs[RESET_BUTTON] = reset_button
+        return buttons_row_layout
+
+
+    def create_channel_type_control(self, controls_row): 
+        inp = ControlsBar.create_channel_type_control(
+            controls_row, 
+            self.selected_conn_channel, 
+            self.conn_channel_type_value_change, 
+            self.conn_channels)
+        self.control_inputs[SETTINGS_CONN_CHANNEL] = inp   
+        
+
+    def create_bin_width_control(self, controls_row):
+        inp = ControlsBar.create_bin_width_control(
+            controls_row, 
+            self.bin_width_micros, 
+            self.bin_width_micros_value_change,)
+        self.control_inputs[SETTINGS_BIN_WIDTH_MICROS] = inp    
+
+
+    def create_update_rate_control(self, controls_row): 
+        inp = ControlsBar.create_update_rate_control(
+            controls_row, 
+            self.selected_update_rate, 
+            self.update_rate_value_change,
+            self.update_rates
+            )
+        self.control_inputs[SETTINGS_UPDATE_RATE] = inp    
+
+
+    def create_running_mode_control(self):
+        running_mode_control, inp  = ControlsBar.create_running_mode_control(
+            self.free_running_acquisition_time, 
+            self.toggle_acquisition_time_mode,
+            )
+        self.control_inputs[SETTINGS_FREE_RUNNING_MODE] = inp    
+        return running_mode_control
+
+      
+    def create_time_span_control(self, controls_row):
+        inp = ControlsBar.create_time_span_control(
+            controls_row, 
+            self.time_span, 
+            self.time_span_value_change,)
+        self.control_inputs[SETTINGS_TIME_SPAN] = inp    
+       
+
+    def create_acquisition_time_control(self, controls_row):
+        inp = ControlsBar.create_acquisition_time_control(
+            controls_row, 
+            self.acquisition_time_millis, 
+            self.acquisition_time_value_change,
+            self.control_inputs[SETTINGS_FREE_RUNNING_MODE]
+            )
+        self.control_inputs[SETTINGS_ACQUISITION_TIME_MILLIS] = inp    
+
+
+    def create_show_cps_control(self):
+        show_cps_control, inp = ControlsBar.create_show_cps_control(
+            self.show_cps, 
+            self.toggle_show_cps,
+            )
+        self.control_inputs[SETTINGS_SHOW_CPS] = inp    
+        return show_cps_control
+    
+
+    def create_logo_and_title(self):  
+        title_row = TopBar.create_logo_and_title(self) 
+        return title_row   
 
     def draw_checkboxes(self):
         channels_checkboxes = []
-
         for i in range(8):
             self.enabled_channels.sort()
             checkbox = QCheckBox("Channel " + str(i + 1))
             checkbox.setStyleSheet(GUIStyles.set_checkbox_style())
+            checkbox.setCursor(Qt.CursorShape.PointingHandCursor)
             if i not in self.enabled_channels:
                 checkbox.setChecked(False)
             else:
@@ -420,10 +313,8 @@ class PhotonsTracingWindow(QMainWindow):
             checkbox.stateChanged.connect(
                 lambda state, index=i: self.toggle_channels_checkbox(state, index)
             )
-
             channels_checkboxes.append(checkbox)
-
-        self.top_utilities_layout.addLayout(self.checkbox_layout)
+        self.top_utilities_layout.addLayout(self.channel_checkbox_layout)
         self.update_checkbox_layout(channels_checkboxes)
         return channels_checkboxes
 
@@ -436,18 +327,18 @@ class PhotonsTracingWindow(QMainWindow):
         print("Enabled channels: " + str(self.enabled_channels))
         self.calc_exported_file_size()
         self.settings.setValue(SETTINGS_ENABLED_CHANNELS, json.dumps(self.enabled_channels))
-        self.start_button.setEnabled(
+        self.control_inputs[START_BUTTON].setEnabled(
             not all(not checkbox.isChecked() for checkbox in self.channels_checkboxes)
         )
 
     def toggle_acquisition_time_mode(self, state):
         if state:
             self.acquisition_time_millis = None
-            self.acquisition_time_input.setEnabled(False)
+            self.control_inputs[SETTINGS_ACQUISITION_TIME_MILLIS].setEnabled(False)
             self.free_running_acquisition_time = True
             self.settings.setValue(SETTINGS_FREE_RUNNING_MODE, True)
         else:
-            self.acquisition_time_input.setEnabled(True)
+            self.control_inputs[SETTINGS_ACQUISITION_TIME_MILLIS].setEnabled(True)
             self.free_running_acquisition_time = False
             self.settings.setValue(SETTINGS_FREE_RUNNING_MODE, False)
         self.calc_exported_file_size()    
@@ -463,18 +354,17 @@ class PhotonsTracingWindow(QMainWindow):
     def toggle_export_data(self, state):
         if state:
             self.write_data = True
-            self.download_button.setEnabled(self.write_data and self.acquisition_stopped)
+            self.control_inputs[DOWNLOAD_BUTTON].setEnabled(self.write_data and self.acquisition_stopped)
             self.set_download_button_icon()
             self.settings.setValue(SETTINGS_WRITE_DATA, True)
             self.bin_file_size_label.show()
             self.calc_exported_file_size()
         else:
             self.write_data = False
-            self.download_button.setEnabled(self.write_data and self.acquisition_stopped)
+            self.control_inputs[DOWNLOAD_BUTTON].setEnabled(self.write_data and self.acquisition_stopped)
             self.set_download_button_icon()
             self.settings.setValue(SETTINGS_WRITE_DATA, False)
             self.bin_file_size_label.hide()
-            
 
     def conn_channel_type_value_change(self, index):
         self.selected_conn_channel = self.sender().currentText()
@@ -486,18 +376,18 @@ class PhotonsTracingWindow(QMainWindow):
         self.settings.setValue(SETTINGS_CONN_CHANNEL, self.selected_conn_channel)     
 
     def acquisition_time_value_change(self, value):
-        self.start_button.setEnabled(value != 0)
+        self.control_inputs[START_BUTTON].setEnabled(value != 0)
         self.acquisition_time_millis = value * 1000  # convert s to ms
         self.settings.setValue(SETTINGS_ACQUISITION_TIME_MILLIS, self.acquisition_time_millis)
         self.calc_exported_file_size()
 
     def time_span_value_change(self, value):
-        self.start_button.setEnabled(value != 0)
+        self.control_inputs[START_BUTTON].setEnabled(value != 0)
         self.time_span = value
         self.settings.setValue(SETTINGS_TIME_SPAN, value)
 
     def bin_width_micros_value_change(self, value):
-        self.start_button.setEnabled(value != 0)
+        self.control_inputs[START_BUTTON].setEnabled(value != 0)
         self.bin_width_micros = value
         self.settings.setValue(SETTINGS_BIN_WIDTH_MICROS, value)
         self.calc_exported_file_size()
@@ -510,13 +400,13 @@ class PhotonsTracingWindow(QMainWindow):
 
     def start_button_pressed(self):
         self.acquisition_stopped=False
-        self.download_button.setEnabled(self.write_data and self.acquisition_stopped)
+        self.control_inputs[DOWNLOAD_BUTTON].setEnabled(self.write_data and self.acquisition_stopped)
         self.set_download_button_icon()
         warn_title, warn_msg = MessagesUtilities.invalid_inputs_handler(
             self.bin_width_micros,
             self.time_span,
             self.acquisition_time_millis,
-            self.acquisition_time_mode_switch,
+            self.control_inputs[SETTINGS_FREE_RUNNING_MODE],
             self.enabled_channels,
             self.selected_conn_channel,
             self.selected_update_rate,
@@ -526,10 +416,12 @@ class PhotonsTracingWindow(QMainWindow):
                 warn_title, warn_msg, QMessageBox.Warning, GUIStyles.set_msg_box_style()
             )
             return
-        self.start_button.setEnabled(False)
-        self.stop_button.setEnabled(True)
+        self.control_inputs[START_BUTTON].setEnabled(False)
+        self.control_inputs[STOP_BUTTON].setEnabled(True)
         for checkbox in self.channels_checkboxes:
             checkbox.setEnabled(False)
+            checkbox.setCursor(Qt.CursorShape.ArrowCursor)
+
 
         for chart in self.charts:
             chart.setVisible(False)
@@ -557,14 +449,15 @@ class PhotonsTracingWindow(QMainWindow):
 
     def stop_button_pressed(self):
         self.acquisition_stopped = True
-        self.download_button.setEnabled(self.write_data and self.acquisition_stopped)
+        self.control_inputs[DOWNLOAD_BUTTON].setEnabled(self.write_data and self.acquisition_stopped)
         self.set_download_button_icon()
-        self.start_button.setEnabled(
+        self.control_inputs[START_BUTTON].setEnabled(
             not all(not checkbox.isChecked() for checkbox in self.channels_checkboxes)
         )
-        self.stop_button.setEnabled(False)
+        self.control_inputs[STOP_BUTTON].setEnabled(False)
         for checkbox in self.channels_checkboxes:
             checkbox.setEnabled(True)
+            checkbox.setCursor(Qt.CursorShape.PointingHandCursor)
         QApplication.processEvents()
 
         flim_labs.request_stop()
@@ -578,16 +471,20 @@ class PhotonsTracingWindow(QMainWindow):
         for channel, curr_conn in self.connectors:
             curr_conn.pause()
 
+
     def reset_button_pressed(self):
         flim_labs.request_stop()
         self.blank_space.show()
-        # reset charts
-        self.start_button.setEnabled(
+
+        self.control_inputs[DOWNLOAD_BUTTON].setEnabled(False)
+       
+        self.control_inputs[START_BUTTON].setEnabled(
             not all(not checkbox.isChecked() for checkbox in self.channels_checkboxes)
         )
-        self.stop_button.setEnabled(False)
+        self.control_inputs[STOP_BUTTON].setEnabled(False)
         for checkbox in self.channels_checkboxes:
             checkbox.setEnabled(True)
+            checkbox.setCursor(Qt.CursorShape.PointingHandCursor)
 
         for chart in self.charts:
             self.charts_grid.removeWidget(chart)
@@ -596,6 +493,7 @@ class PhotonsTracingWindow(QMainWindow):
         self.connectors.clear()
         self.charts.clear()
         QApplication.processEvents()
+
 
     def generate_chart(self, channel_index):
         left_axis = LiveAxis("left", axisPen="#cecece", textPen="#FFA726")
@@ -621,7 +519,7 @@ class PhotonsTracingWindow(QMainWindow):
         plot_curve.setPen(pg.mkPen(color="#a877f7"))
         plot_widget.addItem(plot_curve)
 
-        self.time_span = self.time_span_input.value()
+        self.time_span = self.control_inputs[SETTINGS_TIME_SPAN].value()
         connector = DataConnector(
             plot_curve,
             update_rate=REALTIME_HZ,
@@ -640,7 +538,6 @@ class PhotonsTracingWindow(QMainWindow):
 
         if not self.show_cps:
             cps_label.hide()
-
         return plot_widget, (self.enabled_channels[channel_index], connector), cps_label
 
     def showEvent(self, event):
@@ -663,7 +560,7 @@ class PhotonsTracingWindow(QMainWindow):
 
         for i, checkbox in enumerate(channels_checkboxes):
             row, col = divmod(i, num_columns)
-            self.checkbox_layout.addWidget(checkbox, row, col)
+            self.channel_checkbox_layout.addWidget(checkbox, row, col)
 
     def resizeEvent(self, event):
         super(PhotonsTracingWindow, self).resizeEvent(event)
@@ -676,7 +573,7 @@ class PhotonsTracingWindow(QMainWindow):
             self.bin_file_size = 'XXXMB' 
         else:
             file_size_MB = int((self.acquisition_time_millis / 1000) * len(self.enabled_channels) * (self.bin_width_micros / 1000))
-            self.bin_file_size = format_size(file_size_MB * 1024 * 1024) 
+            self.bin_file_size = FormatUtils.format_size(file_size_MB * 1024 * 1024) 
             
         self.bin_file_size_label.setText("File size: " + str(self.bin_file_size))        
 
@@ -687,8 +584,8 @@ class PhotonsTracingWindow(QMainWindow):
             for v in val:
                 if v == ('end',):  # End of acquisition
                     self.stop_button_pressed()
-                    self.start_button.setEnabled(True)
-                    self.stop_button.setEnabled(False)
+                    self.control_inputs[START_BUTTON].setEnabled(True)
+                    self.control_inputs[STOP_BUTTON].setEnabled(False)
                     break
                 ((current_time,), (ch1, ch2, ch3, ch4, ch5, ch6, ch7, ch8)) = v
                 counts = [ch1, ch2, ch3, ch4, ch5, ch6, ch7, ch8]
@@ -708,7 +605,7 @@ class PhotonsTracingWindow(QMainWindow):
                 curr_conn.cb_append_data_point(y=(counts[channel] / adjustment), x=seconds)
                 cps_counts[channel] += counts[channel] / adjustment
                 if seconds >= next_second:
-                    self.cps[channel].setText(human_format(round(cps_counts[channel])) + " CPS")
+                    self.cps[channel].setText(FormatUtils.format_cps(round(cps_counts[channel])) + " CPS")
                     cps_counts[channel] = 0
             if seconds >= next_second:
                 next_second += 1
@@ -728,7 +625,7 @@ class PhotonsTracingWindow(QMainWindow):
                 else self.acquisition_time_millis
             )
             print("Selected firmware: " + (str(self.selected_firmware)))
-            print("Free running enabled: " + str(self.acquisition_time_mode_switch.isChecked()))
+            print("Free running enabled: " + str(self.control_inputs[SETTINGS_FREE_RUNNING_MODE].isChecked()))
             print("Acquisition time (ms): " + str(acquisition_time_millis))
             print("Time span (s): " + str(self.time_span))
             print("Max points: " + str(40 * self.time_span))
@@ -769,31 +666,27 @@ class PhotonsTracingWindow(QMainWindow):
             )
 
     def show_download_options(self):    
-      self.download_menu.exec_(self.download_button.mapToGlobal(QPoint(0, self.download_button.height())))
+      self.control_inputs[DOWNLOAD_MENU].exec_(
+        self.control_inputs[DOWNLOAD_BUTTON].mapToGlobal(QPoint(0, self.control_inputs[DOWNLOAD_BUTTON].height()))
+        )
 
     def download_matlab(self):
        MatlabScriptUtils.download_matlab(self)
-       self.download_button.setEnabled(False)
-       self.download_button.setEnabled(True)
+       self.control_inputs[DOWNLOAD_BUTTON].setEnabled(False)
+       self.control_inputs[DOWNLOAD_BUTTON].setEnabled(True)
 
     def download_python(self):
        PythonScriptUtils.download_python(self)
-       self.download_button.setEnabled(False)
-       self.download_button.setEnabled(True)
+       self.control_inputs[DOWNLOAD_BUTTON].setEnabled(False)
+       self.control_inputs[DOWNLOAD_BUTTON].setEnabled(True)
 
     def set_download_button_icon(self):
-            if self.download_button.isEnabled():
-                icon = os.path.join(project_root, "assets", "arrow-down-icon-white.png")
-                self.download_button.setIcon(QIcon(icon))
-            else:
-                icon = os.path.join(project_root, "assets", "arrow-down-icon-grey.png")
-                self.download_button.setIcon(QIcon(icon))
-         
-
-    @staticmethod 
-    def init_settings():
-        settings = QSettings('settings.ini', QSettings.Format.IniFormat)
-        return settings
+        if self.control_inputs[DOWNLOAD_BUTTON].isEnabled():
+            icon = os.path.join(project_root, "assets", "arrow-down-icon-white.png")
+            self.control_inputs[DOWNLOAD_BUTTON].setIcon(QIcon(icon))
+        else:
+            icon = os.path.join(project_root, "assets", "arrow-down-icon-grey.png")
+            self.control_inputs[DOWNLOAD_BUTTON].setIcon(QIcon(icon))
 
 
 if __name__ == "__main__":
