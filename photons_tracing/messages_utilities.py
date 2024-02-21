@@ -8,6 +8,9 @@ class MessagesUtilities:
             )
         elif "ErrorSavingConfiguration" in error_msg:
             return ("Error Saving Configuration", custom_content)
+
+        elif "ErrorSavingScriptFile" in error_msg:
+            return ("Error Saving Files", f"An error occurred while saving script and data file: {custom_content}")   
         else:
             return ("Error", error_msg)
 
@@ -15,6 +18,8 @@ class MessagesUtilities:
     def info_handler(info_msg, custom_content=""):
         if "SavedConfiguration" in info_msg:
             return ("Configuration successfully saved", custom_content)
+        elif "SavedScriptFile" in info_msg:
+            return ("Files successfully saved", f"Script and data files have been saved successfully")    
         else:
             return (None, None)
 

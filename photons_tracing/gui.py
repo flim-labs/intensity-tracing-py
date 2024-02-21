@@ -5,12 +5,11 @@ import threading
 import time
 import json
 
+from PyQt5.QtCore import QTimer,QPoint, Qt, QSize, QSettings
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_path, ".."))
 sys.path.append(project_root)
-
-from PyQt5.QtCore import QTimer, Qt, QSettings
 
 from PyQt5.QtWidgets import (
     QMainWindow,
@@ -26,6 +25,8 @@ from PyQt5.QtWidgets import (
     QSizePolicy,
     QScrollArea,
     QMessageBox,
+    QMenu,
+    QAction,
 )
 import pyqtgraph as pg
 from PyQt5.QtGui import QIcon, QPixmap, QFont
@@ -49,6 +50,7 @@ from gui_components.box_message import BoxMessage
 from settings import *
 from helpers import format_size
 from math import log, floor
+from file_utilities import FileUtils, MatlabScriptUtils, PythonScriptUtils
 
 
 REALTIME_MS = 10
@@ -68,8 +70,10 @@ def human_format(number):
     return '%.2f%s' % (number / k ** magnitude, units[magnitude])
 
 
+
+
 class PhotonsTracingWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, params_config=None):
         super(PhotonsTracingWindow, self).__init__()
 
         # Initialize settings config
@@ -91,7 +95,7 @@ class PhotonsTracingWindow(QMainWindow):
         self.enabled_channels = json.loads(self.settings.value(SETTINGS_ENABLED_CHANNELS, DEFAULT_ENABLED_CHANNELS))
         self.show_cps = self.settings.value(SETTINGS_SHOW_CPS, DEFAULT_SHOW_CPS) == 'true' 
         self.write_data = self.settings.value(SETTINGS_WRITE_DATA, DEFAULT_WRITE_DATA) == 'true'
-
+        self.acquisition_stopped = False
         self.charts = []
         self.cps = []
      
@@ -113,13 +117,16 @@ class PhotonsTracingWindow(QMainWindow):
 
         # Header row: Link to User Guide
         self.header_layout = QHBoxLayout()
-
+        
         app_guide_link_widget = LinkWidget(
             icon_filename="info-icon.png", text="User Guide"
         )
         app_guide_link_widget.setCursor(Qt.CursorShape.PointingHandCursor)
         self.header_layout.addLayout(self.create_logo_and_title())
         self.header_layout.addStretch(1)
+
+        
+
         
         # Link to export data documentation
         info_link_widget = LinkWidget(
@@ -159,6 +166,37 @@ class PhotonsTracingWindow(QMainWindow):
         self.bin_file_size_label.show() if self.write_data is True else self.bin_file_size_label.hide()
 
         self.calc_exported_file_size()
+        
+        
+
+
+        #Download button
+        self.download_button = QPushButton("DOWNLOAD ")
+
+    
+
+        self.download_button.setEnabled(self.write_data and self.acquisition_stopped)
+        self.set_download_button_icon()   
+        self.download_button.setStyleSheet(GUIStyles.button_style("#8d4ef2", "#8d4ef2", "#a179ff", "#6b3da5", "100px"))
+
+        self.download_button.setLayoutDirection(Qt.RightToLeft)  # This will flip the text and icon
+        self.download_button.setIconSize(QSize(16, 16)) 
+        self.download_button.clicked.connect(self.show_download_options)
+
+        # Context menu
+        self.download_menu = QMenu()
+        self.matlab_action = QAction("MATLAB FORMAT", self)
+        self.python_action = QAction("PYTHON FORMAT", self)
+
+        self.download_menu.setStyleSheet(GUIStyles.set_context_menu_style("#8d4ef2", "#a179ff", "#6b3da5"))
+        self.download_menu.addAction(self.matlab_action)
+        self.download_menu.addAction(self.python_action)
+        
+        
+        self.matlab_action.triggered.connect(self.download_matlab)
+        self.python_action.triggered.connect(self.download_python)
+        
+        self.header_layout.addWidget(self.download_button)
 
 
         self.header_layout.addWidget(app_guide_link_widget)
@@ -282,6 +320,8 @@ class PhotonsTracingWindow(QMainWindow):
         self.show_cps_control.addWidget(self.show_cps_switch)
         buttons_row_layout.addLayout(self.show_cps_control)
         self.show_cps_control.addSpacing(8)
+
+        
      
         self.start_button = QPushButton("START")
         GUIStyles.set_start_btn_style(self.start_button)
@@ -423,11 +463,15 @@ class PhotonsTracingWindow(QMainWindow):
     def toggle_export_data(self, state):
         if state:
             self.write_data = True
+            self.download_button.setEnabled(self.write_data and self.acquisition_stopped)
+            self.set_download_button_icon()
             self.settings.setValue(SETTINGS_WRITE_DATA, True)
             self.bin_file_size_label.show()
             self.calc_exported_file_size()
         else:
             self.write_data = False
+            self.download_button.setEnabled(self.write_data and self.acquisition_stopped)
+            self.set_download_button_icon()
             self.settings.setValue(SETTINGS_WRITE_DATA, False)
             self.bin_file_size_label.hide()
             
@@ -465,6 +509,9 @@ class PhotonsTracingWindow(QMainWindow):
         self.settings.setValue(SETTINGS_DRAW_FREQUENCY, self.draw_frequency)
 
     def start_button_pressed(self):
+        self.acquisition_stopped=False
+        self.download_button.setEnabled(self.write_data and self.acquisition_stopped)
+        self.set_download_button_icon()
         warn_title, warn_msg = MessagesUtilities.invalid_inputs_handler(
             self.bin_width_micros,
             self.time_span,
@@ -509,6 +556,9 @@ class PhotonsTracingWindow(QMainWindow):
         self.start_photons_tracing()
 
     def stop_button_pressed(self):
+        self.acquisition_stopped = True
+        self.download_button.setEnabled(self.write_data and self.acquisition_stopped)
+        self.set_download_button_icon()
         self.start_button.setEnabled(
             not all(not checkbox.isChecked() for checkbox in self.channels_checkboxes)
         )
@@ -558,7 +608,8 @@ class PhotonsTracingWindow(QMainWindow):
         )
         plot_widget = LivePlotWidget(
             title="Channel " + str(self.enabled_channels[channel_index] + 1),
-            y_label="Photon counts",
+            y_label="AVG. Photon counts",
+            orientation='vertical',
             axisItems={"bottom": bottom_axis, "left": left_axis},
             x_range_controller=LiveAxisRange(roll_on_tick=1),
         )
@@ -716,6 +767,28 @@ class PhotonsTracingWindow(QMainWindow):
                 QMessageBox.Critical,
                 GUIStyles.set_msg_box_style(),
             )
+
+    def show_download_options(self):    
+      self.download_menu.exec_(self.download_button.mapToGlobal(QPoint(0, self.download_button.height())))
+
+    def download_matlab(self):
+       MatlabScriptUtils.download_matlab(self)
+       self.download_button.setEnabled(False)
+       self.download_button.setEnabled(True)
+
+    def download_python(self):
+       PythonScriptUtils.download_python(self)
+       self.download_button.setEnabled(False)
+       self.download_button.setEnabled(True)
+
+    def set_download_button_icon(self):
+            if self.download_button.isEnabled():
+                icon = os.path.join(project_root, "assets", "arrow-down-icon-white.png")
+                self.download_button.setIcon(QIcon(icon))
+            else:
+                icon = os.path.join(project_root, "assets", "arrow-down-icon-grey.png")
+                self.download_button.setIcon(QIcon(icon))
+         
 
     @staticmethod 
     def init_settings():
