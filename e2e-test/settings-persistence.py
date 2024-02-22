@@ -18,13 +18,14 @@ from photons_tracing.settings import *
 from utils import print_color
 
 
-"""
+""" 🔎🔎🔎
 This test aims to simulate the persistence of GUI parameter configurations after the application is closed and reopened. 
 The application automatically saves updates to configurations in a settings.ini file when parameter values change.
-Random parameters are generated on each test (20)
+Random parameters are generated on each test
+    🔎🔎🔎
 """
 
-NUM_TESTS = 20
+NUM_TESTS = 100
 
 def generate_random_parameters():
     enabled_channels = random.sample(range(8),random.randint(0, 8))
@@ -128,3 +129,5 @@ def test_parameter_changes_persistence(app, qtbot):
     
 
         print_color("Test passed successfully", Fore.GREEN)
+
+        test_app.quit()

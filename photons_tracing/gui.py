@@ -160,7 +160,8 @@ class PhotonsTracingWindow(QMainWindow):
 
 
     def create_export_data_input(self): 
-        info_link_widget, export_data_control = TopBar.create_export_data_input(self.write_data, self.toggle_export_data) 
+        info_link_widget, export_data_control, inp = TopBar.create_export_data_input(self.write_data, self.toggle_export_data)
+        self.control_inputs[SETTINGS_WRITE_DATA] = inp  
         return info_link_widget, export_data_control
 
 
@@ -325,7 +326,7 @@ class PhotonsTracingWindow(QMainWindow):
         else:
             self.enabled_channels.remove(index)
         self.enabled_channels.sort()
-        print("Enabled channels: " + str(self.enabled_channels))
+        #print("Enabled channels: " + str(self.enabled_channels))
         self.calc_exported_file_size()
         self.settings.setValue(SETTINGS_ENABLED_CHANNELS, json.dumps(self.enabled_channels))
         self.control_inputs[START_BUTTON].setEnabled(

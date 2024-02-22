@@ -111,7 +111,7 @@ class TopBar:
         export_data_control.addSpacing(8)
         export_data_control.addWidget(inp)
         
-        return info_link_widget, export_data_control
+        return info_link_widget, export_data_control, inp
 
 
     @staticmethod
