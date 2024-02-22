@@ -81,7 +81,8 @@ class PhotonsTracingWindow(QMainWindow):
 
         self.free_running_acquisition_time = self.settings.value(SETTINGS_FREE_RUNNING_MODE, DEFAULT_FREE_RUNNING_MODE) in ['true', True]
 
-        self.enabled_channels = json.loads(str(self.settings.value(SETTINGS_ENABLED_CHANNELS, DEFAULT_ENABLED_CHANNELS)))
+        default_enabled_channels = self.settings.value(SETTINGS_ENABLED_CHANNELS, DEFAULT_ENABLED_CHANNELS)
+        self.enabled_channels = json.loads(default_enabled_channels) if default_enabled_channels is not None else []
 
         self.show_cps = self.settings.value(SETTINGS_SHOW_CPS, DEFAULT_SHOW_CPS) in ['true', True]
 
