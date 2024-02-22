@@ -287,7 +287,6 @@ class PhotonsTracingWindow(QMainWindow):
             )
         self.control_inputs[SETTINGS_ACQUISITION_TIME_MILLIS] = inp    
 
-
     def create_show_cps_control(self):
         show_cps_control, inp = ControlsBar.create_show_cps_control(
             self.show_cps, 
@@ -335,7 +334,6 @@ class PhotonsTracingWindow(QMainWindow):
 
     def toggle_acquisition_time_mode(self, state):
         if state:
-            self.acquisition_time_millis = None
             self.control_inputs[SETTINGS_ACQUISITION_TIME_MILLIS].setEnabled(False)
             self.free_running_acquisition_time = True
             self.settings.setValue(SETTINGS_FREE_RUNNING_MODE, True)
@@ -574,7 +572,8 @@ class PhotonsTracingWindow(QMainWindow):
         if  self.free_running_acquisition_time is True or self.acquisition_time_millis is None:
             self.bin_file_size = 'XXXMB' 
         else:
-            file_size_MB = int((self.acquisition_time_millis / 1000) * len(self.enabled_channels) * (self.bin_width_micros / 1000))
+            file_size_MB = int((self.acquisition_time_millis / 1000) * 
+            len(self.enabled_channels) * (self.bin_width_micros / 1000))
             self.bin_file_size = FormatUtils.format_size(file_size_MB * 1024 * 1024) 
             
         self.bin_file_size_label.setText("File size: " + str(self.bin_file_size))        
@@ -621,13 +620,14 @@ class PhotonsTracingWindow(QMainWindow):
 
     def start_photons_tracing(self):
         try:
+            free_running_mode = self.control_inputs[SETTINGS_FREE_RUNNING_MODE].isChecked()
             acquisition_time_millis = (
-                None
-                if self.acquisition_time_millis in (0, None)
-                else self.acquisition_time_millis
+            None if self.acquisition_time_millis in (0, None) or 
+            free_running_mode
+            else self.acquisition_time_millis
             )
             print("Selected firmware: " + (str(self.selected_firmware)))
-            print("Free running enabled: " + str(self.control_inputs[SETTINGS_FREE_RUNNING_MODE].isChecked()))
+            print("Free running enabled: " + str(free_running_mode))
             print("Acquisition time (ms): " + str(acquisition_time_millis))
             print("Time span (s): " + str(self.time_span))
             print("Max points: " + str(40 * self.time_span))

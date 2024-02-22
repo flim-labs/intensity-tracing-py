@@ -25,7 +25,7 @@ Random parameters are generated on each test
     🔎🔎🔎
 """
 
-NUM_TESTS = 100
+NUM_TESTS = 10000
 
 def generate_random_parameters():
     enabled_channels = random.sample(range(8),random.randint(0, 8))
