@@ -32,12 +32,13 @@ to verify that:
 """
 
 NUM_TESTS = 1000
-WAITING_TIME = 400
+WAITING_TIME = 3000
 
 
 def generate_random_interactions():
+    rand_enabled_channels = random.sample(range(8),random.randint(1, 8))
     flow = random.choice(["before_start_btn_pressed", "after_start_btn_pressed"])
-    return flow
+    return flow, rand_enabled_channels
 
 
 @pytest.fixture
@@ -71,13 +72,12 @@ def test_show_cps_assertions(window):
             print_color(f"CPS labels hidden? {all_labels_hidden}", Fore.WHITE)
 
 
-
-
-def test_after_start_btn_pressed(window, qtbot):
+def test_after_start_btn_pressed(window, qtbot, rand_enabled_channels):
+    channels_interaction(window, qtbot, rand_enabled_channels)
     # Simulate 'START' button click to show realtime charts
     start_button = window.control_inputs[START_BUTTON]
     qtbot.mouseClick(start_button, Qt.LeftButton)
-    qtbot.wait(300)
+    qtbot.wait(WAITING_TIME)
     # Simulate 'Show CPS' input interactions
     show_cps_switch = window.control_inputs[SETTINGS_SHOW_CPS]
     show_cps_switch_interactions_num = random.randint(1, 50)
@@ -88,9 +88,11 @@ def test_after_start_btn_pressed(window, qtbot):
     # Simulate 'RESET' button click   
     reset_button = window.control_inputs[RESET_BUTTON]
     qtbot.mouseClick(reset_button, Qt.LeftButton)
+    qtbot.wait(WAITING_TIME)
 
 
-def test_before_start_btn_pressed(window, qtbot):
+def test_before_start_btn_pressed(window, qtbot, rand_enabled_channels):
+    channels_interaction(window, qtbot, rand_enabled_channels)
     # Simulate 'Show CPS' input interaction
     show_cps_switch = window.control_inputs[SETTINGS_SHOW_CPS]
     qtbot.mouseClick(show_cps_switch, Qt.LeftButton)
@@ -98,22 +100,33 @@ def test_before_start_btn_pressed(window, qtbot):
     # Simulate 'START' button click to show realtime charts
     start_button = window.control_inputs[START_BUTTON]
     qtbot.mouseClick(start_button, Qt.LeftButton)
+    qtbot.wait(WAITING_TIME)
     test_show_cps_assertions(window)
     # Simulate 'RESET' button click   
     reset_button = window.control_inputs[RESET_BUTTON]
     qtbot.mouseClick(reset_button, Qt.LeftButton)
-  
+    qtbot.wait(WAITING_TIME)
+
+
+def channels_interaction(window, qtbot, rand_enabled_channels):
+    # Simulate channels checkboxes clicking
+    channels_checkboxes = window.channels_checkboxes
+    for index in rand_enabled_channels:
+        qtbot.mouseClick(channels_checkboxes[index], Qt.LeftButton)
+    print_color(f"Enabled channels: {window.enabled_channels}", Fore.WHITE)  
+
 
 def test_show_cps(app, qtbot):
     test_app, window = app
     for idx in range(NUM_TESTS):
+        qtbot.wait(WAITING_TIME)
         print_color(f"\nRunning test {idx + 1}...", Fore.CYAN)
         # Generate random interactions flow
-        flow = generate_random_interactions()
+        flow, rand_enabled_channels = generate_random_interactions()
         if "before_start_btn_pressed" in flow:
-            test_before_start_btn_pressed(window, qtbot)
+            test_before_start_btn_pressed(window, qtbot, rand_enabled_channels)
         else:
-            test_after_start_btn_pressed(window, qtbot)
+            test_after_start_btn_pressed(window, qtbot, rand_enabled_channels)
 
         print_color("Test passed successfully", Fore.GREEN)    
         test_app.quit()

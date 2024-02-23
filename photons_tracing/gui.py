@@ -331,6 +331,8 @@ class PhotonsTracingWindow(QMainWindow):
         self.control_inputs[START_BUTTON].setEnabled(
             not all(not checkbox.isChecked() for checkbox in self.channels_checkboxes)
         )
+        if len(self.enabled_channels) == 0:     
+            self.cps.clear() 
 
     def toggle_acquisition_time_mode(self, state):
         if state:
