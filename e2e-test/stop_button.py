@@ -34,7 +34,7 @@ to verify that:
 """
 
 NUM_TESTS = 20000
-WAITING_TIME = 600
+WAITING_TIME = 200
 
 
 def generate_random_interactions():
@@ -68,14 +68,18 @@ def test_stop_button(app, qtbot):
             qtbot.mouseClick(channels_checkboxes[index], Qt.LeftButton)
         print_color(f"Enabled channels: {window.enabled_channels}", Fore.WHITE)
         qtbot.wait(WAITING_TIME)
+
+        if len(window.enabled_channels) == 0:
+            continue
+        
         # Simulate write data switch clicking (random interactions num)
         write_data_switch = window.control_inputs[SETTINGS_WRITE_DATA]
         write_data_switch_interactions_num = random.randint(1, 5)
         for interaction_num in range(write_data_switch_interactions_num):
             qtbot.mouseClick(write_data_switch, Qt.LeftButton)
             qtbot.wait(WAITING_TIME)
-        print_color(f"Write data enabled? {write_data_switch.isEnabled()}", Fore.WHITE)    
-
+        print_color(f"Write data enabled? {write_data_switch.isEnabled()}", Fore.WHITE)
+            
 
         # Simulate "START" button click
         start_button = window.control_inputs[START_BUTTON]

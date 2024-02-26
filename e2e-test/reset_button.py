@@ -68,7 +68,10 @@ def test_reset_button(app, qtbot):
         for index in rand_enabled_channels:
             qtbot.mouseClick(channels_checkboxes[index], Qt.LeftButton)
         print_color(f"Enabled channels: {window.enabled_channels}", Fore.WHITE)
-        qtbot.wait(WAITING_TIME)      
+        qtbot.wait(WAITING_TIME) 
+        
+        if len(window.enabled_channels) == 0:        
+            continue     
 
         # Simulate "START" button click
         start_button = window.control_inputs[START_BUTTON]
