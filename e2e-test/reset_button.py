@@ -23,24 +23,25 @@ from utils import print_color
 
 
 """ 🔎🔎🔎
-This test aims to simulate the "STOP" button correct functionality
+This test aims to simulate the "RESET" button correct functionality
 to verify that:
-📌 STOP button is disabled right after click
-📌 START button is enabled after STOP button click (only if at least one channel is active)
-📌 DOWNLOAD button is enabled only if write_data and acquisition_stopped are set to True
-📌 Channels checkboxes clicks are enabled after STOP button activation
-📌 acquisition_stopped variabled is set to True after STOP button activation
+📌 blank_space layout is visible right after click
+📌 DOWNLOAD button is disabled
+📌 START button is enabled after RESET button click (only if at least one channel is active)
+📌 STOP button is disabled
+📌 Channels checkboxes clicks are enabled after RESET button activation
+📌 charts list is cleared after RESET button activation
+📌 charts connectors list is cleared after RESET button activation
     🔎🔎🔎
 """
 
 NUM_TESTS = 20000
-WAITING_TIME = 600
+WAITING_TIME = 200
 
 
 def generate_random_interactions():
     rand_enabled_channels = random.sample(range(8),random.randint(1, 8))
     return rand_enabled_channels
-
 
 
 
@@ -54,7 +55,7 @@ def app(qtbot):
 
 
 
-def test_stop_button(app, qtbot):
+def test_reset_button(app, qtbot):
     test_app, window = app
     for idx in range(NUM_TESTS):
         qtbot.wait(WAITING_TIME)
@@ -67,30 +68,27 @@ def test_stop_button(app, qtbot):
         for index in rand_enabled_channels:
             qtbot.mouseClick(channels_checkboxes[index], Qt.LeftButton)
         print_color(f"Enabled channels: {window.enabled_channels}", Fore.WHITE)
-        qtbot.wait(WAITING_TIME)
-        # Simulate write data switch clicking (random interactions num)
-        write_data_switch = window.control_inputs[SETTINGS_WRITE_DATA]
-        write_data_switch_interactions_num = random.randint(1, 5)
-        for interaction_num in range(write_data_switch_interactions_num):
-            qtbot.mouseClick(write_data_switch, Qt.LeftButton)
-            qtbot.wait(WAITING_TIME)
-        print_color(f"Write data enabled? {write_data_switch.isEnabled()}", Fore.WHITE)    
-
+        qtbot.wait(WAITING_TIME)      
 
         # Simulate "START" button click
         start_button = window.control_inputs[START_BUTTON]
         qtbot.mouseClick(start_button, Qt.LeftButton)
         qtbot.wait(WAITING_TIME)
         
-        # Simulate "STOP" button click
-        stop_button = window.control_inputs[STOP_BUTTON]
-        qtbot.mouseClick(stop_button, Qt.LeftButton)
+        # Simulate "RESET" button click
+        reset_button = window.control_inputs[RESET_BUTTON]
+        qtbot.mouseClick(reset_button, Qt.LeftButton)
         qtbot.wait(WAITING_TIME)
-        
-        acquisition_stopped = window.acquisition_stopped
-        assert acquisition_stopped 
-        print_color(f"Acquisition stopped? {acquisition_stopped}", Fore.WHITE)
 
+        blank_space_layout = window.blank_space
+        blank_space_visibile = blank_space_layout.isVisible()
+        assert blank_space_visibile
+        print_color(f"Blank space layout visible? {blank_space_visibile}", Fore.WHITE)
+
+        download_button = window.control_inputs[DOWNLOAD_BUTTON]
+        download_button_enabled = download_button.isEnabled()
+        assert download_button_enabled is False
+        print_color(f"Download button enabled? {download_button_enabled}", Fore.WHITE)
 
         stop_button = window.control_inputs[STOP_BUTTON]
         stop_button_enabled = stop_button.isEnabled()
@@ -106,17 +104,17 @@ def test_stop_button(app, qtbot):
             assert start_button_enabled is False
         print_color(f"Start button enabled? {start_button_enabled}", Fore.WHITE)
 
+        charts_length = len(window.charts)
+        assert charts_length == 0
+        print_color(f"Is charts list empty? {charts_length == 0}", Fore.WHITE)
+
+        charts_connectors_length = len(window.connectors)
+        assert charts_connectors_length == 0
+        print_color(f"Is charts connectors list empty? {charts_length == 0}", Fore.WHITE)
+
         all_checkboxes_enabled = all(checkbox.isEnabled() for checkbox in channels_checkboxes)
         assert all_checkboxes_enabled
-        print_color(f"All channels checkboxes enabled? {all_checkboxes_enabled}", Fore.WHITE)
-
-        write_data_enabled = window.write_data
-        download_button_enabled = window.control_inputs[DOWNLOAD_BUTTON].isEnabled()
-        if write_data_enabled and acquisition_stopped:
-            assert download_button_enabled
-        else:
-            assert download_button_enabled is False
-        print_color(f"Download button enabled? {download_button_enabled}", Fore.WHITE)
+        print_color(f"All channels checkboxes enabled = {all_checkboxes_enabled}", Fore.WHITE)
        
 
         print_color("Test passed successfully", Fore.GREEN)    
