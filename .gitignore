@@ -35,3 +35,5 @@ MANIFEST
 
 .idea
 
+**/*.ini
+

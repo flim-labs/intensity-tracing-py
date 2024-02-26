@@ -403,6 +403,7 @@ class PhotonsTracingWindow(QMainWindow):
 
     def start_button_pressed(self):
         self.acquisition_stopped=False
+        self.settings.setValue(SETTINGS_ACQUISITION_STOPPED,False)
         self.control_inputs[DOWNLOAD_BUTTON].setEnabled(self.write_data and self.acquisition_stopped)
         self.set_download_button_icon()
         warn_title, warn_msg = MessagesUtilities.invalid_inputs_handler(
@@ -452,6 +453,7 @@ class PhotonsTracingWindow(QMainWindow):
 
     def stop_button_pressed(self):
         self.acquisition_stopped = True
+        self.settings.setValue(SETTINGS_ACQUISITION_STOPPED,True)
         self.control_inputs[DOWNLOAD_BUTTON].setEnabled(self.write_data and self.acquisition_stopped)
         self.set_download_button_icon()
         self.control_inputs[START_BUTTON].setEnabled(
@@ -478,9 +480,11 @@ class PhotonsTracingWindow(QMainWindow):
     def reset_button_pressed(self):
         flim_labs.request_stop()
         self.blank_space.show()
+        self.acquisition_stopped=False
+        self.settings.setValue(SETTINGS_ACQUISITION_STOPPED,False)
+        self.control_inputs[DOWNLOAD_BUTTON].setEnabled(self.write_data and self.acquisition_stopped)
+        self.set_download_button_icon() 
 
-        self.control_inputs[DOWNLOAD_BUTTON].setEnabled(False)
-       
         self.control_inputs[START_BUTTON].setEnabled(
             not all(not checkbox.isChecked() for checkbox in self.channels_checkboxes)
         )
