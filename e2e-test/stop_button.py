@@ -121,7 +121,7 @@ def test_stop_button(app, qtbot):
         else:
             assert download_button_enabled is False
         print_color(f"Download button enabled? {download_button_enabled}", Fore.WHITE)
-       
 
         print_color("Test passed successfully", Fore.GREEN)    
-        test_app.quit()
+        
+    test_app.quit()    

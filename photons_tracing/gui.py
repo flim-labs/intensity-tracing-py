@@ -89,7 +89,6 @@ class PhotonsTracingWindow(QMainWindow):
         self.write_data = self.settings.value(SETTINGS_WRITE_DATA, DEFAULT_WRITE_DATA) in ['true', True]
         self.acquisition_stopped = False
 
-
         self.charts = []
         self.cps = []
         self.connectors = []
@@ -102,6 +101,8 @@ class PhotonsTracingWindow(QMainWindow):
         
         self.bin_file_size = ''
         self.bin_file_size_label = QLabel("")
+
+        self.warning_box = None
       
         
         self.pull_from_queue_timer = QTimer()
@@ -403,6 +404,7 @@ class PhotonsTracingWindow(QMainWindow):
 
     def start_button_pressed(self):
         self.acquisition_stopped=False
+        self.warning_box = None
         self.settings.setValue(SETTINGS_ACQUISITION_STOPPED,False)
         self.control_inputs[DOWNLOAD_BUTTON].setEnabled(self.write_data and self.acquisition_stopped)
         self.set_download_button_icon()
@@ -416,9 +418,10 @@ class PhotonsTracingWindow(QMainWindow):
             self.selected_update_rate,
         )
         if warn_title and warn_msg:
-            BoxMessage.setup(
+            message_box = BoxMessage.setup(
                 warn_title, warn_msg, QMessageBox.Warning, GUIStyles.set_msg_box_style()
             )
+            self.warning_box = message_box
             return
         self.control_inputs[START_BUTTON].setEnabled(False)
         self.control_inputs[STOP_BUTTON].setEnabled(True)

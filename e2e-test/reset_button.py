@@ -44,7 +44,6 @@ def generate_random_interactions():
     return rand_enabled_channels
 
 
-
 @pytest.fixture
 def app(qtbot):
     test_app = QApplication([])
@@ -52,7 +51,6 @@ def app(qtbot):
     window.show()
     qtbot.addWidget(window)
     yield  test_app, window
-
 
 
 def test_reset_button(app, qtbot):
@@ -118,7 +116,7 @@ def test_reset_button(app, qtbot):
         all_checkboxes_enabled = all(checkbox.isEnabled() for checkbox in channels_checkboxes)
         assert all_checkboxes_enabled
         print_color(f"All channels checkboxes enabled = {all_checkboxes_enabled}", Fore.WHITE)
-       
 
-        print_color("Test passed successfully", Fore.GREEN)    
-        test_app.quit()
+        print_color("Test passed successfully", Fore.GREEN)
+            
+    test_app.quit()    

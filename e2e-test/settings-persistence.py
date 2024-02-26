@@ -130,4 +130,4 @@ def test_parameter_changes_persistence(app, qtbot):
 
         print_color("Test passed successfully", Fore.GREEN)
 
-        test_app.quit()
+    test_app.quit()    

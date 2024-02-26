@@ -129,4 +129,4 @@ def test_show_cps(app, qtbot):
             test_after_start_btn_pressed(window, qtbot, rand_enabled_channels)
 
         print_color("Test passed successfully", Fore.GREEN)    
-        test_app.quit()
+    test_app.quit()    

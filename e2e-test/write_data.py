@@ -126,6 +126,5 @@ def test_write_data(app, qtbot):
 
         print_color(f"Write data enabled? {window.write_data}", Fore.WHITE)
         print_color(f"Bin file exported? {exported_file_existence}", Fore.WHITE)        
-
   
-        test_app.quit()
+    test_app.quit()    
