@@ -23,13 +23,12 @@ from utils import print_color
 
 
 """ 🔎🔎🔎
-This test aims to simulate the "START" button correct functionality
+This test aims to simulate the "STOP" button correct functionality
 to verify that:
-📌 START button is disabled right after click
-📌 STOP button is enabled after START button click
-📌 Channels checkboxes clicks are disabled after START button activation
-📌 acquisition_stopped variabled is set to False after START button activation
-📌 lenght of visible charts is equal to the length of enabled_channels after START button click
+📌 STOP button is disabled right after click
+📌 START button is enabled after STOP button click
+📌 Channels checkboxes clicks are enabled after STOP button activation
+📌 acquisition_stopped variabled is set to True after STOP button activation
     🔎🔎🔎
 """
 
@@ -53,7 +52,7 @@ def app(qtbot):
 
 
 
-def test_start_button(app, qtbot):
+def test_stop_button(app, qtbot):
     test_app, window = app
     for idx in range(NUM_TESTS):
         qtbot.wait(WAITING_TIME)
@@ -74,30 +73,34 @@ def test_start_button(app, qtbot):
         qtbot.mouseClick(start_button, Qt.LeftButton)
         qtbot.wait(WAITING_TIME)
         
+        # Simulate "STOP" button click
+        stop_button = window.control_inputs[STOP_BUTTON]
+        qtbot.mouseClick(stop_button, Qt.LeftButton)
+        qtbot.wait(WAITING_TIME)
+        
         acquisition_stopped = window.acquisition_stopped
-        assert acquisition_stopped is False
+        assert acquisition_stopped 
         print_color(f"Acquisition stopped = {acquisition_stopped}", Fore.WHITE)
 
-        start_button_enabled = start_button.isEnabled()
-        assert start_button_enabled is False
-        print_color(f"Start button enabled = {start_button_enabled}", Fore.WHITE)
 
         stop_button = window.control_inputs[STOP_BUTTON]
         stop_button_enabled = stop_button.isEnabled()
-        assert stop_button_enabled
+        assert stop_button_enabled is False
         print_color(f"Stop button enabled = {stop_button_enabled}", Fore.WHITE)
+        
+        some_checkboxes_checked = not all(not checkbox.isChecked() for checkbox in channels_checkboxes)
+        print_color(f"Some channels chexboxes checked? = {some_checkboxes_checked}", Fore.WHITE)
+        start_button_enabled = start_button.isEnabled()
+        if some_checkboxes_checked:
+            assert start_button_enabled
+        else:
+            assert start_button_enabled is False
+        print_color(f"Start button enabled = {start_button_enabled}", Fore.WHITE)
 
-        all_checkboxes_disabled = all(checkbox.isEnabled() is False for checkbox in channels_checkboxes)
-        assert all_checkboxes_disabled
-        print_color(f"All channels checkboxes disabled = {all_checkboxes_disabled}", Fore.WHITE)
+        all_checkboxes_enabled = all(checkbox.isEnabled() for checkbox in channels_checkboxes)
+        assert all_checkboxes_enabled
+        print_color(f"All channels checkboxes enabled = {all_checkboxes_enabled}", Fore.WHITE)
        
-        enabled_channels = window.enabled_channels
-        visible_charts = [chart for chart in window.charts if chart.isVisible()]
-
-        assert len(enabled_channels) == len(visible_charts)
-        print_color(f"Active channels = {len(enabled_channels)}", Fore.WHITE)
-        print_color(f"Visibile charts = {len(visible_charts)}", Fore.WHITE)
-
 
         print_color("Test passed successfully", Fore.GREEN)    
         test_app.quit()
