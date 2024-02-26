@@ -31,7 +31,7 @@ This test verifies the functionality of 'DOWNLOAD' button:
     🔎🔎🔎
 """
 
-NUM_TESTS = 10000
+NUM_TESTS = 20000
 WAITING_TIME=100
 
 def generate_random_parameters():
@@ -46,7 +46,7 @@ def generate_random_parameters():
 def app(qtbot):
     test_app = QApplication([])
     window = PhotonsTracingWindow()
-    # window.show()
+    window.show()
     qtbot.addWidget(window)
     yield  test_app, window
  
