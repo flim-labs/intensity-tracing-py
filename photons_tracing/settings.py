@@ -1,3 +1,12 @@
+APP_VERSION = "1.4"
+APP_NAME = "INTENSITY TRACING"
+APP_DEFAULT_WIDTH = 1460
+APP_DEFAULT_HEIGHT = 800
+
+
+EXPORT_DATA_GUIDE_LINK = "https://flim-labs.github.io/intensity-tracing-py/python-flim-labs/intensity-tracing-file-format.html"
+GUI_GUIDE_LINK = "https://flim-labs.github.io/intensity-tracing-py/v1.3/#gui-usage"
+
 SETTINGS_UPDATE_RATE="update_rate"
 DEFAULT_UPDATE_RATE="LOW"
 
@@ -30,3 +39,16 @@ DEFAULT_ENABLED_CHANNELS=[0]
 
 SETTINGS_SHOW_CPS="show_cps"
 DEFAULT_SHOW_CPS=False
+
+START_BUTTON = "start_button"
+STOP_BUTTON = "stop_button"
+RESET_BUTTON = "reset_button"
+DOWNLOAD_BUTTON = "download_button"
+DOWNLOAD_MENU = "download_menu"
+
+REALTIME_MS = 10
+REALTIME_ADJUSTMENT = REALTIME_MS * 1000
+REALTIME_HZ = 1000 / REALTIME_MS
+REALTIME_SECS = REALTIME_MS / 1000
+
+NS_IN_S = 1_000_000_000
