@@ -113,9 +113,10 @@ def check_correct_file_size_format(
     window,
     qtbot,
 ):
-    file_size_MB = int((window.acquisition_time_millis / 1000) * 
-    len(window.enabled_channels) * (window.bin_width_micros / 1000))
-    file_size_bytes = file_size_MB * 1024 * 1024
+    file_size_bytes = int(EXPORTED_DATA_BYTES_UNIT * 
+            (window.acquisition_time_millis / 1000) * 
+            (1000 / window.bin_width_micros) * len(window.enabled_channels))
+
     file_size_label = window.bin_file_size_label.text()
     file_size_label_num_slice = re.search(r'\d+\.\d+', file_size_label)
     file_size_num_value = float(file_size_label_num_slice.group())
