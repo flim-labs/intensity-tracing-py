@@ -13,23 +13,17 @@ class FileUtils:
     def export_script_file(cls, file_extension, content_modifier, window):
         options = QFileDialog.Options()
         file_name, _ = QFileDialog.getSaveFileName(None, "Save File", "", f"All Files (*.{file_extension})", options=options)
-
         if not file_name:
             return
-
         try:
             bin_file_path = cls.get_recent_intensity_tracing_file()
-            bin_file_name = f"{file_name}.bin"
+            bin_file_name = os.path.join(os.path.dirname(file_name), f"{os.path.splitext(os.path.basename(file_name))[0]}.bin")
             shutil.copy(bin_file_path, bin_file_name) if bin_file_path else None
-
             content = cls.read_file_content(content_modifier['source_file'])
             new_content = cls.manipulate_file_content(content, content_modifier, bin_file_name)
-
-            with open(f"{file_name}.{file_extension}", 'w') as file:
+            with open(file_name, 'w') as file:
                 file.writelines(new_content)
-
             cls.show_success_message(file_name)
-
         except Exception as e:
             cls.show_error_message(str(e))
 

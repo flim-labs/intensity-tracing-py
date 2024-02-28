@@ -103,6 +103,7 @@ class PhotonsTracingWindow(QMainWindow):
         self.bin_file_size_label = QLabel("")
 
         self.warning_box = None
+        self.test_mode = False
       
         
         self.pull_from_queue_timer = QTimer()
@@ -419,7 +420,7 @@ class PhotonsTracingWindow(QMainWindow):
         )
         if warn_title and warn_msg:
             message_box = BoxMessage.setup(
-                warn_title, warn_msg, QMessageBox.Warning, GUIStyles.set_msg_box_style()
+                warn_title, warn_msg, QMessageBox.Warning, GUIStyles.set_msg_box_style(), self.test_mode
             )
             self.warning_box = message_box
             return
@@ -681,6 +682,7 @@ class PhotonsTracingWindow(QMainWindow):
                 error_msg,
                 QMessageBox.Critical,
                 GUIStyles.set_msg_box_style(),
+                self.test_mode
             )
 
     def show_download_options(self):    

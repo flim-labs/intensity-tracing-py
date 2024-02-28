@@ -104,6 +104,8 @@ def test_invalid_parameters_warning(app, qtbot):
     for idx in range(NUM_TESTS):
         qtbot.wait(WAITING_TIME)
         print_color(f"\nRunning test {idx + 1}...", Fore.CYAN)
+
+        window.test_mode = True
                 
         # Simulate "RESET" button click
         reset_button = window.control_inputs[RESET_BUTTON]
