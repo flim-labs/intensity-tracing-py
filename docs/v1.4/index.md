@@ -1,11 +1,11 @@
 <a name="readme-top"></a>
 
 <div align="center">
-  <h1>Intensity Tracing v1.3</h1>
+  <h1>Intensity Tracing v1.4</h1>
 </div>
 <div align="center">
   <a href="https://www.flimlabs.com/">
-    <img src="../assets/images/shared/flimlabs-logo.png" alt="Logo" width="120" height="120">
+    <img src="../assets/images/shared/intensity-tracing-logo.png" alt="Logo" width="120" height="120">
   </a>
 </div>
 <br>
@@ -36,7 +36,7 @@
 
 ## Introduction
 
-Welcome to [FLIM LABS Intensity Tracing](https://github.com/flim-labs/intensity-tracing-py) _v1.3_ usage guide. In this documentation section, you will find all the necessary information for the proper use of the application's **graphical user interface** (GUI).
+Welcome to [FLIM LABS Intensity Tracing](https://github.com/flim-labs/intensity-tracing-py) _v1.4_ usage guide. In this documentation section, you will find all the necessary information for the proper use of the application's **graphical user interface** (GUI).
 For a general introduction to the aims and technical requirements of the project, read the [Intensity Tracing Homepage](../index.md). You can also follow the [Console mode](../python-flim-labs/intensity-tracing-console.md) and [Data export](../python-flim-labs/intensity-tracing-file-format.md) dedicated guides links.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -73,9 +73,9 @@ Here a table summary of the configurable parameters:
 
 ### Max Points and Draw Frequency
 
-In _Intensity Tracing v.1.2_, there's a change in the calculation of **max points** and **draw frequency** on charts to prevent overload and overcrowding while maintaining real-time acquisition.
+From _Intensity Tracing v.1.2_, there's a change in the calculation of **max points** and **draw frequency** on charts to prevent overload and overcrowding while maintaining real-time acquisition.
 
-Now, `draw_frequency` takes fixed values based solely on the `selected_update_rate`:
+`draw_frequency` takes fixed values based solely on the `selected_update_rate`:
 
 - If `selected_update_rate` is set to _LOW_, `draw_frequency` is **10Hz**.
 - If `selected_update_rate` is set to _HIGH_ ,`draw_frequency` is **40Hz**.
@@ -159,13 +159,15 @@ The application GUI allows the user to export the analysis data in `binary file 
 
 ## Download Acquired Data
 
-In addition to the [Exported Data Visualization](#exported-data-visualization) feature, users have the capability to download the acquired raw data along with the data reader file by engaging the `DOWNLOAD` button found in the upper-right corner of the graphical user interface (GUI).
+Besides the [Exported Data Visualization](#exported-data-visualization) feature, users can download raw data and its reader file by clicking the `DOWNLOAD` button in the top-right corner of the GUI.
 
-Upon initiating the `DOWNLOAD` process, one must delineate the preferred format for the reader file, choosing either `MATLAB` (.m) or `Python` (.py). Subsequently, it is imperative to designate the directory for saving both the .bin file and its corresponding reader file, ensuring to assign a specific name before finalizing the save operation.
+During the download, users need to choose the preferred reader file format (`MATLAB` (.m) or `Python` (.py)) and specify a directory for saving both the `.bin` file and its corresponding reader file. It's important to provide a specific name before completing the save operation.
 
-Following the download, the visualization of the raw acquired data becomes accessible through the execution of the saved script (reader file). This script is adept at reading binary data from the locally stored file, employing the matplotlib library to render a graphical representation of photon intensity information. For more information about data export and binary file structure refer to:
+After downloading, visualize the raw data by running the saved script (reader file). This script reads binary data from the locally stored file and uses the [matplotlib](https://matplotlib.org/) library to create a graphical representation of photon intensity information.
 
-- [Intensity Tracing Data Export guide ](../python-flim-labs/intensity-tracing-file-format.md)
+For more details on data export and binary file structure, refer to: [Intensity Tracing Data Export guide ](../python-flim-labs/intensity-tracing-file-format.md)
+
+
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

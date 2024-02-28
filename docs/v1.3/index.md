@@ -5,7 +5,7 @@
 </div>
 <div align="center">
   <a href="https://www.flimlabs.com/">
-    <img src="../assets/images/shared/flimlabs-logo.png" alt="Logo" width="120" height="120">
+    <img src="../assets/images/shared/intensity-tracing-logo.png" alt="Logo" width="120" height="120">
   </a>
 </div>
 <br>
@@ -72,9 +72,9 @@ Here a table summary of the configurable parameters:
 
 ### Max Points and Draw Frequency
 
-In _Intensity Tracing v.1.2_, there's a change in the calculation of **max points** and **draw frequency** on charts to prevent overload and overcrowding while maintaining real-time acquisition.
+From _Intensity Tracing v.1.2_, there's a change in the calculation of **max points** and **draw frequency** on charts to prevent overload and overcrowding while maintaining real-time acquisition.
 
-Now, `draw_frequency` takes fixed values based solely on the `selected_update_rate`:
+`draw_frequency` takes fixed values based solely on the `selected_update_rate`:
 
 - If `selected_update_rate` is set to _LOW_, `draw_frequency` is **10Hz**.
 - If `selected_update_rate` is set to _HIGH_ ,`draw_frequency` is **40Hz**.
