@@ -3,6 +3,8 @@ APP_NAME = "INTENSITY TRACING"
 APP_DEFAULT_WIDTH = 1460
 APP_DEFAULT_HEIGHT = 800
 
+SETTINGS_ACQUISITION_STOPPED="acquisition_stopped"
+DEFAULT_ACQUISITION_STOPPED=False
 
 EXPORT_DATA_GUIDE_LINK = "https://flim-labs.github.io/intensity-tracing-py/python-flim-labs/intensity-tracing-file-format.html"
 GUI_GUIDE_LINK = "https://flim-labs.github.io/intensity-tracing-py/v1.3/#gui-usage"
@@ -35,7 +37,7 @@ SETTINGS_WRITE_DATA="write_data"
 DEFAULT_WRITE_DATA=True
 
 SETTINGS_ENABLED_CHANNELS="enabled_channels"
-DEFAULT_ENABLED_CHANNELS=[0]
+DEFAULT_ENABLED_CHANNELS= "[0]"
 
 SETTINGS_SHOW_CPS="show_cps"
 DEFAULT_SHOW_CPS=False

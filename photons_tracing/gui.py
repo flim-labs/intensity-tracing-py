@@ -81,13 +81,13 @@ class PhotonsTracingWindow(QMainWindow):
 
         self.free_running_acquisition_time = self.settings.value(SETTINGS_FREE_RUNNING_MODE, DEFAULT_FREE_RUNNING_MODE) in ['true', True]
 
-        self.enabled_channels = json.loads(str(self.settings.value(SETTINGS_ENABLED_CHANNELS, DEFAULT_ENABLED_CHANNELS)))
+        default_enabled_channels = self.settings.value(SETTINGS_ENABLED_CHANNELS, DEFAULT_ENABLED_CHANNELS)
+        self.enabled_channels = json.loads(default_enabled_channels) if default_enabled_channels is not None else []
 
         self.show_cps = self.settings.value(SETTINGS_SHOW_CPS, DEFAULT_SHOW_CPS) in ['true', True]
 
         self.write_data = self.settings.value(SETTINGS_WRITE_DATA, DEFAULT_WRITE_DATA) in ['true', True]
         self.acquisition_stopped = False
-
 
         self.charts = []
         self.cps = []
@@ -101,6 +101,8 @@ class PhotonsTracingWindow(QMainWindow):
         
         self.bin_file_size = ''
         self.bin_file_size_label = QLabel("")
+
+        self.warning_box = None
       
         
         self.pull_from_queue_timer = QTimer()
@@ -159,7 +161,8 @@ class PhotonsTracingWindow(QMainWindow):
 
 
     def create_export_data_input(self): 
-        info_link_widget, export_data_control = TopBar.create_export_data_input(self.write_data, self.toggle_export_data) 
+        info_link_widget, export_data_control, inp = TopBar.create_export_data_input(self.write_data, self.toggle_export_data)
+        self.control_inputs[SETTINGS_WRITE_DATA] = inp  
         return info_link_widget, export_data_control
 
 
@@ -285,7 +288,6 @@ class PhotonsTracingWindow(QMainWindow):
             )
         self.control_inputs[SETTINGS_ACQUISITION_TIME_MILLIS] = inp    
 
-
     def create_show_cps_control(self):
         show_cps_control, inp = ControlsBar.create_show_cps_control(
             self.show_cps, 
@@ -324,16 +326,17 @@ class PhotonsTracingWindow(QMainWindow):
         else:
             self.enabled_channels.remove(index)
         self.enabled_channels.sort()
-        print("Enabled channels: " + str(self.enabled_channels))
+        #print("Enabled channels: " + str(self.enabled_channels))
         self.calc_exported_file_size()
         self.settings.setValue(SETTINGS_ENABLED_CHANNELS, json.dumps(self.enabled_channels))
         self.control_inputs[START_BUTTON].setEnabled(
             not all(not checkbox.isChecked() for checkbox in self.channels_checkboxes)
         )
+        if len(self.enabled_channels) == 0:     
+            self.cps.clear() 
 
     def toggle_acquisition_time_mode(self, state):
         if state:
-            self.acquisition_time_millis = None
             self.control_inputs[SETTINGS_ACQUISITION_TIME_MILLIS].setEnabled(False)
             self.free_running_acquisition_time = True
             self.settings.setValue(SETTINGS_FREE_RUNNING_MODE, True)
@@ -350,6 +353,7 @@ class PhotonsTracingWindow(QMainWindow):
         else:
             self.show_cps = False
             self.settings.setValue(SETTINGS_SHOW_CPS, False)
+        self.handle_cps_visibility()    
 
     def toggle_export_data(self, state):
         if state:
@@ -400,6 +404,8 @@ class PhotonsTracingWindow(QMainWindow):
 
     def start_button_pressed(self):
         self.acquisition_stopped=False
+        self.warning_box = None
+        self.settings.setValue(SETTINGS_ACQUISITION_STOPPED,False)
         self.control_inputs[DOWNLOAD_BUTTON].setEnabled(self.write_data and self.acquisition_stopped)
         self.set_download_button_icon()
         warn_title, warn_msg = MessagesUtilities.invalid_inputs_handler(
@@ -412,9 +418,10 @@ class PhotonsTracingWindow(QMainWindow):
             self.selected_update_rate,
         )
         if warn_title and warn_msg:
-            BoxMessage.setup(
+            message_box = BoxMessage.setup(
                 warn_title, warn_msg, QMessageBox.Warning, GUIStyles.set_msg_box_style()
             )
+            self.warning_box = message_box
             return
         self.control_inputs[START_BUTTON].setEnabled(False)
         self.control_inputs[STOP_BUTTON].setEnabled(True)
@@ -449,6 +456,7 @@ class PhotonsTracingWindow(QMainWindow):
 
     def stop_button_pressed(self):
         self.acquisition_stopped = True
+        self.settings.setValue(SETTINGS_ACQUISITION_STOPPED,True)
         self.control_inputs[DOWNLOAD_BUTTON].setEnabled(self.write_data and self.acquisition_stopped)
         self.set_download_button_icon()
         self.control_inputs[START_BUTTON].setEnabled(
@@ -475,9 +483,11 @@ class PhotonsTracingWindow(QMainWindow):
     def reset_button_pressed(self):
         flim_labs.request_stop()
         self.blank_space.show()
+        self.acquisition_stopped=False
+        self.settings.setValue(SETTINGS_ACQUISITION_STOPPED,False)
+        self.control_inputs[DOWNLOAD_BUTTON].setEnabled(self.write_data and self.acquisition_stopped)
+        self.set_download_button_icon() 
 
-        self.control_inputs[DOWNLOAD_BUTTON].setEnabled(False)
-       
         self.control_inputs[START_BUTTON].setEnabled(
             not all(not checkbox.isChecked() for checkbox in self.channels_checkboxes)
         )
@@ -493,6 +503,22 @@ class PhotonsTracingWindow(QMainWindow):
         self.connectors.clear()
         self.charts.clear()
         QApplication.processEvents()
+    
+
+    def create_cps_label(self, plot_widget):
+        # cps indicator
+        cps_label = QLabel("0 CPS", plot_widget)
+        cps_label.setFixedWidth(200)
+        cps_label.setStyleSheet(GUIStyles.set_cps_label_style())
+        cps_label.move(60, 5)
+        if not self.show_cps:
+            cps_label.hide()
+        return cps_label    
+
+    def handle_cps_visibility(self):
+        if len(self.cps) > 0:
+            for cps_label in self.cps:
+                cps_label.show() if self.show_cps else cps_label.hide()
 
 
     def generate_chart(self, channel_index):
@@ -513,8 +539,6 @@ class PhotonsTracingWindow(QMainWindow):
         )
 
         plot_widget.getAxis('left').setLabel('AVG. Photon counts', color='#FFA726', orientation='vertical')
-
-
         plot_curve = LiveLinePlot()
         plot_curve.setPen(pg.mkPen(color="#a877f7"))
         plot_widget.addItem(plot_curve)
@@ -526,19 +550,10 @@ class PhotonsTracingWindow(QMainWindow):
             max_points=int(REALTIME_HZ / 2) * self.time_span,
             plot_rate=REALTIME_HZ,
         )
-
         # plot_widget.showGrid(x=True, y=True, alpha=0.5)
         plot_widget.setBackground(None)
+        return plot_widget, (self.enabled_channels[channel_index], connector), self.create_cps_label(plot_widget)
 
-        # cps indicator
-        cps_label = QLabel("0 CPS", plot_widget)
-        cps_label.setFixedWidth(200)
-        cps_label.setStyleSheet(GUIStyles.set_cps_label_style())
-        cps_label.move(60, 5)
-
-        if not self.show_cps:
-            cps_label.hide()
-        return plot_widget, (self.enabled_channels[channel_index], connector), cps_label
 
     def showEvent(self, event):
         super().showEvent(event)
@@ -572,11 +587,10 @@ class PhotonsTracingWindow(QMainWindow):
         if  self.free_running_acquisition_time is True or self.acquisition_time_millis is None:
             self.bin_file_size = 'XXXMB' 
         else:
-            file_size_MB = int((self.acquisition_time_millis / 1000) * len(self.enabled_channels) * (self.bin_width_micros / 1000))
+            file_size_MB = int((self.acquisition_time_millis / 1000) * 
+            len(self.enabled_channels) * (self.bin_width_micros / 1000))
             self.bin_file_size = FormatUtils.format_size(file_size_MB * 1024 * 1024) 
-            
         self.bin_file_size_label.setText("File size: " + str(self.bin_file_size))        
-
 
     def pull_from_queue(self):
         val = flim_labs.pull_from_queue()
@@ -605,7 +619,9 @@ class PhotonsTracingWindow(QMainWindow):
                 curr_conn.cb_append_data_point(y=(counts[channel] / adjustment), x=seconds)
                 cps_counts[channel] += counts[channel] / adjustment
                 if seconds >= next_second:
-                    self.cps[channel].setText(FormatUtils.format_cps(round(cps_counts[channel])) + " CPS")
+                    self.cps[self.enabled_channels.index(channel)].setText(
+                        FormatUtils.format_cps(round(cps_counts[channel])) + " CPS"
+                    )
                     cps_counts[channel] = 0
             if seconds >= next_second:
                 next_second += 1
@@ -619,13 +635,14 @@ class PhotonsTracingWindow(QMainWindow):
 
     def start_photons_tracing(self):
         try:
+            free_running_mode = self.control_inputs[SETTINGS_FREE_RUNNING_MODE].isChecked()
             acquisition_time_millis = (
-                None
-                if self.acquisition_time_millis in (0, None)
-                else self.acquisition_time_millis
+            None if self.acquisition_time_millis in (0, None) or 
+            free_running_mode
+            else self.acquisition_time_millis
             )
             print("Selected firmware: " + (str(self.selected_firmware)))
-            print("Free running enabled: " + str(self.control_inputs[SETTINGS_FREE_RUNNING_MODE].isChecked()))
+            print("Free running enabled: " + str(free_running_mode))
             print("Acquisition time (ms): " + str(acquisition_time_millis))
             print("Time span (s): " + str(self.time_span))
             print("Max points: " + str(40 * self.time_span))

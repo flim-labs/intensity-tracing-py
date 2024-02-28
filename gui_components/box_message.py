@@ -8,4 +8,9 @@ class BoxMessage:
         message_box.setText(msg)
         message_box.setWindowTitle(title)
         message_box.setStyleSheet(style)
-        message_box.exec_()
+        message_box.show()
+        return message_box
+
+    @staticmethod    
+    def close(message_box):
+        message_box.accept()    
