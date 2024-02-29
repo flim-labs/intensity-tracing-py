@@ -2,7 +2,12 @@
 
 ## Version 1.4
 
-- Add download acquired data functionality
+- Automated saving and loading of parameters configuration
+- Add download acquired data functionality (python and matlab plot data scripts + data bin file)
+- Add a GUI helper to preview exported data .bin file size
+- GUI flows stability improved with e2e tests
+
+
 
 ## Version 1.3
 

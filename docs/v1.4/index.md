@@ -20,7 +20,7 @@
     <li><a href="#gui-usage">GUI Usage</a>
     <ul>
     <li><a href="#max-points-and-draw-frequency">Max Points and Draw Frequency</a></li>
-     <li><a href="#save-parameters-configuration">Save Parameters Configuration</a></li>
+     <li><a href="#parameters-configuration-saving">Parameters Configuration Saving</a></li>
     </ul>
     </li>
        <li><a href="#long-time-acquisitions-and-ring-buffers">Long Time Acquisitions and Ring Buffers</a></li>
@@ -89,13 +89,10 @@ This recalibration on the data visualization side doesn't affect the acquisition
 
 <br>
 
-### Save Parameters Configuration
+### Parameters Configuration Saving
+Starting from _Intensity Tracing v.1.4_, the saving of GUI configuration parameters has been **automated**. Each interaction with the parameters results in the relative value change being stored in a `settings.ini` internal file. 
 
-<div align="center">
-    <img src="../assets/images/python/intensity-tracing-save-config-v1.3.gif" alt="GUI" width="100%">
-</div>
-
-Users can locally **save their parameter configuration** by clicking the `SAVE CONFIGURATION` button in the top-right corner of the GUI. The saved parameters include:
+The configurable parameters which can be stored in the settings file include:
 
 - `enabled_channels`
 - `selected_conn_channel`
@@ -108,25 +105,23 @@ Users can locally **save their parameter configuration** by clicking the `SAVE C
 - `write_data`
 - `show_cps`
 
-The configuration file is stored as a JSON file at `C:\Users\YOUR_USER\.flim-labs\config\intensity_tracing_config.json`.
-On application restart, the saved configuration is automatically loaded if the file is found; otherwise, a _default_ configuration is applied.
+On application restart, the saved configuration is automatically loaded. If the `settings.ini` file is not found, or a specific parameter has not been configured yet, a default configuration will be set.
 
-Here an example of the saved _json_ structure:
+
+Here an example of the `settings.ini` structure:
 
 ```json
-{
-  "selected_update_rate": "HIGH",
-  "selected_conn_channel": "USB",
-  "selected_firmware": "intensity_tracing_usb.flim",
-  "bin_width_micros": 1000,
-  "time_span": 5,
-  "acquisition_time_millis": 10000000,
-  "draw_frequency": 40,
-  "free_running_acquisition_time": false,
-  "write_data": true,
-  "show_cps": true,
-  "enabled_channels": [1, 2, 3]
-}
+[General]
+show_cps=true
+free_running_mode=false
+acquisition_time_millis=100000
+bin_width_micros=2000
+enabled_channels="[0, 1, 2]"
+update_rate=HIGH
+draw_frequency=40
+acquisition_stopped=true
+write_data=true
+time_span=10
 ```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -151,8 +146,30 @@ For a detailed guide about console mode usage follow this link:
 
 ## Exported Data Visualization
 
-The application GUI allows the user to export the analysis data in `binary file format`. For a detailed guide about data export and binary file structure see:
+The application GUI allows the user to export the analysis data in `binary file format`. 
 
+The user can also preview the final file size on the GUI. Since the calculation of the size depends on the values of the parameters `enabled_channels`, `bin_width_micros`, `free_running_acquisition_time`, `time_span`, and `acquisition_time_millis`, the value will be displayed if the following actions have been taken:
+- At least one acquisition channel has been activated (`enabled_channels` has a length greater than 0).
+- The 'Free running' acquisition mode has been deactivated.
+- Values have been set for `time_span`, `acquisition_time_millis`, and `bin_width_micros`.
+
+Here is a code snippet which illustrates the algorithm used for the calculation:
+
+```python
+def calc_exported_file_size(self):
+  if self.free_running_acquisition_time is True or self.acquisition_time_millis is None:
+    self.bin_file_size = 'XXXMB' 
+  else:  
+    file_size_bytes = int( EXPORTED_DATA_BYTES_UNIT * 
+    (self.acquisition_time_millis / 1000) * 
+    (1000 / self.bin_width_micros) * len(self.enabled_channels))
+    self.bin_file_size = FormatUtils.format_size(file_size_bytes) 
+    self.bin_file_size_label.setText("File size: " + str(self.bin_file_size))  
+```
+
+where `EXPORTED_DATA_BYTES_UNIT` is equal to the constant value of **12083.2 bytes**.
+
+For a detailed guide about data export and binary file structure see:
 - [Intensity Tracing Data Export guide ](../python-flim-labs/intensity-tracing-file-format.md)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
