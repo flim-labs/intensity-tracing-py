@@ -165,9 +165,7 @@ During the download, users need to choose the preferred reader file format (`MAT
 
 After downloading, visualize the raw data by running the saved script (reader file). This script reads binary data from the locally stored file and uses the [matplotlib](https://matplotlib.org/) library to create a graphical representation of photon intensity information.
 
-For more details on data export and binary file structure, refer to: [Intensity Tracing Data Export guide ](../python-flim-labs/intensity-tracing-file-format.md)
-
-
+For more details on how to run the saved script. data export and binary file structure and refer to: [Intensity Tracing Data Export guide ](../python-flim-labs/intensity-tracing-file-format.md)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
