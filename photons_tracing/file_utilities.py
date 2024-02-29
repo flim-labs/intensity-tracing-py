@@ -19,13 +19,38 @@ class FileUtils:
             bin_file_path = cls.get_recent_intensity_tracing_file()
             bin_file_name = os.path.join(os.path.dirname(file_name), f"{os.path.splitext(os.path.basename(file_name))[0]}.bin")
             shutil.copy(bin_file_path, bin_file_name) if bin_file_path else None
+            
+            
+            #write script file
             content = cls.read_file_content(content_modifier['source_file'])
             new_content = cls.manipulate_file_content(content, content_modifier, bin_file_name)
-            with open(file_name, 'w') as file:
-                file.writelines(new_content)
+            cls.write_file(file_name, new_content) 
+
+            #write requirements file only for python export
+            if len(content_modifier['requirements'])>0: 
+                cls.create_requirements_file(file_name,content_modifier['requirements'])
+            
             cls.show_success_message(file_name)
         except Exception as e:
             cls.show_error_message(str(e))
+
+
+    @classmethod 
+    def write_file(cls, file_name, content):
+        with open (file_name, 'w') as file:
+            file.writelines(content)
+
+    @classmethod
+    def create_requirements_file(cls, script_file_name, requirements):
+        directory = os.path.dirname(script_file_name)
+        requirements_path = os.path.join(directory, 'requirements.txt')
+        requirements_content=[]
+
+        for requirement in requirements:
+            requirements_content.append(f"{requirement}\n")
+        print('write file')
+        cls.write_file(requirements_path, requirements_content)
+
 
     @classmethod
     def read_file_content(cls, file_path):
@@ -85,7 +110,8 @@ class MatlabScriptUtils(FileUtils):
             'source_file': 'plot_data_file.m',
             'skip_pattern': '% Get most recent intensity tracing .bin file from your local computer',
             'end_pattern': 'metadata =',
-            'replace_pattern': 'metadata ='
+            'replace_pattern': 'metadata =',
+            'requirements':[]
         }
         FileUtils.export_script_file('m', content_modifier, window)
 
@@ -97,6 +123,7 @@ class PythonScriptUtils(FileUtils):
             'source_file': 'plot_data_file.py',
             'skip_pattern': 'def get_recent_intensity_tracing_file():',
             'end_pattern': 'times =',
-            'replace_pattern': 'times ='
+            'replace_pattern': 'times =',
+            'requirements': ['matplotlib' ]
         }
         FileUtils.export_script_file('py', content_modifier, window)
