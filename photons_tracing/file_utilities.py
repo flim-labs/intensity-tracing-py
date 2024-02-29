@@ -38,13 +38,15 @@ class FileUtils:
         skip_function = False
 
         for line in content:
-            if modifier['skip_pattern'] in line:
-                skip_function = True
+            if line.startswith(modifier['skip_pattern']):
+                 skip_function = True
             elif skip_function and line.startswith(modifier['end_pattern']):
-                skip_function = False
+                 skip_function = False
             if not skip_function and modifier['replace_pattern'] in line:
                 line += f"\nfile_path = '{file_name}'\n"
-            new_content.append(line)
+                new_content.append(line)
+            if not skip_function and not modifier['replace_pattern'] in line:
+                new_content.append(line)    
 
         return new_content
 
@@ -93,7 +95,7 @@ class PythonScriptUtils(FileUtils):
     def download_python(window):
         content_modifier = {
             'source_file': 'plot_data_file.py',
-            'skip_pattern': 'def get_recent_intensity_tracing_file()',
+            'skip_pattern': 'def get_recent_intensity_tracing_file():',
             'end_pattern': 'times =',
             'replace_pattern': 'times ='
         }
