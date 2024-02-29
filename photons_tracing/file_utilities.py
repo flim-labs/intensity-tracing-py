@@ -27,9 +27,10 @@ class FileUtils:
             cls.write_file(file_name, new_content) 
 
             #write requirements file only for python export
-            if len(content_modifier['requirements'])>0: 
-                cls.create_requirements_file(file_name,content_modifier['requirements'])
-            
+            if len(content_modifier['requirements'])>0:
+                requirement_path, requirements_content=cls.create_requirements_file(file_name,content_modifier['requirements'])
+                cls.write_file(requirement_path,requirements_content )
+                
             cls.show_success_message(file_name)
         except Exception as e:
             cls.show_error_message(str(e))
@@ -48,8 +49,8 @@ class FileUtils:
 
         for requirement in requirements:
             requirements_content.append(f"{requirement}\n")
-        print('write file')
-        cls.write_file(requirements_path, requirements_content)
+        return [requirements_path, requirements_content]
+        
 
 
     @classmethod
@@ -61,6 +62,7 @@ class FileUtils:
     def manipulate_file_content(cls, content, modifier, file_name):
         new_content = []
         skip_function = False
+        print(f'filenameeee {file_name}')
 
         for line in content:
             if line.startswith(modifier['skip_pattern']):
