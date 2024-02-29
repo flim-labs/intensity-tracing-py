@@ -103,6 +103,7 @@ class PhotonsTracingWindow(QMainWindow):
         self.bin_file_size_label = QLabel("")
 
         self.warning_box = None
+        self.test_mode = False
       
         
         self.pull_from_queue_timer = QTimer()
@@ -419,7 +420,7 @@ class PhotonsTracingWindow(QMainWindow):
         )
         if warn_title and warn_msg:
             message_box = BoxMessage.setup(
-                warn_title, warn_msg, QMessageBox.Warning, GUIStyles.set_msg_box_style()
+                warn_title, warn_msg, QMessageBox.Warning, GUIStyles.set_msg_box_style(), self.test_mode
             )
             self.warning_box = message_box
             return
@@ -587,9 +588,10 @@ class PhotonsTracingWindow(QMainWindow):
         if  self.free_running_acquisition_time is True or self.acquisition_time_millis is None:
             self.bin_file_size = 'XXXMB' 
         else:
-            file_size_MB = int((self.acquisition_time_millis / 1000) * 
-            len(self.enabled_channels) * (self.bin_width_micros / 1000))
-            self.bin_file_size = FormatUtils.format_size(file_size_MB * 1024 * 1024) 
+            file_size_bytes = int( EXPORTED_DATA_BYTES_UNIT * 
+            (self.acquisition_time_millis / 1000) * 
+            (1000 / self.bin_width_micros) * len(self.enabled_channels))
+            self.bin_file_size = FormatUtils.format_size(file_size_bytes) 
         self.bin_file_size_label.setText("File size: " + str(self.bin_file_size))        
 
     def pull_from_queue(self):
@@ -680,6 +682,7 @@ class PhotonsTracingWindow(QMainWindow):
                 error_msg,
                 QMessageBox.Critical,
                 GUIStyles.set_msg_box_style(),
+                self.test_mode
             )
 
     def show_download_options(self):    

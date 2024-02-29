@@ -1,7 +1,7 @@
 <a name="readme-top"></a>
 
 <div align="center">
-  <h1>Intensity Tracing v1.3</h1>
+  <h1>Intensity Tracing v1.4</h1>
 </div>
 <div align="center">
   <a href="https://www.flimlabs.com/">
@@ -26,6 +26,7 @@
        <li><a href="#long-time-acquisitions-and-ring-buffers">Long Time Acquisitions and Ring Buffers</a></li>
     <li><a href="#console-usage">Console Usage</a></li>
      <li><a href="#exported-data-visualization">Exported Data Visualization</a></li>
+     <li><a href="#download-acquired-data">Download Acquired Data</a></li>
     <li><a href="#license">License</a></li>
     <li><a href="#contact">Contact</a></li>
   </ol>
@@ -35,7 +36,7 @@
 
 ## Introduction
 
-Welcome to [FLIM LABS Intensity Tracing](https://github.com/flim-labs/intensity-tracing-py) _v1.3_ usage guide. In this documentation section, you will find all the necessary information for the proper use of the application's **graphical user interface** (GUI).
+Welcome to [FLIM LABS Intensity Tracing](https://github.com/flim-labs/intensity-tracing-py) _v1.4_ usage guide. In this documentation section, you will find all the necessary information for the proper use of the application's **graphical user interface** (GUI).
 For a general introduction to the aims and technical requirements of the project, read the [Intensity Tracing Homepage](../index.md). You can also follow the [Console mode](../python-flim-labs/intensity-tracing-console.md) and [Data export](../python-flim-labs/intensity-tracing-file-format.md) dedicated guides links.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -153,6 +154,18 @@ For a detailed guide about console mode usage follow this link:
 The application GUI allows the user to export the analysis data in `binary file format`. For a detailed guide about data export and binary file structure see:
 
 - [Intensity Tracing Data Export guide ](../python-flim-labs/intensity-tracing-file-format.md)
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+## Download Acquired Data
+
+Besides the [Exported Data Visualization](#exported-data-visualization) feature, users can download raw data and its reader file by clicking the `DOWNLOAD` button in the top-right corner of the GUI.
+
+During the download, users need to choose the preferred reader file format (`MATLAB` (.m) or `Python` (.py)) and specify a directory for saving both the `.bin` file and its corresponding reader file. It's important to provide a specific name before completing the save operation.
+
+After downloading, visualize the raw data by running the saved script (reader file). This script reads binary data from the locally stored file and uses the [matplotlib](https://matplotlib.org/) library to create a graphical representation of photon intensity information.
+
+For more details on how to run the saved script. data export and binary file structure and refer to: [Intensity Tracing Data Export guide ](../python-flim-labs/intensity-tracing-file-format.md)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

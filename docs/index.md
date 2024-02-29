@@ -8,7 +8,7 @@
 </div>
 <div align="center">
   <a href="https://www.flimlabs.com/">
-    <img src="./assets/images/shared/flimlabs-logo.png" alt="Logo" width="120" height="120">
+    <img src="./assets/images/shared/intensity-tracing-logo.png" alt="Logo" width="120" height="120">
   </a>
 </div>
 <br>

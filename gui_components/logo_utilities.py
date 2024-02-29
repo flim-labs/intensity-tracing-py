@@ -31,7 +31,7 @@ class LogoOverlay(QWidget):
 class TitlebarIcon():  
     @staticmethod
     def setup(window):
-        icon_path = os.path.join(project_root, 'assets', 'flimlabs-icon.png')
+        icon_path = os.path.join(project_root, 'assets', 'intensity-tracing-logo.png')
         window.setWindowIcon(QIcon(icon_path))
 
           
