@@ -7,7 +7,7 @@ SETTINGS_ACQUISITION_STOPPED="acquisition_stopped"
 DEFAULT_ACQUISITION_STOPPED=False
 
 EXPORT_DATA_GUIDE_LINK = "https://flim-labs.github.io/intensity-tracing-py/python-flim-labs/intensity-tracing-file-format.html"
-GUI_GUIDE_LINK = "https://flim-labs.github.io/intensity-tracing-py/v1.3/#gui-usage"
+GUI_GUIDE_LINK = f"https://flim-labs.github.io/intensity-tracing-py/v{APP_VERSION}/#gui-usage"
 
 SETTINGS_UPDATE_RATE="update_rate"
 DEFAULT_UPDATE_RATE="LOW"
@@ -30,7 +30,7 @@ DEFAULT_ACQUISITION_TIME_MILLIS=None
 SETTINGS_DRAW_FREQUENCY="draw_frequency"
 DEFAULT_DRAW_FREQUENCY=10
 
-SETTINGS_FREE_RUNNING_MODE="running_mode"
+SETTINGS_FREE_RUNNING_MODE="free_running_mode"
 DEFAULT_FREE_RUNNING_MODE=True
 
 SETTINGS_WRITE_DATA="write_data"
