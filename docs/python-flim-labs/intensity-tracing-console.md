@@ -5,7 +5,7 @@
 </div>
 <div align="center">
   <a href="https://www.flimlabs.com/">
-    <img src="../assets/images/shared/flimlabs-logo.png" alt="Logo" width="120" height="120">
+    <img src="../assets/images/shared/intensity-tracing-logo.png" alt="Logo" width="120" height="120">
   </a>
 </div>
 <br>
@@ -48,7 +48,7 @@ Here a table summary of the configurable parameters on code side:
 For more details about the project follow these links:
 
 - [Intensity Tracing introduction](../intensity-tracing/index.md)
-- [Intensity Tracing GUI guide](../intensity-tracing/v1.3/index.md)
+- [Intensity Tracing GUI guide](../intensity-tracing/v1.4/index.md)
 - [Intensity Tracing Data Export guide ](./intensity-tracing-file-format.md)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
