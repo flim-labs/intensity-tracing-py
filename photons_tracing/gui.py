@@ -548,7 +548,7 @@ class PhotonsTracingWindow(QMainWindow):
         connector = DataConnector(
             plot_curve,
             update_rate=REALTIME_HZ,
-            max_points=int(REALTIME_HZ / 2) * self.time_span,
+            max_points=int(REALTIME_HZ) * self.time_span,
             plot_rate=REALTIME_HZ,
         )
         # plot_widget.showGrid(x=True, y=True, alpha=0.5)
@@ -586,13 +586,16 @@ class PhotonsTracingWindow(QMainWindow):
 
     def calc_exported_file_size(self):
         if  self.free_running_acquisition_time is True or self.acquisition_time_millis is None:
-            self.bin_file_size = 'XXXMB' 
+            file_size_bytes = int(EXPORTED_DATA_BYTES_UNIT *
+                                  (1000 / self.bin_width_micros) * len(self.enabled_channels))
+            self.bin_file_size = FormatUtils.format_size(file_size_bytes)
+            self.bin_file_size_label.setText("File size: " + str(self.bin_file_size) + "/s")
         else:
             file_size_bytes = int( EXPORTED_DATA_BYTES_UNIT * 
             (self.acquisition_time_millis / 1000) * 
             (1000 / self.bin_width_micros) * len(self.enabled_channels))
             self.bin_file_size = FormatUtils.format_size(file_size_bytes) 
-        self.bin_file_size_label.setText("File size: " + str(self.bin_file_size))        
+            self.bin_file_size_label.setText("File size: " + str(self.bin_file_size))
 
     def pull_from_queue(self):
         val = flim_labs.pull_from_queue()
@@ -629,7 +632,7 @@ class PhotonsTracingWindow(QMainWindow):
                 next_second += 1
 
             QApplication.processEvents()
-            time.sleep(REALTIME_SECS / 2)
+            time.sleep(REALTIME_SECS / 1.1)
         else:
             print("Realtime queue worker stopped")
             self.realtime_queue.queue.clear()
