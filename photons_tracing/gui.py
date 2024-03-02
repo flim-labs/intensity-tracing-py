@@ -594,7 +594,7 @@ class PhotonsTracingWindow(QMainWindow):
             file_size_bytes = int( EXPORTED_DATA_BYTES_UNIT * 
             (self.acquisition_time_millis / 1000) * 
             (1000 / self.bin_width_micros) * len(self.enabled_channels))
-            self.bin_file_size = FormatUtils.format_size(file_size_bytes) 
+            self.bin_file_size = FormatUtils.format_size(file_size_bytes)
             self.bin_file_size_label.setText("File size: " + str(self.bin_file_size))
 
     def pull_from_queue(self):
