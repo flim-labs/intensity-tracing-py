@@ -10,7 +10,7 @@ class MessagesUtilities:
             return ("Error Saving Configuration", custom_content)
 
         elif "ErrorSavingScriptFile" in error_msg:
-            return ("Error Saving Files", f"An error occurred while saving script and data file: {custom_content}")   
+            return ("Error Saving Files", f"An error occurred while saving script and data file: {custom_content}")
         else:
             return ("Error", error_msg)
 
@@ -19,19 +19,19 @@ class MessagesUtilities:
         if "SavedConfiguration" in info_msg:
             return ("Configuration successfully saved", custom_content)
         elif "SavedScriptFile" in info_msg:
-            return ("Files successfully saved", "Script and data files have been saved successfully")    
+            return ("Files successfully saved", "Script and data files have been saved successfully")
         else:
             return (None, None)
 
     @staticmethod
     def invalid_inputs_handler(
-        bin_width_micros,
-        time_span,
-        acquisition_time_millis,
-        acquisition_time_mode_switch,
-        enabled_channels,
-        selected_conn_channel,
-        selected_update_rate,
+            bin_width_micros,
+            time_span,
+            acquisition_time_millis,
+            acquisition_time_mode_switch,
+            enabled_channels,
+            selected_conn_channel,
+            selected_update_rate,
     ):
         def empty_input_error():
             return (
@@ -67,7 +67,7 @@ class MessagesUtilities:
             return empty_input_error()
 
         elif (
-            not acquisition_time_mode_switch.isChecked() and not acquisition_time_millis
+                not acquisition_time_mode_switch.isChecked() and not acquisition_time_millis
         ):
             return no_acquisition_time_error()
 
@@ -92,22 +92,22 @@ class MessagesUtilities:
         acquisition_time_range = (0.5 * 1000, 1800 * 1000)
 
         if (
-            (
-                bin_width_micros is not None
-                and not (bin_width_range[0] <= bin_width_micros <= bin_width_range[1])
-            )
-            or (
+                (
+                        bin_width_micros is not None
+                        and not (bin_width_range[0] <= bin_width_micros <= bin_width_range[1])
+                )
+                or (
                 time_span is not None
                 and not (time_span_range[0] <= time_span <= time_span_range[1])
-            )
-            or (
+        )
+                or (
                 acquisition_time_millis is not None
                 and not (
-                    acquisition_time_range[0]
-                    <= acquisition_time_millis
-                    <= acquisition_time_range[1]
-                )
-            )
+                acquisition_time_range[0]
+                <= acquisition_time_millis
+                <= acquisition_time_range[1]
+        )
+        )
         ):
             return (
                 "Values out of range",

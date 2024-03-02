@@ -1,17 +1,17 @@
-from PyQt5.QtWidgets import QLabel, QVBoxLayout, QHBoxLayout, QDoubleSpinBox, QSpinBox
+from PyQt5.QtWidgets import QLabel, QVBoxLayout, QHBoxLayout, QSpinBox
 
 
 class InputNumberControl:
     @staticmethod
     def setup(
-        label,
-        min,
-        max,
-        value,
-        row,
-        event_callback,
-        spacing=20,
-        control_layout="vertical",
+            label,
+            min,
+            max,
+            value,
+            row,
+            event_callback,
+            spacing=20,
+            control_layout="vertical",
     ):
         q_label = QLabel(label)
         control = QVBoxLayout() if control_layout == "vertical" else QHBoxLayout()

@@ -1,6 +1,8 @@
 import json
 import os
+
 from PyQt5.QtWidgets import QMessageBox
+
 from gui_components.box_message import BoxMessage
 from gui_styles import GUIStyles
 from messages_utilities import MessagesUtilities
@@ -12,18 +14,18 @@ class ParamsConfigHandler:
     )
 
     def __init__(
-        self,
-        selected_update_rate="LOW",
-        selected_conn_channel="USB",
-        selected_firmware="intensity_tracing_usb.flim",
-        bin_width_micros=1000,
-        time_span=5,
-        acquisition_time_millis=None,
-        draw_frequency=10,
-        free_running_acquisition_time=True,
-        write_data=True,
-        enabled_channels=[0],
-        show_cps=False
+            self,
+            selected_update_rate="LOW",
+            selected_conn_channel="USB",
+            selected_firmware="intensity_tracing_usb.flim",
+            bin_width_micros=1000,
+            time_span=5,
+            acquisition_time_millis=None,
+            draw_frequency=10,
+            free_running_acquisition_time=True,
+            write_data=True,
+            enabled_channels=[0],
+            show_cps=False
     ):
         self.config = {
             "selected_update_rate": selected_update_rate,

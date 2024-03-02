@@ -1,5 +1,6 @@
 from math import log, floor
 
+
 class FormatUtils:
     @staticmethod
     def format_size(size_in_bytes):
@@ -10,7 +11,6 @@ class FormatUtils:
             size_in_bytes /= 1024.0
             unit_index += 1
         return f"{size_in_bytes:.2f} {units[unit_index]}"
-
 
     @staticmethod
     def format_cps(number):

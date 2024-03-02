@@ -24,12 +24,14 @@ SOFTWARE.
 
 """source: https://github.com/Prx001/QSwitchControl"""
 
-from PyQt5.QtWidgets import QWidget, QCheckBox, QApplication
+from PyQt5.QtCore import Qt, QPoint, QPropertyAnimation, QEasingCurve
 from PyQt5.QtGui import QPainter, QColor
-from PyQt5.QtCore import Qt, QPoint, QPropertyAnimation, QEasingCurve, pyqtProperty, pyqtSlot
+from PyQt5.QtWidgets import QWidget, QCheckBox
+
 
 def take_closest(num, collection):
     return min(collection, key=lambda x: abs(x - num))
+
 
 class SwitchCircle(QWidget):
     def __init__(self, parent, move_range: tuple, color, animation_curve, animation_duration):
@@ -85,6 +87,7 @@ class SwitchCircle(QWidget):
         except AttributeError:
             pass
         return super().mouseReleaseEvent(event)
+
 
 class SwitchControl(QCheckBox):
     def __init__(self, parent=None, bg_color="#777777", circle_color="#DDD", active_color="#aa00ff",

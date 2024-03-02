@@ -1,7 +1,6 @@
+from PyQt5.QtGui import QColor, QPalette, QFont
+from PyQt5.QtWidgets import QApplication
 from PyQt5.QtWidgets import QStyleFactory
-from PyQt5.QtGui import QColor, QPalette, QFont, QPixmap
-from PyQt5.QtWidgets import QVBoxLayout, QLabel, QWidget, QApplication
-from PyQt5.QtCore import Qt
 
 
 class GUIStyles:
@@ -241,8 +240,8 @@ class GUIStyles:
             }   
                  
         """
-     
-    @staticmethod        
+
+    @staticmethod
     def set_cps_label_style():
         return """
             QLabel{
@@ -251,9 +250,10 @@ class GUIStyles:
                 font-family: "Montserrat";
                 font-size: 22px;
             }
-        """    
-    @staticmethod        
-    def set_context_menu_style(base,selected,pressed):
+        """
+
+    @staticmethod
+    def set_context_menu_style(base, selected, pressed):
         return f"""
 
         QWidget {{

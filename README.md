@@ -51,7 +51,7 @@ To be able to run this project locally on your machine you need to satisfy these
    ```     
 5. Run the project with GUI mode
    ```sh
-   python gui.py
+   python intensity_tracing.py
    ```  
 6. Or run the project with Console mode
    ```sh

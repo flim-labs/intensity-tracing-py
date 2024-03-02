@@ -1,8 +1,9 @@
 from PyQt5.QtWidgets import QMessageBox
 
+
 class BoxMessage:
     @staticmethod
-    def setup(title, msg, icon, style, test_mode = False):
+    def setup(title, msg, icon, style, test_mode=False):
         message_box = QMessageBox()
         message_box.setIcon(icon)
         message_box.setText(msg)
@@ -10,10 +11,10 @@ class BoxMessage:
         message_box.setStyleSheet(style)
         if test_mode:
             message_box.show()
-        else: 
-            message_box.exec_()    
+        else:
+            message_box.exec_()
         return message_box
 
-    @staticmethod    
+    @staticmethod
     def close(message_box):
-        message_box.accept()    
+        message_box.accept()

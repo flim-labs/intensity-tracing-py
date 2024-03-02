@@ -1,5 +1,6 @@
-import flim_labs
 import threading
+
+import flim_labs
 
 
 def stop():
