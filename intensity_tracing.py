@@ -31,6 +31,7 @@ from pglive.sources.live_plot_widget import LivePlotWidget
 from gui_components.box_message import BoxMessage
 from gui_components.controls_bar import ControlsBar
 from gui_components.layout_utilities import init_ui
+from gui_components.resource_path import resource_path
 from gui_components.top_bar import TopBar
 from gui_components.file_utilities import MatlabScriptUtils, PythonScriptUtils
 from gui_components.format_utilities import FormatUtils
@@ -673,10 +674,10 @@ class PhotonsTracingWindow(QMainWindow):
 
     def set_download_button_icon(self):
         if self.control_inputs[DOWNLOAD_BUTTON].isEnabled():
-            icon = os.path.join(project_root, "assets", "arrow-down-icon-white.png")
+            icon = resource_path("assets/arrow-down-icon-white.png")
             self.control_inputs[DOWNLOAD_BUTTON].setIcon(QIcon(icon))
         else:
-            icon = os.path.join(project_root, "assets", "arrow-down-icon-grey.png")
+            icon = resource_path("assets/arrow-down-icon-grey.png")
             self.control_inputs[DOWNLOAD_BUTTON].setIcon(QIcon(icon))
 
 

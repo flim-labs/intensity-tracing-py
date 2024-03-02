@@ -28,7 +28,7 @@ class FileUtils:
 
             # write script file
             content = content_modifier['source_file']
-            new_content = cls.manipulate_file_content(content, content_modifier, bin_file_name)
+            new_content = cls.manipulate_file_content(content, bin_file_name)
             cls.write_file(file_name, new_content)
 
             # write requirements file only for python export
@@ -62,22 +62,8 @@ class FileUtils:
             return file.readlines()
 
     @classmethod
-    def manipulate_file_content(cls, content, modifier, file_name):
-        new_content = []
-        skip_function = False
-
-        for line in content:
-            if line.startswith(modifier['skip_pattern']):
-                skip_function = True
-            elif skip_function and line.startswith(modifier['end_pattern']):
-                skip_function = False
-            if not skip_function and modifier['replace_pattern'] in line:
-                line += f"\nfile_path = '{file_name}'\n"
-                new_content.append(line)
-            if not skip_function and not modifier['replace_pattern'] in line:
-                new_content.append(line)
-
-        return new_content
+    def manipulate_file_content(cls, content, file_name):
+        return content.replace("<FILE-PATH>", file_name.replace('\\', '/'))
 
     @classmethod
     def show_success_message(cls, file_name):
@@ -111,13 +97,7 @@ class MatlabScriptUtils(FileUtils):
     @staticmethod
     def download_matlab(window):
         content_modifier = {
-            'source_file': """
-% Get most recent intensity tracing .bin file from your local computer
-data_folder = fullfile(getenv('USERPROFILE'), '.flim-labs', 'data');
-files = dir(fullfile(data_folder, 'intensity-tracing*'));
-
-[~, idx] = sort([files.datenum], 'descend');
-most_recent_file = files(idx(1)).name;
+            'source_file': """most_recent_file = '<FILE-PATH>';
 
 file_path = fullfile(data_folder, most_recent_file);
 
@@ -133,7 +113,7 @@ end
 first_bytes = fread(fid, 4, 'uint8=>char')';
 
 if ~strcmp(first_bytes, 'IT02')
-    fprintf('Invalid data file\n');
+    fprintf('Invalid data file');
     fclose(fid);
     return;
 end
@@ -229,23 +209,12 @@ class PythonScriptUtils(FileUtils):
     @staticmethod
     def download_python(window):
         content_modifier = {
-            'source_file': """
-import os
+            'source_file': """import os
 import struct
 
 import matplotlib.pyplot as plt
 
-
-def get_recent_intensity_tracing_file():
-    data_folder = os.path.join(os.environ["USERPROFILE"], ".flim-labs", "data")
-    files = [f for f in os.listdir(data_folder) if f.startswith("intensity-tracing")]
-    files.sort(key=lambda x: os.path.getmtime(os.path.join(data_folder, x)), reverse=True)
-    return os.path.join(data_folder, files[0])
-
-
-file_path = get_recent_intensity_tracing_file()
-print("Using data file: " + file_path)
-# file_path = "INSERT DATA FILE PATH HERE" # You can also manually insert the path to the data file here
+file_path = "<FILE-PATH>"
 
 times = []
 
@@ -264,7 +233,7 @@ with open(file_path, 'rb') as f:
         print("Enabled channels: " + (", ".join(["Channel " + str(ch + 1) for ch in metadata["channels"]])))
 
     if "bin_width_micros" in metadata and metadata["bin_width_micros"] is not None:
-        print("Bin width: " + str(metadata["bin_width_micros"]) + "\u00B5s")
+        print("Bin width: " + str(metadata["bin_width_micros"]) + "micros")
 
     if "acquisition_time_millis" in metadata and metadata["acquisition_time_millis"] is not None:
         print("Acquisition time: " + str(metadata["acquisition_time_millis"] / 1000) + "s")

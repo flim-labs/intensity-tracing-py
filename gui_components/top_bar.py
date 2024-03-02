@@ -2,6 +2,8 @@ import os
 
 from PyQt5.QtCore import Qt, QSize
 
+from gui_components import resource_path
+
 current_path = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_path, ".."))
 
@@ -37,7 +39,7 @@ class TopBar:
         header_layout = QHBoxLayout()
         # Header row: Link to User Guide
         app_guide_link_widget = LinkWidget(
-            icon_filename="info-icon.png", text="User Guide", link=GUI_GUIDE_LINK
+            icon_filename=resource_path.resource_path("assets/info-icon.png"), text="User Guide", link=GUI_GUIDE_LINK
         )
         app_guide_link_widget.setCursor(Qt.CursorShape.PointingHandCursor)
         header_layout.addLayout(logo_and_title)
@@ -58,7 +60,7 @@ class TopBar:
     def create_logo_and_title(self):
         title_row = QHBoxLayout()
         pixmap = QPixmap(
-            os.path.join(project_root, "assets", "flimlabs-logo.png")
+            resource_path.resource_path("assets/flimlabs-logo.png")
         ).scaledToWidth(60)
         ctl = QLabel(pixmap=pixmap)
         title_row.addWidget(ctl)
@@ -78,7 +80,7 @@ class TopBar:
     def create_export_data_input(value, change_cb):
         # Link to export data documentation
         info_link_widget = LinkWidget(
-            icon_filename="info-icon.png",
+            icon_filename=resource_path.resource_path("assets/info-icon.png"),
             link=EXPORT_DATA_GUIDE_LINK,
         )
         info_link_widget.setCursor(Qt.CursorShape.PointingHandCursor)
