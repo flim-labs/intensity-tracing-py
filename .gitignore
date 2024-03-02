@@ -39,3 +39,4 @@ MANIFEST
 **/*.ini
 
 export
+settings.ini

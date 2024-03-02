@@ -108,7 +108,7 @@ class PhotonsTracingWindow(QMainWindow):
 
     @staticmethod
     def init_settings():
-        settings = QSettings('gui_components/settings.ini', QSettings.Format.IniFormat)
+        settings = QSettings('settings.ini', QSettings.Format.IniFormat)
         return settings
 
     def init_ui(self):
