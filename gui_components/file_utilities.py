@@ -36,7 +36,7 @@ class FileUtils:
             # write requirements file only for python export
             if len(content_modifier['requirements']) > 0:
                 requirement_path, requirements_content = cls.create_requirements_file(file_name,
-                                                                                      content_modifier['requirements'])
+                content_modifier['requirements'])
                 cls.write_file(requirement_path, requirements_content)
 
             cls.show_success_message(file_name)
