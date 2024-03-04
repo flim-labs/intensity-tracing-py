@@ -150,7 +150,6 @@ The application GUI allows the user to export the analysis data in `binary file 
 
 The user can also preview the final file size on the GUI. Since the calculation of the size depends on the values of the parameters `enabled_channels`, `bin_width_micros`, `free_running_acquisition_time`, `time_span`, and `acquisition_time_millis`, the value will be displayed if the following actions have been taken:
 - At least one acquisition channel has been activated (`enabled_channels` has a length greater than 0).
-- The 'Free running' acquisition mode has been deactivated.
 - Values have been set for `time_span`, `acquisition_time_millis`, and `bin_width_micros`.
 
 Here is a code snippet which illustrates the algorithm used for the calculation:
