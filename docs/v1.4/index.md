@@ -157,14 +157,17 @@ Here is a code snippet which illustrates the algorithm used for the calculation:
 
 ```python
 def calc_exported_file_size(self):
-  if self.free_running_acquisition_time is True or self.acquisition_time_millis is None:
-    self.bin_file_size = 'XXXMB' 
-  else:  
-    file_size_bytes = int( EXPORTED_DATA_BYTES_UNIT * 
-    (self.acquisition_time_millis / 1000) * 
+  if self.free_running_acquisition_time is True or self acquisition_time_millis is None:
+    file_size_bytes = int(EXPORTED_DATA_BYTES_UNIT *
     (1000 / self.bin_width_micros) * len(self.enabled_channels))
-    self.bin_file_size = FormatUtils.format_size(file_size_bytes) 
-    self.bin_file_size_label.setText("File size: " + str(self.bin_file_size))  
+    self.bin_file_size = FormatUtils.format_size(file_size_bytes)
+    self.bin_file_size_label.setText("File size: " + str(self.bin_file_size) + "/s")
+  else:  
+    file_size_bytes = int(EXPORTED_DATA_BYTES_UNIT *
+    (self.acquisition_time_millis / 1000) *
+    (1000 / self.bin_width_micros) * len(self.enabled_channels))
+    self.bin_file_size = FormatUtils.format_size(file_size_bytes)
+    self.bin_file_size_label.setText("File size: " + str(self.bin_file_size))
 ```
 
 where `EXPORTED_DATA_BYTES_UNIT` is equal to the constant value of **12083.2 bytes**.
