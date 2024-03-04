@@ -8,7 +8,6 @@
 - GUI flows stability improved with e2e tests
 
 
-
 ## Version 1.3
 
 - Ring buffer adaptations and realtime improvements
