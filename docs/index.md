@@ -72,7 +72,7 @@ To get a local copy up and running follow these steps.
 To be able to run this project locally on your machine you need to satisfy these requirements:
 * Windows OS (>= Windows 10)
 * 4GB RAM
-* Modern CPU
+* Multicore CPU
 * Python version >= 3.8
 * Possess a [FLIM LABS acquisition card](https://www.flimlabs.com/products/data-acquisition-card/) to be able to acquire your data
 * ZestSC3 drivers installed
