@@ -46,7 +46,7 @@ For a general introduction to the aims and technical requirements of the project
 ## GUI Usage
 
 <div align="center">
-    <img src="../assets/images/python/intensity-tracing-gui-1.3.png" alt="GUI" width="100%">
+    <img src="../assets/images/python/intensity-tracing-gui-1.4.png" alt="GUI" width="100%">
 </div>
 
 The GUI mode provides advanced functionality for configuring analysis **parameters** and displaying live-streamed photon data. It allows simultaneous acquisition from up to **8 channels**, offering real-time data visualization in the form of plots:
@@ -150,21 +150,23 @@ The application GUI allows the user to export the analysis data in `binary file 
 
 The user can also preview the final file size on the GUI. Since the calculation of the size depends on the values of the parameters `enabled_channels`, `bin_width_micros`, `free_running_acquisition_time`, `time_span`, and `acquisition_time_millis`, the value will be displayed if the following actions have been taken:
 - At least one acquisition channel has been activated (`enabled_channels` has a length greater than 0).
-- The 'Free running' acquisition mode has been deactivated.
 - Values have been set for `time_span`, `acquisition_time_millis`, and `bin_width_micros`.
 
 Here is a code snippet which illustrates the algorithm used for the calculation:
 
 ```python
 def calc_exported_file_size(self):
-  if self.free_running_acquisition_time is True or self.acquisition_time_millis is None:
-    self.bin_file_size = 'XXXMB' 
-  else:  
-    file_size_bytes = int( EXPORTED_DATA_BYTES_UNIT * 
-    (self.acquisition_time_millis / 1000) * 
+  if self.free_running_acquisition_time is True or self acquisition_time_millis is None:
+    file_size_bytes = int(EXPORTED_DATA_BYTES_UNIT *
     (1000 / self.bin_width_micros) * len(self.enabled_channels))
-    self.bin_file_size = FormatUtils.format_size(file_size_bytes) 
-    self.bin_file_size_label.setText("File size: " + str(self.bin_file_size))  
+    self.bin_file_size = FormatUtils.format_size(file_size_bytes)
+    self.bin_file_size_label.setText("File size: " + str(self.bin_file_size) + "/s")
+  else:  
+    file_size_bytes = int(EXPORTED_DATA_BYTES_UNIT *
+    (self.acquisition_time_millis / 1000) *
+    (1000 / self.bin_width_micros) * len(self.enabled_channels))
+    self.bin_file_size = FormatUtils.format_size(file_size_bytes)
+    self.bin_file_size_label.setText("File size: " + str(self.bin_file_size))
 ```
 
 where `EXPORTED_DATA_BYTES_UNIT` is equal to the constant value of **12083.2 bytes**.

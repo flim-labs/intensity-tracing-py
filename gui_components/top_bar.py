@@ -60,7 +60,7 @@ class TopBar:
     def create_logo_and_title(self):
         title_row = QHBoxLayout()
         pixmap = QPixmap(
-            resource_path.resource_path("assets/flimlabs-logo.png")
+            resource_path.resource_path("assets/intensity-tracing-logo.png")
         ).scaledToWidth(60)
         ctl = QLabel(pixmap=pixmap)
         title_row.addWidget(ctl)
