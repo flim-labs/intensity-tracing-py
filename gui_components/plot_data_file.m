@@ -11,15 +11,16 @@ metadata = struct('channels', [], 'bin_width_micros', [], 'acquisition_time_mill
 
 fid = fopen(file_path, 'rb');
 
+
 if fid == -1
     error('Unable to open the file');
 end
 
-% First 4 bytes must be IT01
-first_bytes = fread(fid, 4, 'uint8=>char')';
+% First 4 bytes must be IT02
+first_bytes = fread(fid, 4, 'char')';
 
-if ~strcmp(first_bytes, 'IT02')
-    fprintf('Invalid data file\n');
+if ~isequal(first_bytes, 'IT02')
+    fprintf('Invalid data file');
     fclose(fid);
     return;
 end
@@ -37,7 +38,7 @@ if ~isempty(metadata.channels)
 end
 
 if ~isempty(metadata.bin_width_micros)
-    disp(['Bin width: ' num2str(metadata.bin_width_micros) ' µs']);
+    disp(['Bin width: ' num2str(metadata.bin_width_micros) ' us']);
 end
 
 if ~isempty(metadata.acquisition_time_millis)
@@ -54,17 +55,17 @@ number_of_channels = numel(metadata.channels);
 channel_lines = cell(1, number_of_channels);
 
 bin_width_seconds = metadata.bin_width_micros / 1e6;
-times = []
+times = [];
 
 while true
-    data = fread(fid, 4 * number_of_channels + 8);
+    data = fread(fid, 4 * number_of_channels + 8, 'uint8=>uint8');
 
     if isempty(data)
         break;
     end
 
     time = typecast(data(1:8), 'double');
-    channel_values = typecast(data(8:end), 'uint32');
+    channel_values = typecast(data(9:end), 'uint32');
 
     for i = 1:numel(channel_lines)
         channel_lines{i} = [channel_lines{i}, channel_values(i)];
@@ -73,7 +74,6 @@ while true
     times = [times, time / 1e9];
 
 end
-
 
 fclose(fid);
 
@@ -86,9 +86,9 @@ for i = 1:numel(active_channels)
 end
 
 % Set plot title with metadata information
-title_str = sprintf('Bin Width: %s µs, Laser Period: %s ns',
-num2str(metadata.bin_width_micros),
-num2str(metadata.laser_period_ns));
+title_str = sprintf('Bin Width: %s us, Laser Period: %s ns',
+    num2str(metadata.bin_width_micros),
+    num2str(metadata.laser_period_ns));
 
 if ~isempty(metadata.acquisition_time_millis)
     title_str = [title_str, sprintf(', Acquisition Time: %s s', num2str(metadata.acquisition_time_millis / 1000))];
