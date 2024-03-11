@@ -254,25 +254,41 @@ with open(file_path, 'rb') as f:
             channel_lines[i].append(channel_values[i])
 
         times.append(time / 1_000_000_000)
+ 
+
+    for i in range(len(metadata["channels"])):
+        channel_line = channel_lines[i]
+        plt.plot(
+            times,
+            channel_line,
+            label="Channel " + str(metadata["channels"][i] + 1),
+            linewidth=0.5
+        )
 
 
-plt.xlabel("Time (s)")
-plt.ylabel("Intensity (counts)")
-plt.title("Intensity tracing")
-plt.grid(True)
-# background dark
-
-
-for i in range(len(channel_lines)):
-    channel_line = channel_lines[i]
-    plt.plot(
-        times,
-        channel_line,
-        label="Channel " + str(metadata["channels"][i] + 1),
-        linewidth=0.5
+    title_str = 'Bin Width: {} us, Laser Period: {} ns'.format(
+        metadata['bin_width_micros'],
+        metadata['laser_period_ns']
     )
 
-plt.show()
+    if metadata['acquisition_time_millis'] is not None:
+        title_str += ', Acquisition Time: {} s'.format(metadata['acquisition_time_millis'] / 1000)
+
+    plt.title(title_str)
+  
+    plt.xlabel("Time (s)")
+    plt.ylabel("Intensity (counts)")
+
+
+    plt.grid(True)
+
+
+    plt.legend(bbox_to_anchor = (1.05, 1), fancybox=True, shadow=True)
+    plt.tight_layout()
+
+
+
+    plt.show()
 
             """,
             'skip_pattern': 'def get_recent_intensity_tracing_file():',

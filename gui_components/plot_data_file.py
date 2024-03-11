@@ -58,20 +58,38 @@ with open(file_path, 'rb') as f:
 
         times.append(time / 1_000_000_000)
 
-plt.xlabel("Time (s)")
-plt.ylabel("Intensity (counts)")
-plt.title("Intensity tracing")
-plt.grid(True)
-# background dark
+    # Plot data
+    for i in range(len(metadata["channels"])):
+        channel_line = channel_lines[i]
+        plt.plot(
+            times,
+            channel_line,
+            label="Channel " + str(metadata["channels"][i] + 1),
+            linewidth=0.5
+        )
 
-
-for i in range(len(channel_lines)):
-    channel_line = channel_lines[i]
-    plt.plot(
-        times,
-        channel_line,
-        label="Channel " + str(metadata["channels"][i] + 1),
-        linewidth=0.5
+    # Set plot title with metadata information
+    title_str = 'Bin Width: {} us, Laser Period: {} ns'.format(
+        metadata['bin_width_micros'],
+        metadata['laser_period_ns']
     )
 
-plt.show()
+    if metadata['acquisition_time_millis'] is not None:
+        title_str += ', Acquisition Time: {} s'.format(metadata['acquisition_time_millis'] / 1000)
+
+    plt.title(title_str)
+
+    # Set x and y axis labels
+    plt.xlabel("Time (s)")
+    plt.ylabel("Intensity (counts)")
+
+    # Display grid
+    plt.grid(True)
+
+    # Set legend
+    plt.legend(bbox_to_anchor = (1.05, 1), fancybox=True, shadow=True)
+    plt.tight_layout()
+
+
+    # Show the plot
+    plt.show()
