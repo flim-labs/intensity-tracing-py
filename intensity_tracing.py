@@ -30,14 +30,14 @@ from pglive.sources.live_plot_widget import LivePlotWidget
 
 from gui_components.box_message import BoxMessage
 from gui_components.controls_bar import ControlsBar
-from gui_components.layout_utilities import init_ui
-from gui_components.resource_path import resource_path
-from gui_components.top_bar import TopBar
 from gui_components.file_utilities import MatlabScriptUtils, PythonScriptUtils
 from gui_components.format_utilities import FormatUtils
 from gui_components.gui_styles import GUIStyles
+from gui_components.layout_utilities import init_ui
 from gui_components.messages_utilities import MessagesUtilities
+from gui_components.resource_path import resource_path
 from gui_components.settings import *
+from gui_components.top_bar import TopBar
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_path, ".."))
@@ -99,6 +99,9 @@ class PhotonsTracingWindow(QMainWindow):
 
         self.pull_from_queue_timer = QTimer()
         self.pull_from_queue_timer.timeout.connect(self.pull_from_queue)
+
+        self.pull_from_queue_timer2 = QTimer()
+        self.pull_from_queue_timer2.timeout.connect(self.pull_from_queue2)
 
         self.realtime_queue_thread = None
         self.realtime_queue_worker_stop = False
@@ -446,9 +449,10 @@ class PhotonsTracingWindow(QMainWindow):
 
         self.realtime_queue.queue.clear()
         self.realtime_queue_worker_stop = True
-        if self.realtime_queue_thread is not None:
+        if self.realtime_queue_thread is not None and self.realtime_queue_thread.is_alive():
             self.realtime_queue_thread.join()
         self.pull_from_queue_timer.stop()
+        self.pull_from_queue_timer2.stop()  # TODO PERFORMANCE TEST
 
         for channel, curr_conn in self.connectors:
             curr_conn.pause()
@@ -579,6 +583,38 @@ class PhotonsTracingWindow(QMainWindow):
                 counts = [ch1, ch2, ch3, ch4, ch5, ch6, ch7, ch8]
                 self.realtime_queue.put((current_time, counts))
 
+    def pull_from_queue2(self):
+        val = flim_labs.pull_from_queue()
+        if len(val) > 0:
+            for v in val:
+                if v == ('end',):  # End of acquisition
+                    self.stop_button_pressed()
+                    self.control_inputs[START_BUTTON].setEnabled(True)
+                    self.control_inputs[STOP_BUTTON].setEnabled(False)
+                    break
+                ((current_time,), (ch1, ch2, ch3, ch4, ch5, ch6, ch7, ch8)) = v
+                counts = [ch1, ch2, ch3, ch4, ch5, ch6, ch7, ch8]
+                self.realtime_draw(current_time, counts)
+
+    def realtime_draw(self, current_time_ns, counts):
+        cps_counts = [0] * 8
+        next_second = 1
+        adjustment = REALTIME_ADJUSTMENT / self.bin_width_micros
+        seconds = current_time_ns / NS_IN_S
+        for channel, curr_conn in self.connectors:
+            curr_conn.cb_append_data_point(y=(counts[channel] / adjustment), x=seconds)
+            cps_counts[channel] += counts[channel] / adjustment
+            if seconds >= next_second:
+                self.cps[self.enabled_channels.index(channel)].setText(
+                    FormatUtils.format_cps(round(cps_counts[channel])) + " CPS"
+                )
+                cps_counts[channel] = 0
+        if seconds >= next_second:
+            next_second += 1
+
+        QApplication.processEvents()
+        time.sleep(REALTIME_SECS / 1.1)
+
     def realtime_queue_worker(self):
         cps_counts = [0] * 8
         next_second = 1
@@ -637,7 +673,8 @@ class PhotonsTracingWindow(QMainWindow):
 
             self.realtime_queue_worker_stop = False
             self.realtime_queue_thread = threading.Thread(target=self.realtime_queue_worker)
-            self.realtime_queue_thread.start()
+
+            # self.realtime_queue_thread.start() # TODO PERFORMANCE TEST
 
             file_bin = result.bin_file
             if file_bin != "":
@@ -645,7 +682,8 @@ class PhotonsTracingWindow(QMainWindow):
 
             self.blank_space.hide()
 
-            self.pull_from_queue_timer.start(1)
+            # self.pull_from_queue_timer.start(1) # TODO PERFORMANCE TEST
+            self.pull_from_queue_timer2.start(1)
 
         except Exception as e:
             error_title, error_msg = MessagesUtilities.error_handler(str(e))
