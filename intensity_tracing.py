@@ -603,7 +603,7 @@ class PhotonsTracingWindow(QMainWindow):
         seconds = current_time_ns / NS_IN_S
         for channel, curr_conn in self.connectors:
             curr_conn.cb_append_data_point(y=(counts[channel] / adjustment), x=seconds)
-            cps_counts[channel] += counts[channel] / adjustment
+            cps_counts[channel] += counts[channel]
             if seconds >= next_second:
                 self.cps[self.enabled_channels.index(channel)].setText(
                     FormatUtils.format_cps(round(cps_counts[channel])) + " CPS"
