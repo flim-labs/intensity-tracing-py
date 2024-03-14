@@ -63,7 +63,7 @@ Welcome to [FLIM LABS Intensity Tracing](https://github.com/flim-labs/intensity-
 
 <!-- GETTING STARTED -->
 ## Getting Started
-To directly test the application, skipping the prerequisites and installation requirements you can download an installer at this [link](https://github.com/flim-labs/intensity-tracing-py/releases/tag/v1.4) (_Note: you still need to have the FLIM LABS acquisition card_). 
+To directly test the application, skipping the installation requirements you can download an installer at this [link](https://github.com/flim-labs/intensity-tracing-py/releases/tag/v1.4) (_Note: you still need to have the FLIM LABS acquisition card_). 
 
 To get a local copy up and running follow these steps.
 
@@ -96,10 +96,6 @@ To be able to run this project locally on your machine you need to satisfy these
    ```sh
    pip install -r requirements.txt
    ```
-6. Starting from the root, navigate to the correct folder:
-   ```sh
-   cd photons_tracing
-   ```     
 5. Run the project with GUI mode
    ```sh
    python intensity_tracing.py

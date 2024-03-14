@@ -30,7 +30,7 @@
 </div>
 
 The [Intensity Tracing](https://github.com/flim-labs/intensity-tracing-py) Console mode provides live-streaming data representation directly in the console, without an interface intermediary and charts data visualization processes.
-The data displayed on the console screen indicates **the moment of acquisition** (in seconds) and the corresponding **number of photons** detected during that time.
+The data displayed on the console screen indicates **the moment of acquisition** (in seconds) and the corresponding **number of photons** detected during that time for each **enabled channels**.
 
 Here a table summary of the configurable parameters on code side:
 
