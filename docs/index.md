@@ -75,7 +75,7 @@ To be able to run this project locally on your machine you need to satisfy these
 * Multicore CPU
 * Python version >= 3.8
 * Possess a [FLIM LABS Data Acquisition Card](https://www.flimlabs.com/products/data-acquisition-card/) to be able to acquire your data
-* ZestSC3 drivers installed
+* FLIM LABS Data Acquisition Card drivers installed [(download here)](https://flim-labs.github.io/flim-labs-drivers/data-acquisition-card-drivers/)
 
 
 ### Installation
