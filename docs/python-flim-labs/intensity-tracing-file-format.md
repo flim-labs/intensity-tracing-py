@@ -116,8 +116,9 @@ If you have chosen to export the data without also downloading the scripts for m
 If you are testing Intensity Tracing locally after cloning the [GitHub repository](https://github.com/flim-labs/intensity-tracing-py), follow these steps:
 
 - **Python script**:
-<br>
-   - Navigate to the root directory of the project:
+   <br>
+
+   -  Navigate to the root directory of the project:
      ```sh
      cd YOUR_PROJECT_ROOT_FOLDER
      ```
@@ -147,11 +148,10 @@ If you are testing Intensity Tracing locally after cloning the [GitHub repositor
      <br>
 
 - **Matlab script**:
-<br>
+   <br>
    - With your code editor, navigate to the  `plot_data_file.m ` file within the _gui_components_ folder and modify the  `file_path ` variable by inserting the path of the .bin file you want to analyze. You can find the _.bin file_ exported at the path  `C:\\Users\\YOUR_USER\\.flim-labs\\data `. Note: if you do not modify the path, the most recently saved file will be automatically selected.
    <br>
    - From your MATLAB command window prompt, navigate to the _gui_components_ folder of the project and run the MATLAB script by typing `plot_data_file`.
-
 
 <hr>   
 
@@ -176,7 +176,7 @@ Here the steps to make your tests:
    C:\Users\YOUR_USER\.flim-labs\data
    ```
 2. If you are testing **Python** script, follow these steps:
-<br>   
+   <br>   
       - In the **intensity_tracing_plot_data_file_example.py** file, comment out this line of code:
          ```python
          file_path = get_recent_intensity_tracing_file()
