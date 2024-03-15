@@ -136,16 +136,16 @@ If you are testing Intensity Tracing locally after cloning the [GitHub repositor
      ```
    - In your code editor, modify the  `file_path ` variable in the  `plot_data_file.py ` file within the _gui_components_ folder, inserting the path of the _.bin file_ you want to analyze. You can find the .bin file exported at the path  `C:\\Users\\YOUR_USER\\.flim-labs\\data `. Note: if you do not modify the path, the most recently saved file will be automatically selected.
    <br>
-   - From the terminal, make sure you have moved to the _gui_components_ folder with:
-     ```sh
-     cd gui_components
-     ```
+   - From the terminal, make sure you have moved to the     _gui_components_ folder with:
+      ```sh
+      cd gui_components
+      ```
    - Run the script using the command:
      ```sh
      python plot_data_file.py
      ```
-
-     <br>
+   <br>
+     
 
 - **Matlab script**:
    <br>
