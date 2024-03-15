@@ -15,14 +15,14 @@ Welcome to [FLIM LABS Intensity Tracing](https://github.com/flim-labs/intensity-
 
 <!-- GETTING STARTED -->
 ## Getting Started
-To directly test the application, skipping the prerequisites and installation requirements you can download an installer at this [link](https://github.com/flim-labs/intensity-tracing-py/releases/tag/v1.2) (_Note: you still need to have the FLIM LABS acquisition card_). 
+To directly test the application, skipping the prerequisites and installation requirements you can download an installer at this [link](https://github.com/flim-labs/intensity-tracing-py/releases/tag/v1.2) (_Note: you still need to have the FLIM LABS Data Acquisition Card_). 
 
 To get a local copy up and running follow these steps.
 
 ### Prerequisites
 
 To be able to run this project locally on your machine you need to satisfy these requirements:
-* Possess a [FLIM LABS acquisition card](https://www.flimlabs.com/products/data-acquisition-card/) to be able to acquire your data
+* Possess a [FLIM LABS Data Acquisition Card](https://www.flimlabs.com/products/data-acquisition-card/) to be able to acquire your data
 * ZestSC3 drivers installed
 * Python version >= 3.8
 * Windows OS

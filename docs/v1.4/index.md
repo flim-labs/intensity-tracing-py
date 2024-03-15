@@ -77,7 +77,7 @@ The number of active channels affects the _size of the exported data file_. With
 
 To start acquisition, at least one channel must be activated.
 
-_Note: Ensure that the channel activated in the software corresponds to the channel number being used for acquisition on the [FLIM LABS acquisition card](https://www.flimlabs.com/products/data-acquisition-card/)._
+_Note: Ensure that the channel activated in the software corresponds to the channel number being used for acquisition on the [FLIM LABS Data Acquisition Card](https://www.flimlabs.com/products/data-acquisition-card/)._
 
 <hr>
 
@@ -86,7 +86,7 @@ _Note: Ensure that the channel activated in the software corresponds to the chan
 
 The user can choose the type of connection for data acquisition between **SMA** and **USB** connections.
 
-_Note: The connection type set in the software must match the actual connection type activated on the [FLIM LABS acquisition card](https://www.flimlabs.com/products/data-acquisition-card/)._
+_Note: The connection type set in the software must match the actual connection type activated on the [FLIM LABS Data Acquisition Card](https://www.flimlabs.com/products/data-acquisition-card/)._
 
 <hr>
 
