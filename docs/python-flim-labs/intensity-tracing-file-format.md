@@ -38,6 +38,8 @@
 
 ## Introduction
 
+[![Intensity Tracing Export Dara](../assets/images/python/intensity-tracing-export-data-video-thumbnail.png)](https://www.youtube.com/watch?v=WYTV987AXl0)
+
 The [Intensity Tracing](https://github.com/flim-labs/intensity-tracing-py) tool allows seamless export of photons counts analyzed data to binary files, with convenient plotting and visualization capabilities. This guide provides an in-depth exploration of the **binary file structure**, offering a comprehensive understanding of how exported data is formatted and can be leveraged.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>

@@ -56,9 +56,7 @@ For a general introduction to the aims, technical requirements and installation 
 
 ## GUI Usage
 
-<div align="center">
-    <img src="../assets/images/python/intensity-tracing-gui-1.4.png" alt="GUI" width="100%">
-</div>
+[![Intensity Tracing GUI Features](../assets/images/python/intensity-tracing-features-video-thumbnail.png)](https://www.youtube.com/watch?v=rNQJm9N51Rw)
 
 The GUI mode provides advanced functionality for configuring analysis **parameters** and displaying live-streamed photon data. It allows simultaneous acquisition from up to **8 channels**, offering real-time data visualization in the form of plots:
 
