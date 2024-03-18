@@ -7,7 +7,7 @@ SETTINGS_ACQUISITION_STOPPED = "acquisition_stopped"
 DEFAULT_ACQUISITION_STOPPED = False
 
 EXPORT_DATA_GUIDE_LINK = "https://flim-labs.github.io/intensity-tracing-py/python-flim-labs/intensity-tracing-file-format.html"
-GUI_GUIDE_LINK = f"https://flim-labs.github.io/intensity-tracing-py/v{APP_VERSION}/#gui-usage"
+GUI_GUIDE_LINK = f"https://flim-labs.github.io/intensity-tracing-py/v{APP_VERSION}"
 
 SETTINGS_UPDATE_RATE = "update_rate"
 DEFAULT_UPDATE_RATE = "LOW"
