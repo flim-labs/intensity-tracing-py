@@ -105,19 +105,6 @@ class ControlsBar:
         return inp
 
     @staticmethod
-    def create_update_rate_control(controls_row, value, change_cb, options):
-        # Update rate control (LOW/HIGH)
-        _, inp = SelectControl.setup(
-            "Update rate:",
-            value,
-            controls_row,
-            options,
-            change_cb,
-        )
-        inp.setStyleSheet(GUIStyles.set_input_select_style())
-        return inp
-
-    @staticmethod
     def create_running_mode_control(value, change_cb):
         # Acquisition time mode switch control (Free Running/Fixed)
         running_mode_control = QVBoxLayout()

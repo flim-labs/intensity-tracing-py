@@ -53,9 +53,7 @@ class PhotonsTracingWindow(QMainWindow):
 
         ##### GUI PARAMS #####
         self.firmwares = ["intensity_tracing_usb.flim", "intensity_tracing_sma.flim"]
-
-        self.update_rates = ["LOW", "HIGH"]
-        self.selected_update_rate = self.settings.value(SETTINGS_UPDATE_RATE, DEFAULT_UPDATE_RATE)
+      
 
         self.conn_channels = ["USB", "SMA"]
         self.selected_conn_channel = self.settings.value(SETTINGS_CONN_CHANNEL, DEFAULT_CONN_CHANNEL)
@@ -67,8 +65,6 @@ class PhotonsTracingWindow(QMainWindow):
         default_acquisition_time_millis = self.settings.value(SETTINGS_ACQUISITION_TIME_MILLIS)
         self.acquisition_time_millis = int(
             default_acquisition_time_millis) if default_acquisition_time_millis is not None else DEFAULT_ACQUISITION_TIME_MILLIS
-
-        self.draw_frequency = int(self.settings.value(SETTINGS_DRAW_FREQUENCY, DEFAULT_DRAW_FREQUENCY))
 
         self.free_running_acquisition_time = self.settings.value(SETTINGS_FREE_RUNNING_MODE,
                                                                  DEFAULT_FREE_RUNNING_MODE) in ['true', True]
@@ -196,7 +192,6 @@ class PhotonsTracingWindow(QMainWindow):
         controls_row = QHBoxLayout()
         self.create_channel_type_control(controls_row)
         self.create_bin_width_control(controls_row)
-        self.create_update_rate_control(controls_row)
         running_mode_control = self.create_running_mode_control()
         controls_row.addLayout(running_mode_control)
         controls_row.addSpacing(15)
@@ -234,14 +229,6 @@ class PhotonsTracingWindow(QMainWindow):
             self.bin_width_micros_value_change, )
         self.control_inputs[SETTINGS_BIN_WIDTH_MICROS] = inp
 
-    def create_update_rate_control(self, controls_row):
-        inp = ControlsBar.create_update_rate_control(
-            controls_row,
-            self.selected_update_rate,
-            self.update_rate_value_change,
-            self.update_rates
-        )
-        self.control_inputs[SETTINGS_UPDATE_RATE] = inp
 
     def create_running_mode_control(self):
         running_mode_control, inp = ControlsBar.create_running_mode_control(
@@ -374,12 +361,6 @@ class PhotonsTracingWindow(QMainWindow):
         self.settings.setValue(SETTINGS_BIN_WIDTH_MICROS, value)
         self.calc_exported_file_size()
 
-    def update_rate_value_change(self, index):
-        self.selected_update_rate = self.sender().currentText()
-        self.draw_frequency = 10 if self.selected_update_rate == 'LOW' else 40
-        self.settings.setValue(SETTINGS_UPDATE_RATE, self.selected_update_rate)
-        self.settings.setValue(SETTINGS_DRAW_FREQUENCY, self.draw_frequency)
-
     def start_button_pressed(self):
         self.acquisition_stopped = False
         self.warning_box = None
@@ -393,7 +374,6 @@ class PhotonsTracingWindow(QMainWindow):
             self.control_inputs[SETTINGS_FREE_RUNNING_MODE],
             self.enabled_channels,
             self.selected_conn_channel,
-            self.selected_update_rate,
         )
         if warn_title and warn_msg:
             message_box = BoxMessage.setup(
@@ -657,8 +637,8 @@ class PhotonsTracingWindow(QMainWindow):
             print("Time span (s): " + str(self.time_span))
             print("Max points: " + str(40 * self.time_span))
             print("Bin width (µs): " + str(self.bin_width_micros))
-            output_frequency_ms = 100 if self.selected_update_rate == 'LOW' else 25
-            print("Output frequency ms: " + str(output_frequency_ms))
+           # output_frequency_ms = 100 if self.selected_update_rate == 'LOW' else 25
+           # print("Output frequency ms: " + str(output_frequency_ms))
 
             result = flim_labs.start_intensity_tracing(
                 enabled_channels=self.enabled_channels,
@@ -668,7 +648,7 @@ class PhotonsTracingWindow(QMainWindow):
                 acquisition_time_millis=acquisition_time_millis,  # E.g. 10000 = Stops after 10 seconds of acquisition
                 firmware_file=self.selected_firmware,
                 # String, if None let flim decide to use intensity tracing Firmware
-                output_frequency_ms=output_frequency_ms  # Based on Update Rate (100=LOW, 25=HIGH)
+                #output_frequency_ms=output_frequency_ms  # Based on Update Rate (100=LOW, 25=HIGH)
             )
 
             self.realtime_queue_worker_stop = False

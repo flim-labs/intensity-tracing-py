@@ -74,7 +74,7 @@ After the metadata, the script enters a loop to read and process data in chunks 
 
 ## Data Visualization 
 
-Depending on whether you have chosen to download the script files (Python and/or Matlab) for data analysis on the [Intensity Tracing GUI](../intensity-tracing/v1.4/index.md) or not, follow one of the these guides to visualize the saved data:
+Depending on whether you have chosen to download the script files (Python and/or Matlab) for data analysis on the [Intensity Tracing GUI](../intensity-tracing/v1.5/index.md) or not, follow one of the these guides to visualize the saved data:
 
 #### Export data with download
 
@@ -232,7 +232,7 @@ Here the steps to make your tests:
 For more details about the project follow these links:
 
 - [Intensity Tracing introduction](../intensity-tracing/index.md)
-- [Intensity Tracing GUI guide](../intensity-tracing/v1.4/index.md)
+- [Intensity Tracing GUI guide](../intensity-tracing/v1.5/index.md)
 - [Intensity Tracing Console guide ](./intensity-tracing-console.md)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>

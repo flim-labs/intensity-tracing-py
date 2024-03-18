@@ -1,12 +1,15 @@
 # Intensity Tracing Changelog
 
+## Version 1.5
+- Fixes and improvements of realtime performances
+- No more need of update rate user input to calculate plots draw frequency
+
 ## Version 1.4
 
 - Automated saving and loading of parameters configuration
 - Add download acquired data functionality (python and matlab plot data scripts + data bin file)
 - Add a GUI helper to preview exported data .bin file size
 - GUI flows stability improved with e2e tests
-
 
 ## Version 1.3
 
