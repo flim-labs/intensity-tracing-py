@@ -19,11 +19,22 @@
     </li>
     <li><a href="#gui-usage">GUI Usage</a>
     <ul>
-    <li><a href="#max-points-and-draw-frequency">Max Points and Draw Frequency</a></li>
-     <li><a href="#parameters-configuration-saving">Parameters Configuration Saving</a></li>
+    <li><a href="#acquisition-channels">Acquisition channels</a></li>
+    <li><a href="#connection-type">Connection type</a></li>
+    <li><a href="#bin-width">Bin width</a></li>
+    <li><a href="#update-rate">Update rate</a></li>
+    <li><a href="#acquisition-mode">Acquisition modee</a></li>
+    <li><a href="#acquisition-time">Acquisition time</a></li>
+    <li><a href="#time-span">Time span</a></li>
+    <li><a href="#show-cps">Show CPS</a></li>
+    <li><a href="#export-data">Export data</a></li>
+    <li><a href="#download-scripts-and-data-files">Download scripts and data files</a></li>
+    <li><a href="#parameters-table-summary">Parameters table summary</a></li>
     </ul>
     </li>
-       <li><a href="#long-time-acquisitions-and-ring-buffers">Long Time Acquisitions and Ring Buffers</a></li>
+    <li><a href="#max-points-and-draw-frequency">Max Points and Draw Frequency</a></li>
+    <li><a href="#parameters-configuration-saving">Parameters Configuration Saving</a></li>
+    <li><a href="#long-time-acquisitions-and-ring-buffers">Long Time Acquisitions and Ring Buffers</a></li>
     <li><a href="#console-usage">Console Usage</a></li>
      <li><a href="#exported-data-visualization">Exported Data Visualization</a></li>
      <li><a href="#download-acquired-data">Download Acquired Data</a></li>
@@ -37,7 +48,7 @@
 ## Introduction
 
 Welcome to [FLIM LABS Intensity Tracing](https://github.com/flim-labs/intensity-tracing-py) _v1.4_ usage guide. In this documentation section, you will find all the necessary information for the proper use of the application's **graphical user interface** (GUI).
-For a general introduction to the aims and technical requirements of the project, read the [Intensity Tracing Homepage](../index.md). You can also follow the [Console mode](../python-flim-labs/intensity-tracing-console.md) and [Data export](../python-flim-labs/intensity-tracing-file-format.md) dedicated guides links.
+For a general introduction to the aims, technical requirements and installation of the project, read the [Intensity Tracing Homepage](../index.md). You can also follow the [Console mode](../python-flim-labs/intensity-tracing-console.md) and [Data export](../python-flim-labs/intensity-tracing-file-format.md) dedicated guides links.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -45,14 +56,116 @@ For a general introduction to the aims and technical requirements of the project
 
 ## GUI Usage
 
-<div align="center">
-    <img src="../assets/images/python/intensity-tracing-gui-1.4.png" alt="GUI" width="100%">
-</div>
+[![Intensity Tracing GUI Features](../assets/images/python/intensity-tracing-features-video-thumbnail.png)](https://www.youtube.com/watch?v=rNQJm9N51Rw)
 
 The GUI mode provides advanced functionality for configuring analysis **parameters** and displaying live-streamed photon data. It allows simultaneous acquisition from up to **8 channels**, offering real-time data visualization in the form of plots:
 
 - **X** Axis: represents _acquisition time_
 - **Y** Axis: represents _photons intensity_
+
+Here an overview of each available feature:
+
+#### Acquisition channels
+
+The software allows for data acquisition in **single-channel** or **multi-channel** mode, with the user able to activate up to _8_ channels simultaneously.
+
+For each activated channel, its respective real-time acquisition plot will be displayed on the interface.
+
+The number of active channels affects the _size of the exported data file_. With the same values set for  `bin width ` and  `acquisition time `, the file size _grows proportionally to the number of activated channels_.
+
+To start acquisition, at least one channel must be activated.
+
+_Note: Ensure that the channel activated in the software corresponds to the channel number being used for acquisition on the [FLIM LABS Data Acquisition Card](https://www.flimlabs.com/products/data-acquisition-card/)._
+
+<hr>
+
+
+#### Connection type
+
+The user can choose the type of connection for data acquisition between **SMA** and **USB** connections.
+
+_Note: The connection type set in the software must match the actual connection type activated on the [FLIM LABS Data Acquisition Card](https://www.flimlabs.com/products/data-acquisition-card/)._
+
+<hr>
+
+#### Bin width
+
+The user can set a **bin width** value ranging from _1_ to _1,000,000_ microseconds (μs). Bin width represents the duration of time to wait for accumulating photon counts in the exported data file. In the interface plots, this value is adjusted to maintain real-time visualization.
+
+The configured bin width value affects the size of the exported data file. With the number of `active channels` and `acquisition time` unchanged, the _file size grows inversely proportional to the bin width value_.
+
+<hr>
+
+#### Update rate
+
+The **update rate** value indicates the frequency of drawing updates on the plot. The user can choose between _LOW_ and _HIGH_ options.
+
+- If the value is set to LOW, the drawing frequency will automatically be set to _40Hz_.
+- If the value is set to HIGH, the drawing frequency will automatically be set to _10Hz_.
+
+The update rate value, along with `time span`, also affects the maximum number of points maintained on the plot. For further details, refer to the [Max Points and Draw Frequency](#max-points-and-draw-frequency) section.
+
+<hr>
+
+#### Acquisition mode
+
+Users can choose between two data acquisition modes: **free running** or **fixed acquisition time**.
+
+In free running mode, the total acquisition time is _not specified_. If users deactivate free running mode, they must set a specific acquisition time value.
+
+The chosen acquisition mode impacts the size of the exported data file. Refer to the [Export Data](#export-data) section for details.
+
+<hr>
+
+#### Acquisition time
+
+When the free running acquisition mode is disabled, users must specify the **acquisition time** parameter to set the total data acquisition duration. Users can choose a value between _1_ and _1800_ s (seconds).
+
+For example, if a value of 10 is set, the acquisition will stop after 10 seconds.
+
+The acquisition time value directly affects the final size of the exported data file. Keeping the `bin width` and `active channels` values unchanged, the _file size increases proportionally to the acquisition time value_.
+
+<hr>
+
+#### Time span
+
+**Time span** set the time interval, in seconds, for the _last visible data range on the duration x-axis_. For instance, if this value is set to 5s, the x-axis will scroll to continuously display the latest 5 seconds of real-time data on the chart.
+Users can choose a value from _1_ to _300_ s (seconds).
+
+The time span value, along with `update rate` affects the maximum number of points maintained on the plot. For further details, refer to the [Max Points and Draw Frequency](#max-points-and-draw-frequency) section.
+
+<hr>
+
+#### Show CPS
+
+Users can choose to enable the **Show CPS** option to display real-time average _Photon Count per Second (CPS)_ in the left-upper corner of active acquisition channel charts.
+This feature offers an instant insight into signal intensity even when the traces are not actively observed.
+
+<hr>
+
+#### Export data
+
+Users can choose to **export acquired data** in _.bin_ file format for further analysis.
+Refers to this sections for more details:
+- [Export Data](#export-data)
+- [Intensity Tracing Data Export guide ](../python-flim-labs/intensity-tracing-file-format.md)
+
+<hr>
+
+#### Download scripts and data files
+
+If the _Export data_ option is enabled, the **download** button allows users to download, in a single action, the _.bin file_ containing the acquired data and two scripts (_Python_ and _Matlab_) for manipulating and displaying the acquired data in graphical form.
+
+Note: If the user chooses to download the "Python" script, a _requirements.txt_ file - indicating the dependencies to install for running the script - will be automatically downloaded as well.
+
+Refers to this sections for more details:
+- [Download Acquired Data](#download-acquired-data)
+- [Intensity Tracing Data Export guide ](../python-flim-labs/intensity-tracing-file-format.md)
+
+<hr>
+
+
+#### Parameters table summary
 
 Here a table summary of the configurable parameters:
 

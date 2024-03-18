@@ -43,6 +43,8 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
+[![Intensity Tracing GUI Overview](./assets/images/python/intensity-tracing-gui-overview-video-thumbnail.png)](https://www.youtube.com/watch?v=XReSC8xNEuQ)
+
 Welcome to [FLIM LABS Intensity Tracing](https://github.com/flim-labs/intensity-tracing-py), a Python application designed to **analyze single-photon counts as a function of time** and plotting the intensity trace. Facilitated by an underlying data processor developed in Rust, responsible for data retrieval from the hardware component, this application enables real-time data analysis and visualization. Users can seamlessly transition between the graphical user interface (**GUI**) and **console** mode to navigate through the analytical capabilities. Whether your focus is on rigorous data analysis or dynamic visualizations, Intensity Tracing serves as a flexible tool for the precise measurement and exploration of photon intensity.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -63,7 +65,7 @@ Welcome to [FLIM LABS Intensity Tracing](https://github.com/flim-labs/intensity-
 
 <!-- GETTING STARTED -->
 ## Getting Started
-To directly test the application, skipping the prerequisites and installation requirements you can download an installer at this [link](https://github.com/flim-labs/intensity-tracing-py/releases/tag/v1.4) (_Note: you still need to have the FLIM LABS acquisition card_). 
+To directly test the application, skipping the installation requirements you can download an installer at this [link](https://github.com/flim-labs/intensity-tracing-py/releases/tag/v1.4) (_Note: you still need to have the FLIM LABS Data Acquisition Card_). 
 
 To get a local copy up and running follow these steps.
 
@@ -74,8 +76,8 @@ To be able to run this project locally on your machine you need to satisfy these
 * 4GB RAM
 * Multicore CPU
 * Python version >= 3.8
-* Possess a [FLIM LABS acquisition card](https://www.flimlabs.com/products/data-acquisition-card/) to be able to acquire your data
-* ZestSC3 drivers installed
+* Possess a [FLIM LABS Data Acquisition Card](https://www.flimlabs.com/products/data-acquisition-card/) to be able to acquire your data
+* FLIM LABS Data Acquisition Card drivers installed [(download here)](https://flim-labs.github.io/flim-labs-drivers/data-acquisition-card-drivers/)
 
 
 ### Installation
@@ -96,10 +98,6 @@ To be able to run this project locally on your machine you need to satisfy these
    ```sh
    pip install -r requirements.txt
    ```
-6. Starting from the root, navigate to the correct folder:
-   ```sh
-   cd photons_tracing
-   ```     
 5. Run the project with GUI mode
    ```sh
    python intensity_tracing.py
