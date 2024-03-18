@@ -45,10 +45,6 @@ To be able to run this project locally on your machine you need to satisfy these
    ```sh
    pip install -r requirements.txt
    ```
-6. Starting from the root, navigate to the correct folder:
-   ```sh
-   cd photons_tracing
-   ```     
 5. Run the project with GUI mode
    ```sh
    python intensity_tracing.py
