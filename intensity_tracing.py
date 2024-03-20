@@ -637,8 +637,7 @@ class PhotonsTracingWindow(QMainWindow):
             print("Time span (s): " + str(self.time_span))
             print("Max points: " + str(40 * self.time_span))
             print("Bin width (µs): " + str(self.bin_width_micros))
-           # output_frequency_ms = 100 if self.selected_update_rate == 'LOW' else 25
-           # print("Output frequency ms: " + str(output_frequency_ms))
+
 
             result = flim_labs.start_intensity_tracing(
                 enabled_channels=self.enabled_channels,
@@ -648,7 +647,6 @@ class PhotonsTracingWindow(QMainWindow):
                 acquisition_time_millis=acquisition_time_millis,  # E.g. 10000 = Stops after 10 seconds of acquisition
                 firmware_file=self.selected_firmware,
                 # String, if None let flim decide to use intensity tracing Firmware
-                #output_frequency_ms=output_frequency_ms  # Based on Update Rate (100=LOW, 25=HIGH)
             )
 
             self.realtime_queue_worker_stop = False
