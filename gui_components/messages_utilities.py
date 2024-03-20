@@ -31,7 +31,6 @@ class MessagesUtilities:
             acquisition_time_mode_switch,
             enabled_channels,
             selected_conn_channel,
-            selected_update_rate,
     ):
         def empty_input_error():
             return (
@@ -56,12 +55,7 @@ class MessagesUtilities:
                 "No connection channel selected",
                 "You must choose between 'USB' and 'SMA' connection channels before starting photons tracing",
             )
-
-        def no_update_rate_error():
-            return (
-                "No update rate selected",
-                "You must choose between 'LOW' and 'HIGH' update rate before starting photons tracing",
-            )
+      
 
         if bin_width_micros == 0 or time_span == 0 or acquisition_time_millis == 0:
             return empty_input_error()
@@ -76,9 +70,6 @@ class MessagesUtilities:
 
         elif not selected_conn_channel:
             return no_conn_channel_error()
-
-        elif not selected_update_rate:
-            return no_update_rate_error()
 
         else:
             return MessagesUtilities.range_check(
