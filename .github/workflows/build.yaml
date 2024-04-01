@@ -2,8 +2,6 @@ name: Build Flim-Labs exe
 
 on:
   push:
-    branches:
-      - feature/ci-cd
 
 jobs:
   build:
