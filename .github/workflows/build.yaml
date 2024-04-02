@@ -1,0 +1,31 @@
+name: Build Flim-Labs exe
+
+on:
+  push:
+
+jobs:
+  build:
+    runs-on: windows-latest  # Use Windows environment
+    strategy:
+      matrix:
+        python-version: ["3.9"]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4    
+      
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Run build script
+      shell: pwsh
+      run: |
+        ./build-exe.ps1
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: Installer
+        path: D:\a\intensity-tracing-py\intensity-tracing-py\dist
