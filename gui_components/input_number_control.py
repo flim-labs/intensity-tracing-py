@@ -14,6 +14,7 @@ class InputNumberControl:
             control_layout="vertical",
     ):
         q_label = QLabel(label)
+        q_label.setStyleSheet("font-size: 18px; color: #f8f8f8;")
         control = QVBoxLayout() if control_layout == "vertical" else QHBoxLayout()
         input = QSpinBox()
         input.setRange(min, max)

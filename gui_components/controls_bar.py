@@ -22,42 +22,48 @@ from gui_components.layout_utilities import draw_layout_separator
 
 
 class ControlsBar:
-
-    @staticmethod
+    
+    @staticmethod  
     def init_gui_controls_layout(controls_row, buttons_row):
-        controls_layout = QVBoxLayout()
+        layout_container = QVBoxLayout()
+        layout_container.setSpacing(0)
+        layout_container.setContentsMargins(0,0,0,0)
+        controls_layout = QHBoxLayout()
         controls_layout.addSpacing(10)
         blank_space = QWidget()
         blank_space.setMinimumHeight(1)
-        blank_space.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-
-        controls_layout.addLayout(controls_row)
-        controls_layout.addWidget(draw_layout_separator())
+        blank_space.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        buttons_qv_box = QVBoxLayout()
+        buttons_qv_box.setSpacing(0)
+        buttons_qv_box.setContentsMargins(0,0,0,0)
+        buttons_qv_box.addSpacing(20)
+        buttons_qv_box.addLayout(buttons_row)
+        controls_layout.addWidget(controls_row)
+        controls_layout.addLayout(buttons_qv_box)
         controls_layout.addSpacing(10)
-        controls_layout.addLayout(buttons_row)
-        controls_layout.addSpacing(10)
+        layout_container.addLayout(controls_layout)
+        layout_container.addWidget(draw_layout_separator())
+        return blank_space, layout_container
 
-        return blank_space, controls_layout
+ 
 
     @staticmethod
     def create_buttons(
-            show_cps_control,
             start_btn_pressed_cb,
             stop_btn_pressed_cb,
             reset_btn_pressed_cb,
-            channels_checkboxes
+            enabled_channels
     ):
         # ACTION BUTTONS
         buttons_row_layout = QHBoxLayout()
         buttons_row_layout.addStretch(1)
-        buttons_row_layout.addLayout(show_cps_control)
         # start button
         start_button = QPushButton("START")
         start_button.setCursor(Qt.CursorShape.PointingHandCursor)
         GUIStyles.set_start_btn_style(start_button)
         start_button.clicked.connect(start_btn_pressed_cb)
         start_button.setEnabled(
-            not all(not checkbox.isChecked() for checkbox in channels_checkboxes)
+            len(enabled_channels) > 0
         )
         buttons_row_layout.addWidget(start_button)
         # stop button
@@ -114,7 +120,9 @@ class ControlsBar:
         inp.stateChanged.connect(
             (lambda state: change_cb(state))
         )
-        running_mode_control.addWidget(QLabel("Free running:"))
+        q_label = QLabel("Free running:")
+        q_label.setStyleSheet("font-size: 18px; color: #f8f8f8;")
+        running_mode_control.addWidget(q_label)
         running_mode_control.addSpacing(8)
         running_mode_control.addWidget(inp)
 
@@ -157,11 +165,12 @@ class ControlsBar:
     @staticmethod
     def create_show_cps_control(value, change_cb):
         # Show CPS switch control
-        show_cps_control = QHBoxLayout()
+        show_cps_control = QVBoxLayout()
         show_cps_label = QLabel("Show CPS:")
+        show_cps_label.setStyleSheet("font-size: 18px; color: #f8f8f8;")
         inp = SwitchControl(
             active_color="#8d4ef2",
-            width=70, height=30, checked=value
+            width=100, height=30, checked=value
         )
         inp.stateChanged.connect(
             (lambda state: change_cb(state))
@@ -169,6 +178,5 @@ class ControlsBar:
         show_cps_control.addWidget(show_cps_label)
         show_cps_control.addSpacing(8)
         show_cps_control.addWidget(inp)
-        show_cps_control.addSpacing(8)
 
         return show_cps_control, inp

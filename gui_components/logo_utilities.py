@@ -25,7 +25,7 @@ class LogoOverlay(QWidget):
         self.adjustSize()
 
     def update_position(self, window):
-        self.move(window.width() - self.width() - 10, window.height() - self.height() - 30)
+        self.move(window.width() - self.width() - 10, window.height() - self.height() - 20)
 
     def update_visibility(self, window):
         self.setVisible(500 <= window.height() <= 2000)
