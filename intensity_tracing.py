@@ -69,7 +69,6 @@ class PhotonsTracingWindow(QMainWindow):
         self.cps_charts_widgets = []
         self.intensity_charts = []
         self.intensity_charts_wrappers = []
-        self.intensity_lines = []
         self.only_cps_widgets = []
         self.connectors = {}
         self.pull_from_queue_timer = QTimer()

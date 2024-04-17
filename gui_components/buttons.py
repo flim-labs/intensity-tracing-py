@@ -116,7 +116,6 @@ class ButtonsActionsController:
         app.control_inputs[START_BUTTON].setEnabled(False)
         app.control_inputs[STOP_BUTTON].setEnabled(True)   
         app.intensity_charts.clear()
-        app.intensity_lines.clear()
         app.cps_charts_widgets.clear()
         app.cps_ch.clear()
         for chart in app.intensity_charts:
