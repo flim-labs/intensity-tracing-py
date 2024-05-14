@@ -55,12 +55,13 @@ with open(file_path, 'rb') as f:
 
         for i in range(len(channel_lines)):
             channel_lines[i].append(channel_values[i])
-
-        times.append(time / 1_000_000_000)
+        times.append(time)
+        
 
     # Plot data
     for i in range(len(metadata["channels"])):
         channel_line = channel_lines[i]
+        
         plt.plot(
             times,
             channel_line,

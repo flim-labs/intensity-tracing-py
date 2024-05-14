@@ -82,6 +82,7 @@ class IntensityTracing:
     @staticmethod
     def pull_from_queue(app):
         val = flim_labs.pull_from_queue()
+        print(val)
         if len(val) > 0:
             for v in val:
                 if v == ('end',):  # End of acquisition

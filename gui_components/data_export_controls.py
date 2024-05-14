@@ -101,15 +101,17 @@ class DownloadDataControl(QWidget):
 class DataExportActions: 
     @staticmethod
     def calc_exported_file_size(app):
+        if len(app.enabled_channels) == 0:
+             app.bin_file_size_label.setText("")
+             return 
+        chunk_bytes = 8 + (4 * len(app.enabled_channels))
+        chunk_bytes_in_us =  (1000 * (chunk_bytes * 1000)) / app.bin_width_micros
         if app.free_running_acquisition_time is True or app.acquisition_time_millis is None:
-            file_size_bytes = int(EXPORTED_DATA_BYTES_UNIT *
-                                  (1000 / app.bin_width_micros) * len(app.enabled_channels))
+            file_size_bytes = int(chunk_bytes_in_us)
             app.bin_file_size = FormatUtils.format_size(file_size_bytes)
             app.bin_file_size_label.setText("File size: " + str(app.bin_file_size) + "/s")
         else:
-            file_size_bytes = int(EXPORTED_DATA_BYTES_UNIT *
-                                  (app.acquisition_time_millis / 1000) *
-                                  (1000 / app.bin_width_micros) * len(app.enabled_channels))
+            file_size_bytes = int(chunk_bytes_in_us * (app.acquisition_time_millis/1000))
             app.bin_file_size = FormatUtils.format_size(file_size_bytes)
             app.bin_file_size_label.setText("File size: " + str(app.bin_file_size))
             

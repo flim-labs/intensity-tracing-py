@@ -4,6 +4,7 @@ from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 from gui_components.buttons import PlotsConfigPopup
+from gui_components.data_export_controls import DataExportActions
 from gui_components.resource_path import resource_path
 from gui_components.gui_styles import GUIStyles
 from gui_components.settings import *
@@ -70,6 +71,7 @@ class ChannelsControl(QWidget):
                 self.app.intensity_plots_to_show = filtered_intensity_plot_to_show
                 self.app.settings.setValue(SETTINGS_INTENSITY_PLOTS_TO_SHOW, json.dumps(filtered_intensity_plot_to_show))
         self.app.settings.setValue(SETTINGS_ENABLED_CHANNELS, json.dumps(self.app.enabled_channels))
+        DataExportActions.calc_exported_file_size(self.app)
  
 
     def open_plots_config_popup(self):
