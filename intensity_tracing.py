@@ -502,7 +502,7 @@ class PhotonsTracingWindow(QMainWindow):
         connector = DataConnector(
             plot_curve,
             update_rate=REALTIME_HZ,
-            max_points=int(REALTIME_HZ) * self.time_span,
+            max_points=25 * self.time_span,
             plot_rate=REALTIME_HZ,
         )
         # plot_widget.showGrid(x=True, y=True, alpha=0.5)
@@ -582,6 +582,10 @@ class PhotonsTracingWindow(QMainWindow):
         adjustment = REALTIME_ADJUSTMENT / self.bin_width_micros
         seconds = current_time_ns / NS_IN_S
         for channel, curr_conn in self.connectors:
+            # trim first 2 seconds of data
+            curr_conn
+
+
             curr_conn.cb_append_data_point(y=(counts[channel] / adjustment), x=seconds)
             cps_counts[channel] += counts[channel]
             if seconds >= next_second:
