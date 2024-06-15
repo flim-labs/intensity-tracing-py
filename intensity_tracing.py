@@ -19,7 +19,7 @@ from gui_components.channels_control import ChannelsControl
 from gui_components.controls_bar import ControlsBar
 from gui_components.data_export_controls import DownloadDataControl, ExportDataControl
 from gui_components.input_params_controls import InputParamsControls
-from gui_components.intensity_tracing_controller import IntensityTracing
+from gui_components.intensity_tracing_controller import IntensityTracing, IntensityTracingPlot
 from gui_components.layout_utilities import init_ui
 from gui_components.settings import *
 from gui_components.top_bar import TopBar
@@ -51,6 +51,8 @@ class PhotonsTracingWindow(QMainWindow):
         self.enabled_channels = json.loads(default_enabled_channels) if default_enabled_channels is not None else []
         self.show_cps = self.settings.value(SETTINGS_SHOW_CPS, DEFAULT_SHOW_CPS) in ['true', True]
         self.write_data = self.settings.value(SETTINGS_WRITE_DATA, DEFAULT_WRITE_DATA) in ['true', True]
+        self.cached_time_span_seconds = 3
+        
         self.acquisition_stopped = False
         self.control_inputs = {}
         self.widgets = {}
@@ -70,16 +72,20 @@ class PhotonsTracingWindow(QMainWindow):
         self.intensity_charts = []
         self.intensity_charts_wrappers = []
         self.only_cps_widgets = []
-        self.connectors = {}
+        
+        self.intensity_lines = {}
+        
+        
         self.pull_from_queue_timer = QTimer()
         self.pull_from_queue_timer.timeout.connect(partial(IntensityTracing.pull_from_queue, self))
         self.realtime_queue_thread = None
         self.realtime_queue_worker_stop = False
-        self.realtime_queue = queue.Queue()
-        self.pull_from_queue_timer2 = QTimer()
-        #self.pull_from_queue_timer2.timeout.connect(self.pull_from_queue2)  
+        self.realtime_queue = queue.Queue() 
         self.last_cps_update_time = QElapsedTimer() 
         self.cps_update_interval = 400  
+        self.timer_update_plots = QTimer()
+        self.timer_update_plots.timeout.connect(partial(IntensityTracingPlot.update_plots, self))
+        
         self.init_ui()
 
     @staticmethod
@@ -200,6 +206,7 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
 
     window = PhotonsTracingWindow()
+    window.showMaximized()
     window.show()
     exit_code = app.exec()
     IntensityTracing.stop_button_pressed(window)

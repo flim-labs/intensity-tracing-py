@@ -1,22 +1,16 @@
 import queue
 import threading
 import time
+import numpy as np
 import pyqtgraph as pg
 from flim_labs import flim_labs
 from functools import partial
-from pglive.kwargs import Axis
-from pglive.sources.data_connector import DataConnector
-from pglive.sources.live_axis import LiveAxis
-from pglive.sources.live_axis_range import LiveAxisRange
-from pglive.sources.live_plot import LiveLinePlot
-from pglive.sources.live_plot_widget import LivePlotWidget
 from gui_components.box_message import BoxMessage
 from gui_components.data_export_controls import DataExportActions
 from gui_components.format_utilities import FormatUtils
 from gui_components.messages_utilities import MessagesUtilities
 from gui_components.gui_styles import GUIStyles
 from gui_components.settings import *
-from PyQt5.QtCore import QTimer
 from PyQt5.QtWidgets import (
     QApplication,
     QMessageBox,
@@ -45,6 +39,8 @@ class IntensityTracing:
             print("Time span (s): " + str(app.time_span))
             print("Max points: " + str(40 * app.time_span))
             print("Bin width (µs): " + str(app.bin_width_micros))
+            
+            app.cached_time_span_seconds = float(app.settings.value(SETTINGS_TIME_SPAN, DEFAULT_TIME_SPAN))
 
             result = flim_labs.start_intensity_tracing(
                 enabled_channels=app.enabled_channels,
@@ -54,6 +50,7 @@ class IntensityTracing:
                 acquisition_time_millis=acquisition_time_millis, 
                 firmware_file=app.selected_firmware,
             )
+            
             app.realtime_queue_worker_stop = False
             app.realtime_queue_thread = threading.Thread(target=partial(IntensityTracing.realtime_queue_worker, app))
             app.realtime_queue_thread.start()
@@ -64,9 +61,8 @@ class IntensityTracing:
             app.blank_space.hide()
             app.pull_from_queue_timer.start(1)
             app.last_cps_update_time.start()
+            app.timer_update_plots.start(1)
             #app.pull_from_queue_timer2.start(1)
-           
-           
 
         except Exception as e:
             error_title, error_msg = MessagesUtilities.error_handler(str(e))
@@ -82,7 +78,6 @@ class IntensityTracing:
     @staticmethod
     def pull_from_queue(app):
         val = flim_labs.pull_from_queue()
-        print(val)
         if len(val) > 0:
             for v in val:
                 if v == ('end',):  # End of acquisition
@@ -94,7 +89,9 @@ class IntensityTracing:
                 
                 
     @staticmethod            
-    def calculate_cps(app, time_ns, counts):
+    def process_data(app, time_ns, counts):
+        adjustment = REALTIME_ADJUSTMENT / app.bin_width_micros
+        seconds = time_ns / NS_IN_S
         if app.last_cps_update_time.elapsed() >= app.cps_update_interval:
             cps_counts = [0] * 8
             for channel, cps in app.cps_ch.items():
@@ -102,8 +99,10 @@ class IntensityTracing:
                 #print(f"{channel} - {cps_counts[channel]}")
                 app.cps_ch[channel].setText(FormatUtils.format_cps(round(cps_counts[channel])) + " CPS")
                 app.last_cps_update_time.restart()
-        for channel, curr_conn in app.connectors.items():
-            curr_conn.cb_append_data_point(y=(counts[channel]), x=(time_ns / NS_IN_S))
+        
+        for i, channel in enumerate(app.intensity_plots_to_show):
+            intensity = counts[channel] / adjustment
+            IntensityTracingPlot.update_plots2(channel, time_ns, intensity, app)    
         QApplication.processEvents()           
 
             
@@ -114,8 +113,8 @@ class IntensityTracing:
                 (current_time_ns, counts) = app.realtime_queue.get(timeout=REALTIME_MS / 1000)
             except queue.Empty:
                 continue
-            IntensityTracing.calculate_cps(app, current_time_ns, counts)
-            time.sleep(REALTIME_SECS / 2)
+            IntensityTracing.process_data(app, current_time_ns, counts)
+            time.sleep(REALTIME_SECS / 1.1)
         else:
             print("Realtime queue worker stopped")
             app.realtime_queue.queue.clear()
@@ -138,52 +137,61 @@ class IntensityTracing:
         if app.realtime_queue_thread is not None:
             app.realtime_queue_thread.join()
         app.pull_from_queue_timer.stop() 
-        for channel, curr_conn in app.connectors.items():     
-            curr_conn.pause()         
-        
- 
+        app.timer_update_plots.stop()
 
 
 class IntensityTracingPlot:
     
     @staticmethod
     def generate_chart(channel_index, app):
-        left_axis = LiveAxis("left", axisPen="#cecece", textPen="#FFA726")
-        bottom_axis = LiveAxis(
-            "bottom",
-            axisPen="#cecece",
-            textPen="#23F3AB",
-            tick_angle=-45,
-            **{Axis.TICK_FORMAT: Axis.DURATION, Axis.DURATION_FORMAT: Axis.DF_SHORT},
-        )
-        plot_widget = LivePlotWidget(
-            title="Channel " + str(channel_index + 1),
-            y_label="AVG. Photon counts",
-            orientation='vertical',
-            axisItems={"bottom": bottom_axis, "left": left_axis},
-            x_range_controller=LiveAxisRange(roll_on_tick=1),
-        )
-        plot_widget.getAxis('left').setLabel('AVG. Photon counts', color='#FFA726', orientation='vertical')
-        plot_curve = LiveLinePlot()
-        plot_curve.setPen(pg.mkPen(color="#a877f7"))
-        plot_widget.addItem(plot_curve)
-        app.time_span = app.control_inputs[SETTINGS_TIME_SPAN].value()
-        connector = DataConnector(
-            plot_curve,
-            update_rate=REALTIME_HZ,
-            max_points=int(REALTIME_HZ) * app.time_span,
-            plot_rate=REALTIME_HZ,
-        )
-        plot_widget.setBackground("#171717")
-        plot_widget.setStyleSheet("border: 1px solid #3b3b3b;")
-        return plot_widget, connector
-    
+        x = np.arange(1)
+        y = x * 0
+        intensity_widget = pg.PlotWidget()
+        intensity_widget.setLabel('left', 'AVG. Photon counts', units='')
+        intensity_widget.setLabel('bottom', 'Time', units='s')
+        intensity_widget.setTitle("Channel " + str(channel_index + 1))
+        intensity_plot = intensity_widget.plot(x, y, pen="#a877f7")
+        intensity_widget.setStyleSheet("border: 1px solid #3b3b3b")
+        intensity_widget.setBackground("#141414")
+        intensity_widget.getAxis('left').setTextPen('#FFA726')
+        intensity_widget.getAxis('bottom').setTextPen("#23F3AB")
+        return intensity_widget, intensity_plot
+        
+        
 
     @staticmethod
     def create_cps_label():    
         # cps indicator
         cps_label = QLabel("0 CPS")
-        return cps_label   
+        return cps_label  
+    
+    
+    
+    @staticmethod
+    def update_plots(app):
+        for i, channel in enumerate(app.intensity_plots_to_show):
+            x, y = app.intensity_lines[channel].getData()
+        QApplication.processEvents()
+        time.sleep(0.01)     
+    
+    
+    @staticmethod
+    def update_plots2(channel_index, time_ns, intensity, app):
+        intensity_line = app.intensity_lines[channel_index]
+        x, y = intensity_line.getData()
+        if x is None or (len(x) == 1 and x[0] == 0):
+            x = np.array([time_ns / 1_000_000_000])
+            y = np.array([np.sum(intensity)])
+        else:
+            x = np.append(x, time_ns / 1_000_000_000)
+            y = np.append(y, np.sum(intensity))  
+        if len(x) > 2:
+            while x[-1] - x[0] > app.cached_time_span_seconds: 
+                x = x[1:]  
+                y = y[1:]
+        intensity_line.setData(x, y)  
+        QApplication.processEvents()
+        time.sleep(0.01)         
 
 
     @staticmethod
@@ -200,7 +208,7 @@ class IntensityTracingPlot:
            row, col = divmod(index, 2)
            app.layouts[INTENSITY_PLOTS_GRID].addWidget(chart_widget, row, col)
            app.intensity_charts.append(chart)
-           app.connectors[app.intensity_plots_to_show[index]] = connector
+           app.intensity_lines[app.intensity_plots_to_show[index]] = connector
            app.intensity_charts_wrappers.append(chart_widget)
            app.cps_ch[channel] = cps
            app.cps_charts_widgets.append(cps)

@@ -120,9 +120,7 @@ class ButtonsActionsController:
         app.cps_ch.clear()
         for chart in app.intensity_charts:
             chart.setVisible(False)
-        for channel, curr_conn in app.connectors.items():    
-            curr_conn.disconnect()
-        app.connectors.clear()        
+        app.intensity_lines.clear()        
         app.intensity_charts_wrappers.clear()
         QApplication.processEvents()         
         ButtonsActionsController.intensity_tracing_start(app)
@@ -159,13 +157,14 @@ class ButtonsActionsController:
         if app.realtime_queue_thread is not None:
             app.realtime_queue_thread.join()
         app.pull_from_queue_timer.stop() 
-        for channel, curr_conn in app.connectors.items():     
-            curr_conn.pause()    
+        app.timer_update_plots.stop() 
     
    
     @staticmethod
     def reset_button_pressed(app):
         flim_labs.request_stop()
+        app.pull_from_queue_timer.stop() 
+        app.timer_update_plots.stop()
         app.last_cps_update_time.invalidate() 
         app.blank_space.show()
         app.control_inputs[START_BUTTON].setEnabled(len(app.enabled_channels) > 0)
@@ -178,7 +177,7 @@ class ButtonsActionsController:
         for wrapper in app.intensity_charts_wrappers:
             wrapper.setParent(None)
             wrapper.deleteLater()  
-        app.connectors.clear()         
+        app.intensity_lines.clear()         
         app.intensity_charts.clear()
         app.cps_charts_widgets.clear()
         app.cps_ch.clear()

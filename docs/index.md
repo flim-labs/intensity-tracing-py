@@ -55,7 +55,6 @@ Welcome to [FLIM LABS Intensity Tracing](https://github.com/flim-labs/intensity-
 
 * [Python](https://www.python.org/)
 * [PyQt5](https://pypi.org/project/PyQt5/)
-* [pglive](https://pypi.org/project/pglive/)
 * [matplotlib](https://pypi.org/project/matplotlib/)
 * [flim-labs](https://pypi.org/project/flim-labs/)
 
