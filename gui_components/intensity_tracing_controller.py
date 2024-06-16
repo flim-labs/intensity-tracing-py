@@ -91,7 +91,6 @@ class IntensityTracing:
     @staticmethod            
     def process_data(app, time_ns, counts):
         adjustment = REALTIME_ADJUSTMENT / app.bin_width_micros
-        seconds = time_ns / NS_IN_S
         if app.last_cps_update_time.elapsed() >= app.cps_update_interval:
             cps_counts = [0] * 8
             for channel, cps in app.cps_ch.items():
@@ -155,8 +154,7 @@ class IntensityTracingPlot:
         intensity_widget.setBackground("#141414")
         intensity_widget.getAxis('left').setTextPen('#FFA726')
         intensity_widget.getAxis('bottom').setTextPen("#23F3AB")
-        return intensity_widget, intensity_plot
-        
+        return intensity_widget, intensity_plot  
         
 
     @staticmethod
@@ -166,32 +164,33 @@ class IntensityTracingPlot:
         return cps_label  
     
     
-    
-    @staticmethod
+    @staticmethod       
     def update_plots(app):
         for i, channel in enumerate(app.intensity_plots_to_show):
-            x, y = app.intensity_lines[channel].getData()
+            if channel < len(app.intensity_lines):
+                x, y = app.intensity_lines[channel].getData()
         QApplication.processEvents()
-        time.sleep(0.01)     
+        time.sleep(0.01)
     
     
-    @staticmethod
+    @staticmethod        
     def update_plots2(channel_index, time_ns, intensity, app):
-        intensity_line = app.intensity_lines[channel_index]
-        x, y = intensity_line.getData()
-        if x is None or (len(x) == 1 and x[0] == 0):
-            x = np.array([time_ns / 1_000_000_000])
-            y = np.array([np.sum(intensity)])
-        else:
-            x = np.append(x, time_ns / 1_000_000_000)
-            y = np.append(y, np.sum(intensity))  
-        if len(x) > 2:
-            while x[-1] - x[0] > app.cached_time_span_seconds: 
-                x = x[1:]  
-                y = y[1:]
-        intensity_line.setData(x, y)  
-        QApplication.processEvents()
-        time.sleep(0.01)         
+        if channel_index < len(app.intensity_lines):
+            intensity_line = app.intensity_lines[channel_index]
+            x, y = intensity_line.getData()
+            if x is None or (len(x) == 1 and x[0] == 0):
+                x = np.array([time_ns / 1_000_000_000])
+                y = np.array([np.sum(intensity)])
+            else:
+                x = np.append(x, time_ns / 1_000_000_000)
+                y = np.append(y, np.sum(intensity))  
+            if len(x) > 2:
+                while x[-1] - x[0] > app.cached_time_span_seconds: 
+                    x = x[1:]  
+                    y = y[1:]
+            intensity_line.setData(x, y)  
+            QApplication.processEvents()
+            time.sleep(0.01)         
 
 
     @staticmethod

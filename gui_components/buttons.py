@@ -166,6 +166,8 @@ class ButtonsActionsController:
         app.pull_from_queue_timer.stop() 
         app.timer_update_plots.stop()
         app.last_cps_update_time.invalidate() 
+        app.realtime_queue.queue.clear()
+        app.realtime_queue_worker_stop = True
         app.blank_space.show()
         app.control_inputs[START_BUTTON].setEnabled(len(app.enabled_channels) > 0)
         app.control_inputs[STOP_BUTTON].setEnabled(False)
