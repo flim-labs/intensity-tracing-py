@@ -1,5 +1,5 @@
 PyQt5
-flim-labs==1.0.34
+flim-labs==1.0.35
 matplotlib
 numpy==1.26.4
 pyqtgraph==0.13.4

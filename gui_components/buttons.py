@@ -233,17 +233,15 @@ class PlotsConfigPopup(QWidget):
         
         self.start_btn = QPushButton("START")
         self.start_btn.setEnabled(len(self.app.intensity_plots_to_show) > 0)
-        self.start_btn.setStyleSheet(GUIStyles.channels_btn_style(base="#FB8C00", hover="#FFA726", pressed="#FB8C00", text="white")) 
+        GUIStyles.set_reset_btn_style(self.start_btn)
         self.start_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self.start_btn.clicked.connect(self.start_acquisition)  
         
-        if start_acquisition is True:
-            layout.addSpacing(20)
-            row_btn = QHBoxLayout()
-            row_btn.addStretch(1)
-            row_btn.addWidget(self.start_btn)
-            layout.addLayout(row_btn)
-            
+        layout.addSpacing(20)
+        row_btn = QHBoxLayout()
+        row_btn.addStretch(1)
+        row_btn.addWidget(self.start_btn)
+        layout.addLayout(row_btn)
               
         self.setLayout(layout)
         self.setStyleSheet(GUIStyles.plots_config_popup_style())

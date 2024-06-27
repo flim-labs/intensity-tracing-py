@@ -52,16 +52,14 @@ with open(file_path, 'rb') as f:
             break
         (time,) = struct.unpack('d', data[:8])
         channel_values = struct.unpack(channel_values_unpack_string, data[8:])
-
         for i in range(len(channel_lines)):
             channel_lines[i].append(channel_values[i])
         times.append(time)
-        
 
+    
     # Plot data
     for i in range(len(metadata["channels"])):
         channel_line = channel_lines[i]
-        
         plt.plot(
             times,
             channel_line,

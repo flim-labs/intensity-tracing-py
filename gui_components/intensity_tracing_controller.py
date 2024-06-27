@@ -61,7 +61,7 @@ class IntensityTracing:
             app.blank_space.hide()
             app.pull_from_queue_timer.start(1)
             app.last_cps_update_time.start()
-            app.timer_update_plots.start(1)
+            app.timer_update_plots.start()
             #app.pull_from_queue_timer2.start(1)
 
         except Exception as e:
@@ -84,7 +84,6 @@ class IntensityTracing:
                     IntensityTracing.stop_button_pressed(app)
                     break
                 ((time_ns), (intensities)) = v
-                #print(intensities)
                 app.realtime_queue.put((time_ns[0], intensities))
                 
                 
@@ -101,8 +100,8 @@ class IntensityTracing:
         
         for i, channel in enumerate(app.intensity_plots_to_show):
             intensity = counts[channel] / adjustment
-            IntensityTracingPlot.update_plots2(channel, time_ns, intensity, app)    
-        QApplication.processEvents()           
+            IntensityTracingPlot.update_plots2(channel, i, time_ns, intensity, app)    
+                  
 
             
     @staticmethod            
@@ -113,6 +112,7 @@ class IntensityTracing:
             except queue.Empty:
                 continue
             IntensityTracing.process_data(app, current_time_ns, counts)
+            QApplication.processEvents() 
             time.sleep(REALTIME_SECS / 1.1)
         else:
             print("Realtime queue worker stopped")
@@ -149,11 +149,12 @@ class IntensityTracingPlot:
         intensity_widget.setLabel('left', 'AVG. Photon counts', units='')
         intensity_widget.setLabel('bottom', 'Time', units='s')
         intensity_widget.setTitle("Channel " + str(channel_index + 1))
-        intensity_plot = intensity_widget.plot(x, y, pen="#a877f7")
+        intensity_plot = intensity_widget.plot(x, y, pen="#23F3AB")
         intensity_widget.setStyleSheet("border: 1px solid #3b3b3b")
         intensity_widget.setBackground("#141414")
         intensity_widget.getAxis('left').setTextPen('#FFA726')
-        intensity_widget.getAxis('bottom').setTextPen("#23F3AB")
+        intensity_widget.getAxis('bottom').setTextPen("#a877f7")
+        
         return intensity_widget, intensity_plot  
         
 
@@ -174,8 +175,8 @@ class IntensityTracingPlot:
     
     
     @staticmethod        
-    def update_plots2(channel_index, time_ns, intensity, app):
-        if channel_index < len(app.intensity_lines):
+    def update_plots2(channel_index, plots_to_show_index, time_ns, intensity, app):
+        if plots_to_show_index < len(app.intensity_lines):
             intensity_line = app.intensity_lines[channel_index]
             x, y = intensity_line.getData()
             if x is None or (len(x) == 1 and x[0] == 0):
