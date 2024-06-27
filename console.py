@@ -47,9 +47,9 @@ def thread_function(bin_width_micros):
 if __name__ == "__main__":
     
     #CONFIGURABLE PARAMS
-    enabled_channels=[0, 1]
-    bin_width_micros = 1000000
-    acquisition_time_millis=1000
+    enabled_channels=[0]
+    bin_width_micros = 1
+    acquisition_time_millis=10000
     write_bin=False
     write_data=True
     firmware_file="intensity_tracing_usb.flim"

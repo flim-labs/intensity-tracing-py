@@ -23,7 +23,7 @@
     <li><a href="#connection-type">Connection type</a></li>
     <li><a href="#bin-width">Bin width</a></li>
     <li><a href="#update-rate">Update rate</a></li>
-    <li><a href="#acquisition-mode">Acquisition modee</a></li>
+    <li><a href="#acquisition-mode">Acquisition mode</a></li>
     <li><a href="#acquisition-time">Acquisition time</a></li>
     <li><a href="#time-span">Time span</a></li>
     <li><a href="#show-cps">Show CPS</a></li>
@@ -118,8 +118,6 @@ The acquisition time value directly affects the final size of the exported data 
 
 **Time span** set the time interval, in seconds, for the _last visible data range on the duration x-axis_. For instance, if this value is set to 5s, the x-axis will scroll to continuously display the latest 5 seconds of real-time data on the chart.
 Users can choose a value from _1_ to _300_ s (seconds).
-
-The time span value, along with `update rate` affects the maximum number of points maintained on the plot. For further details, refer to the [Max Points and Draw Frequency](#max-points-and-draw-frequency) section.
 
 <hr>
 

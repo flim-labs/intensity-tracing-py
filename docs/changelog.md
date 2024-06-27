@@ -1,5 +1,14 @@
 # Intensity Tracing Changelog
 
+## Version 1.6
+- Fixes on time span
+- Fixes on exported .bin file size calculation
+- Make console mode script more customizable and user-friendly
+- Fixes on console mode photons counts prints, based on the correct bin-width parameter
+- GUI improvements and restyling
+- Add plot visualization/only CPS dual mode configuration, in order to avoid cluttering the interface
+- Make controls bar collapsible
+
 ## Version 1.5
 - Fixes and improvements of realtime performances
 - No more need of update rate user input to calculate plots draw frequency

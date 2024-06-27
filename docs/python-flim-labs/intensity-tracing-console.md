@@ -34,10 +34,11 @@ Here a table summary of the configurable parameters on code side:
 
 |                           | data-type   | config                                                                            | default   | explanation                                                                               |
 | ------------------------- | ----------- | --------------------------------------------------------------------------------- | --------- | ----------------------------------------------------------------------------------------- |
-| `enabled_channels`        | number[]    | set a list of enabled acquisition data channels (up to 8). e.g. [0,1,2,3,4,5,6,7] | [1]       | the list of enabled channels for photons data acquisition                                 |
-| `bin_width_micros`        | number      | Set the numerical value in microseconds                                           | 1000 (ms) | the time duration to wait for photons count accumulation.                                 |
-| `acquisition_time_millis` | number/None | Set the data acquisition duration                                                 | None      | The acquisition duration could be determinate (_numeric value_) or indeterminate (_None_) |
-| `write_data`              | boolean     | Set export data option to True/False                                              | True      | if set to _True_, the acquired raw data will be exported locally to the computer          |
+| `enabled_channels`        | number[]    | set a list of enabled acquisition data channels (up to 8). e.g. [0,1,2,3,4,5,6,7] | _[0]_       | the list of enabled channels for photons data acquisition                                 |
+| `bin_width_micros`        | number      | Set the numerical value in microseconds                                           | _1 (μs)_ | the time duration to wait for photons count accumulation.                                 |
+| `acquisition_time_millis` | number/None | Set the data acquisition duration                                                 | _10000 (ms_)      | The acquisition duration could be determinate (_numeric value_) or indeterminate (_None_) |
+| `write_data`              | boolean     | Set export data option to True/False                                              | _True_      | if set to _True_, the acquired raw data will be exported locally to the computer          |
+| `firmware_file`              | string     | Set the intensity tracing firmware input (USB or SMA)                                              | _intensity_tracing_usb.flim_     |     The firmware input used for the acquisition     |
 
  <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -46,7 +47,7 @@ Here a table summary of the configurable parameters on code side:
 For more details about the project follow these links:
 
 - [Intensity Tracing introduction](../index.md)
-- [Intensity Tracing GUI guide](../v1.5/index.md)
+- [Intensity Tracing GUI guide](../v1.6/index.md)
 - [Intensity Tracing Data Export guide ](./intensity-tracing-file-format.md)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>

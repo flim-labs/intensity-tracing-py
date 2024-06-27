@@ -168,10 +168,9 @@ class IntensityTracingPlot:
     @staticmethod       
     def update_plots(app):
         for i, channel in enumerate(app.intensity_plots_to_show):
-            if channel < len(app.intensity_lines):
+            if i < len(app.intensity_lines):
                 x, y = app.intensity_lines[channel].getData()
         QApplication.processEvents()
-        time.sleep(0.01)
     
     
     @staticmethod        
