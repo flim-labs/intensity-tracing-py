@@ -39,16 +39,6 @@ def draw_layout_separator(line_width=1, color="#282828", vertical_space=10):
     return container_widget
 
 
-def create_logo_overlay(self):
-    # Logo overlay
-    logo_overlay = LogoOverlay(self)
-    logo_overlay.show()
-    logo_overlay.update_visibility(self)
-    logo_overlay.update_position(logo_overlay)
-    logo_overlay.lower()
-    return logo_overlay
-
-
 
 def init_ui(self, top_utilities_layout):
     # Titlebar logo icon
@@ -75,9 +65,8 @@ def init_ui(self, top_utilities_layout):
     widget.setLayout(main_layout)
     scroll_area.setWidget(widget)
     self.setCentralWidget(scroll_area)
-    logo_overlay = create_logo_overlay(self)
 
-    return main_layout, logo_overlay, plot_grids_container
+    return main_layout, plot_grids_container
 
 
 

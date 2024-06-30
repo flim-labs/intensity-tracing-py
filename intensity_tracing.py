@@ -3,7 +3,7 @@ import json
 import os
 import queue
 import sys
-from PyQt5.QtCore import QTimer, Qt, QSettings, QElapsedTimer
+from PyQt5.QtCore import QTimer, Qt, QSettings, QElapsedTimer, QEvent
 from PyQt5.QtWidgets import (
     QMainWindow,
     QDesktopWidget,
@@ -21,6 +21,7 @@ from gui_components.data_export_controls import DownloadDataControl, ExportDataC
 from gui_components.input_params_controls import InputParamsControls
 from gui_components.intensity_tracing_controller import IntensityTracing, IntensityTracingPlot
 from gui_components.layout_utilities import init_ui
+from gui_components.logo_utilities import LogoOverlay
 from gui_components.settings import *
 from gui_components.top_bar import TopBar
 current_path = os.path.dirname(os.path.abspath(__file__))
@@ -86,6 +87,9 @@ class PhotonsTracingWindow(QMainWindow):
         self.timer_update_plots = QTimer()
         self.timer_update_plots.timeout.connect(partial(IntensityTracingPlot.update_plots, self))
         
+        self.overlay = LogoOverlay(self)
+        self.installEventFilter(self)
+        
         self.init_ui()
 
     @staticmethod
@@ -95,10 +99,9 @@ class PhotonsTracingWindow(QMainWindow):
 
     def init_ui(self):
         self.create_top_utilities_layout()
-        main_layout, logo_overlay, charts_grid = init_ui(self, self.top_utilities_layout)
+        main_layout, charts_grid = init_ui(self, self.top_utilities_layout)
         self.main_layout = main_layout
-        self.logo_overlay = logo_overlay
-        
+
     
     def create_top_utilities_layout(self):    
         top_collapsible_widget = QWidget()
@@ -187,20 +190,24 @@ class PhotonsTracingWindow(QMainWindow):
         y = (screen_rect.height() - self.height()) // 2
         self.move(x, y)
 
-
-    def resizeEvent(self, event):
-        super(PhotonsTracingWindow, self).resizeEvent(event)
-        self.logo_overlay.update_position(self)
-        self.logo_overlay.update_visibility(self)
         
         
     def closeEvent(self, event):  
         if PLOTS_CONFIG_POPUP in self.widgets:
             self.widgets[PLOTS_CONFIG_POPUP].close()    
         event.accept()   
+        
+         
+    def eventFilter(self, source, event):  
+        try:
+            if event.type() in (
+                    QEvent.Type.Resize, QEvent.Type.MouseButtonPress, QEvent.Type.MouseButtonRelease):
+                self.overlay.raise_()
+                self.overlay.resize(self.size())
+            return super().eventFilter(source, event)
+        except:
+            pass   
      
-
-
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
