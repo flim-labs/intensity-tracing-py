@@ -18,6 +18,7 @@ class LinkWidget(QWidget):
 
         if text:
             text_label = QLabel(text)
+            text_label.setStyleSheet("font-size: 18px; color: #f8f8f8;")
             layout.addWidget(text_label)
 
         layout.addSpacing(10)

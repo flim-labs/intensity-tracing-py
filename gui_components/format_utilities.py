@@ -20,3 +20,8 @@ class FormatUtils:
         k = 1000.0
         magnitude = int(floor(log(number, k)))
         return '%.2f%s' % (number / k ** magnitude, units[magnitude])
+    
+    @staticmethod
+    def calc_bytes_in_micro(micro_value, bytes_in_1000_micro):
+        return (bytes_in_1000_micro / micro_value) * 1000
+        

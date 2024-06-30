@@ -1,4 +1,4 @@
-APP_VERSION = "1.5"
+APP_VERSION = "1.6"
 APP_NAME = "INTENSITY TRACING"
 APP_DEFAULT_WIDTH = 1460
 APP_DEFAULT_HEIGHT = 800
@@ -36,11 +36,31 @@ DEFAULT_ENABLED_CHANNELS = "[0]"
 SETTINGS_SHOW_CPS = "show_cps"
 DEFAULT_SHOW_CPS = False
 
+SETTINGS_INTENSITY_PLOTS_TO_SHOW = "intensity_plots_to_show"
+DEFAULT_INTENSITY_PLOTS_TO_SHOW = "[]"
+
+MAX_CHANNELS = 8
+
 START_BUTTON = "start_button"
 STOP_BUTTON = "stop_button"
 RESET_BUTTON = "reset_button"
 DOWNLOAD_BUTTON = "download_button"
 DOWNLOAD_MENU = "download_menu"
+
+MAIN_LAYOUT = "main_layout"
+
+CHANNELS_COMPONENT = "channels_component"
+CH_CORRELATIONS_POPUP = "ch_correlations_popup"
+PLOTS_CONFIG_POPUP = "plots_config_popup"
+
+INTENSITY_PLOTS_GRID = "intensity_plots_grid"
+INTENSITY_ONLY_CPS_GRID = "intensity_only_cps_grid"
+PLOT_GRIDS_CONTAINER = "plots_grids_container"
+TOP_COLLAPSIBLE_WIDGET = "top_collapsible_widget"
+INTENSITY_WIDGET_WRAPPER = "intensity_widget_wrapper"
+CHANNELS_CHECKBOXES = "channels_checkboxes"
+
+CHECKBOX_CONTROLS = "ch_controls"
 
 REALTIME_MS = 10
 REALTIME_ADJUSTMENT = REALTIME_MS * 1000

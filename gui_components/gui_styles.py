@@ -8,12 +8,12 @@ class GUIStyles:
     def set_default_theme(theme):
         QApplication.setStyle(QStyleFactory.create(theme))
 
-    @staticmethod
-    def customize_theme(window):
+    @staticmethod    
+    def customize_theme(window, bg = QColor(28, 28, 28, 128), fg = QColor(255, 255, 255)):
         palette = QPalette()
-        background_color = QColor(28, 28, 28, 128)
+        background_color = bg
         palette.setColor(QPalette.ColorRole.Window, background_color)
-        palette.setColor(QPalette.ColorRole.WindowText, QColor(255, 255, 255))
+        palette.setColor(QPalette.ColorRole.WindowText, fg)
         window.setPalette(palette)
 
     @staticmethod
@@ -290,3 +290,145 @@ class GUIStyles:
          }}
 
         """
+    @staticmethod         
+    def toggle_collapse_button():
+        return """
+            QPushButton{
+                background-color: transparent;
+                border-radius: 15px;
+                qproperty-iconSize: 15px;
+                border: 1px solid #808080;
+            } 
+        """   
+        
+    @staticmethod           
+    def channels_btn_style(base, hover, pressed, text="white"):
+        return f"""
+            QPushButton, QPushButton:released {{
+                font-family: "Montserrat";
+                letter-spacing: 0.1em;
+                padding: 10px 12px;
+                font-size: 14px;
+                font-weight: bold;
+                border-radius: 4px;
+                min-width: 160px;
+                background-color: {base};
+                border: 2px solid {base};
+                color: {text};
+            }}
+            
+            QPushButton:hover {{
+                background-color: {hover};
+                border: 2px solid {hover};
+            }}
+
+            QPushButton:focus {{
+                background-color: {base};
+                border: 2px solid {base};
+            }}
+
+            QPushButton:pressed {{
+                background-color: {base};
+                border: 2px solid {base};
+            }}
+
+            QPushButton:disabled {{
+                background-color: #cecece;
+                border: 2px solid #cecece;
+                color: #8c8b8b;
+            }}
+        """
+        
+    @staticmethod   
+    def plots_config_popup_style():
+        return """
+            QWidget {
+                background-color: #141414;
+                color: #6e6b6b;
+                font-family: Montserrat;
+                font-size: 14px;
+            }
+            QLabel#prompt_text {
+                color: white;
+                font-size: 18px;
+            } 
+        """
+        
+    @staticmethod        
+    def set_simple_checkbox_style(color):
+        return f"""
+            QCheckBox {{
+                spacing: 5px;
+                color: #f8f8f8;
+                font-family: "Montserrat";
+                font-size: 14px;
+                letter-spacing: 0.1em;
+                border-radius: 5px;
+            }}
+            QCheckBox::indicator {{
+                width: 14px;
+                height: 14px;
+                border-radius: 7px;  
+            }}
+
+            QCheckBox::indicator:unchecked {{
+                background-color: #6b6a6a;
+            }}
+
+            QCheckBox::indicator:checked {{
+                background-color: {color};
+            }}
+        """  
+        
+    @staticmethod        
+    def checkbox_wrapper_style():
+        return """
+            QWidget#ch_checkbox_wrapper, QWidget#tau_checkbox_wrapper{
+                border: 1px solid #3b3b3b;
+                background-color: transparent;
+                padding: 0;
+            } 
+            QWidget#tau_checkbox_wrapper{
+                border-radius: 5px;
+            } 
+            QWidget{
+                color: #f8f8f8;
+                font-family: "Montserrat";
+                font-size: 16px;
+                padding: 0;
+            }        
+        """ 
+        
+    @staticmethod  
+    def set_cps_label_style():
+        return """
+            QLabel{
+                font-weight: 700;
+                font-family: "Montserrat";
+                font-size: 40px;
+                color: #a877f7;
+            }
+        """ 
+    
+    @staticmethod       
+    def only_cps_widget():
+        return """
+            QWidget#container{
+                padding: 12px;
+                border: 1px solid #3b3b3b;
+                margin-right: 8px;
+                margin-left: 8px;
+            }
+            QLabel#cps{
+                font-weight: 700;
+                font-family: "Montserrat";
+                font-size: 34px;
+                color: #FB8C00;
+            }
+            QLabel#ch{
+                font-size: 24px;
+                color: #cecece;
+                margin-left: 8px;
+            }
+        """                      
+         
