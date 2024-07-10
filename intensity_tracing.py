@@ -79,14 +79,8 @@ class PhotonsTracingWindow(QMainWindow):
         
         self.pull_from_queue_timer = QTimer()
         self.pull_from_queue_timer.timeout.connect(partial(IntensityTracing.pull_from_queue, self))
-        self.realtime_queue_thread = None
-        self.realtime_queue_worker_stop = False
-        self.realtime_queue = queue.Queue() 
         self.last_cps_update_time = QElapsedTimer() 
         self.cps_update_interval = 400  
-        self.timer_update_plots = QTimer()
-        self.timer_update_plots.timeout.connect(partial(IntensityTracingPlot.update_plots, self))
-        
         self.overlay = LogoOverlay(self)
         self.installEventFilter(self)
         
