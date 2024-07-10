@@ -50,10 +50,6 @@ class IntensityTracing:
                 acquisition_time_millis=acquisition_time_millis, 
                 firmware_file=app.selected_firmware,
             )
-            
-            app.realtime_queue_worker_stop = False
-            app.realtime_queue_thread = threading.Thread(target=partial(IntensityTracing.realtime_queue_worker, app))
-            app.realtime_queue_thread.start()
 
             file_bin = result.bin_file
             if file_bin != "":
@@ -61,7 +57,6 @@ class IntensityTracing:
             app.blank_space.hide()
             app.pull_from_queue_timer.start(1)
             app.last_cps_update_time.start()
-            app.timer_update_plots.start()
             #app.pull_from_queue_timer2.start(1)
 
         except Exception as e:
@@ -74,7 +69,6 @@ class IntensityTracing:
                 app.test_mode
             )
 
-
     @staticmethod
     def pull_from_queue(app):
         val = flim_labs.pull_from_queue()
@@ -83,8 +77,10 @@ class IntensityTracing:
                 if v == ('end',):  # End of acquisition
                     IntensityTracing.stop_button_pressed(app)
                     break
+                if app.acquisition_stopped:
+                    break
                 ((time_ns), (intensities)) = v
-                app.realtime_queue.put((time_ns[0], intensities))
+                IntensityTracing.process_data(app, time_ns[0], intensities)
                 
                 
     @staticmethod            
@@ -103,23 +99,6 @@ class IntensityTracing:
             IntensityTracingPlot.update_plots2(channel, i, time_ns, intensity, app)    
                   
 
-            
-    @staticmethod            
-    def realtime_queue_worker(app):
-        while app.realtime_queue_worker_stop is False:
-            try:
-                (current_time_ns, counts) = app.realtime_queue.get(timeout=REALTIME_MS / 1000)
-            except queue.Empty:
-                continue
-            IntensityTracing.process_data(app, current_time_ns, counts)
-            QApplication.processEvents() 
-            time.sleep(REALTIME_SECS / 1.1)
-        else:
-            print("Realtime queue worker stopped")
-            app.realtime_queue.queue.clear()
-            app.realtime_queue_worker_stop = False
-
-
 
     @staticmethod    
     def stop_button_pressed(app):
@@ -131,13 +110,7 @@ class IntensityTracing:
         DataExportActions.set_download_button_icon(app)
         QApplication.processEvents()
         flim_labs.request_stop()
-        app.realtime_queue.queue.clear()
-        app.realtime_queue_worker_stop = True
-        if app.realtime_queue_thread is not None:
-            app.realtime_queue_thread.join()
         app.pull_from_queue_timer.stop() 
-        app.timer_update_plots.stop()
-
 
 class IntensityTracingPlot:
     
@@ -163,14 +136,7 @@ class IntensityTracingPlot:
         # cps indicator
         cps_label = QLabel("0 CPS")
         return cps_label  
-    
-    
-    @staticmethod       
-    def update_plots(app):
-        for i, channel in enumerate(app.intensity_plots_to_show):
-            if i < len(app.intensity_lines):
-                x, y = app.intensity_lines[channel].getData()
-        QApplication.processEvents()
+
     
     
     @staticmethod        

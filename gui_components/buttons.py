@@ -152,22 +152,14 @@ class ButtonsActionsController:
         DataExportActions.set_download_button_icon(app)
         QApplication.processEvents()
         flim_labs.request_stop()
-        app.realtime_queue.queue.clear()
-        app.realtime_queue_worker_stop = True
-        if app.realtime_queue_thread is not None:
-            app.realtime_queue_thread.join()
         app.pull_from_queue_timer.stop() 
-        app.timer_update_plots.stop() 
     
    
     @staticmethod
     def reset_button_pressed(app):
         flim_labs.request_stop()
         app.pull_from_queue_timer.stop() 
-        app.timer_update_plots.stop()
         app.last_cps_update_time.invalidate() 
-        app.realtime_queue.queue.clear()
-        app.realtime_queue_worker_stop = True
         app.blank_space.show()
         app.control_inputs[START_BUTTON].setEnabled(len(app.enabled_channels) > 0)
         app.control_inputs[STOP_BUTTON].setEnabled(False)
