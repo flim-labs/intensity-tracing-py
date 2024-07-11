@@ -146,6 +146,7 @@ class ButtonsActionsController:
     def stop_button_pressed(app):
         app.acquisition_stopped = True
         app.last_cps_update_time.invalidate() 
+        app.cps_counts = [0]* 8
         app.control_inputs[START_BUTTON].setEnabled(len(app.enabled_channels) > 0)
         app.control_inputs[STOP_BUTTON].setEnabled(False)
         app.control_inputs[DOWNLOAD_BUTTON].setEnabled(app.write_data and app.acquisition_stopped)
@@ -175,6 +176,7 @@ class ButtonsActionsController:
         app.intensity_charts.clear()
         app.cps_charts_widgets.clear()
         app.cps_ch.clear()
+        app.cps_counts = [0]* 8
         app.intensity_charts_wrappers.clear()
         ButtonsActionsController.clear_intensity_grid_widgets(app)  
         QApplication.processEvents()    

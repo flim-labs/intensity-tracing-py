@@ -69,6 +69,7 @@ class PhotonsTracingWindow(QMainWindow):
         self.warning_box = None
         self.test_mode = False
         self.cps_ch = {}
+        self.cps_counts = [0]* 8
         self.cps_charts_widgets = []
         self.intensity_charts = []
         self.intensity_charts_wrappers = []

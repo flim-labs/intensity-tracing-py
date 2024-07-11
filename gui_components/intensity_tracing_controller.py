@@ -86,13 +86,14 @@ class IntensityTracing:
     @staticmethod            
     def process_data(app, time_ns, counts):
         adjustment = REALTIME_ADJUSTMENT / app.bin_width_micros
+        for channel, cps in app.cps_ch.items():
+            app.cps_counts[channel] += counts[channel] 
         if app.last_cps_update_time.elapsed() >= app.cps_update_interval:
-            cps_counts = [0] * 8
             for channel, cps in app.cps_ch.items():
-                cps_counts[channel] += counts[channel]
                 #print(f"{channel} - {cps_counts[channel]}")
-                app.cps_ch[channel].setText(FormatUtils.format_cps(round(cps_counts[channel])) + " CPS")
-                app.last_cps_update_time.restart()
+                app.cps_ch[channel].setText(FormatUtils.format_cps(round(app.cps_counts[channel])) + " CPS")
+            app.last_cps_update_time.restart()    
+            app.cps_counts = [0]* 8         
         
         for i, channel in enumerate(app.intensity_plots_to_show):
             intensity = counts[channel] / adjustment
@@ -104,6 +105,7 @@ class IntensityTracing:
     def stop_button_pressed(app):
         app.acquisition_stopped = True
         app.last_cps_update_time.invalidate() 
+        app.cps_counts = [0]* 8
         app.control_inputs[START_BUTTON].setEnabled(len(app.enabled_channels) > 0)
         app.control_inputs[STOP_BUTTON].setEnabled(False)
         app.control_inputs[DOWNLOAD_BUTTON].setEnabled(app.write_data and app.acquisition_stopped)
