@@ -69,7 +69,7 @@ class PhotonsTracingWindow(QMainWindow):
         self.warning_box = None
         self.test_mode = False
         self.cps_ch = {}
-        self.cps_counts = [0]* 8
+        self.cps_counts = {}
         self.cps_charts_widgets = []
         self.intensity_charts = []
         self.intensity_charts_wrappers = []
@@ -80,8 +80,6 @@ class PhotonsTracingWindow(QMainWindow):
         
         self.pull_from_queue_timer = QTimer()
         self.pull_from_queue_timer.timeout.connect(partial(IntensityTracing.pull_from_queue, self))
-        self.last_cps_update_time = QElapsedTimer() 
-        self.cps_update_interval = 400  
         self.overlay = LogoOverlay(self)
         self.installEventFilter(self)
         

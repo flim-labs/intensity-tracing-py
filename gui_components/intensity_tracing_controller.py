@@ -56,7 +56,6 @@ class IntensityTracing:
                 print("File bin written in: " + str(file_bin))
             app.blank_space.hide()
             app.pull_from_queue_timer.start(1)
-            app.last_cps_update_time.start()
             #app.pull_from_queue_timer2.start(1)
 
         except Exception as e:
@@ -87,25 +86,37 @@ class IntensityTracing:
     def process_data(app, time_ns, counts):
         adjustment = REALTIME_ADJUSTMENT / app.bin_width_micros
         for channel, cps in app.cps_ch.items():
-            app.cps_counts[channel] += counts[channel] 
-        if app.last_cps_update_time.elapsed() >= app.cps_update_interval:
-            for channel, cps in app.cps_ch.items():
-                #print(f"{channel} - {cps_counts[channel]}")
-                app.cps_ch[channel].setText(FormatUtils.format_cps(round(app.cps_counts[channel])) + " CPS")
-            app.last_cps_update_time.restart()    
-            app.cps_counts = [0]* 8         
-        
+            IntensityTracing.update_cps(app, time_ns, counts, channel)
         for i, channel in enumerate(app.intensity_plots_to_show):
             intensity = counts[channel] / adjustment
-            IntensityTracingPlot.update_plots2(channel, i, time_ns, intensity, app)    
-                  
-
+            IntensityTracingPlot.update_plots2(channel, i, time_ns, intensity, app)  
+            
+              
+    @staticmethod
+    def update_cps(app, time_ns, counts, channel_index):
+        if channel_index in app.cps_counts:
+            cps = app.cps_counts[channel_index]
+            intensities_sum = np.sum(counts)
+            if cps["last_time_ns"] == 0:
+                cps["last_time_ns"] = time_ns
+                cps["last_count"] = intensities_sum
+                cps["current_count"] = intensities_sum
+                return
+            cps["current_count"] = cps["current_count"] + np.sum(counts) 
+            time_elapsed = time_ns - cps["last_time_ns"]
+            if time_elapsed > 330_000_000:
+                cps_value = (cps["current_count"] - cps["last_count"]) / (
+                    time_elapsed / 1_000_000_000
+                )
+                app.cps_ch[channel_index].setText(FormatUtils.format_cps(cps_value) + " CPS")
+                cps["last_time_ns"] = time_ns
+                cps["last_count"] = cps["current_count"]
+                
 
     @staticmethod    
     def stop_button_pressed(app):
         app.acquisition_stopped = True
-        app.last_cps_update_time.invalidate() 
-        app.cps_counts = [0]* 8
+        app.cps_counts.clear()
         app.control_inputs[START_BUTTON].setEnabled(len(app.enabled_channels) > 0)
         app.control_inputs[STOP_BUTTON].setEnabled(False)
         app.control_inputs[DOWNLOAD_BUTTON].setEnabled(app.write_data and app.acquisition_stopped)
