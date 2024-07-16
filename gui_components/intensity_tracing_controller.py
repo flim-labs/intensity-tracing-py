@@ -94,7 +94,6 @@ class IntensityTracing:
               
     @staticmethod
     def update_cps(app, time_ns, counts, channel_index):
-        print(counts)
         if channel_index in app.cps_counts:
             cps = app.cps_counts[channel_index]
             if cps["last_time_ns"] == 0:
