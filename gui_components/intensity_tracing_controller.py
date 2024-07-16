@@ -94,15 +94,15 @@ class IntensityTracing:
               
     @staticmethod
     def update_cps(app, time_ns, counts, channel_index):
+        print(counts)
         if channel_index in app.cps_counts:
             cps = app.cps_counts[channel_index]
-            intensities_sum = np.sum(counts)
             if cps["last_time_ns"] == 0:
                 cps["last_time_ns"] = time_ns
-                cps["last_count"] = intensities_sum
-                cps["current_count"] = intensities_sum
+                cps["last_count"] = counts[channel_index]
+                cps["current_count"] = counts[channel_index]
                 return
-            cps["current_count"] = cps["current_count"] + np.sum(counts) 
+            cps["current_count"] = cps["current_count"] + counts[channel_index]
             time_elapsed = time_ns - cps["last_time_ns"]
             if time_elapsed > 330_000_000:
                 cps_value = (cps["current_count"] - cps["last_count"]) / (
@@ -111,6 +111,7 @@ class IntensityTracing:
                 app.cps_ch[channel_index].setText(FormatUtils.format_cps(cps_value) + " CPS")
                 cps["last_time_ns"] = time_ns
                 cps["last_count"] = cps["current_count"]
+             
                 
 
     @staticmethod    

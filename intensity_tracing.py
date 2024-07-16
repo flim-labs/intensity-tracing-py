@@ -60,6 +60,7 @@ class PhotonsTracingWindow(QMainWindow):
         self.layouts = {}
         default_intensity_plots_to_show = self.settings.value(SETTINGS_INTENSITY_PLOTS_TO_SHOW, DEFAULT_INTENSITY_PLOTS_TO_SHOW)
         self.intensity_plots_to_show = json.loads(default_intensity_plots_to_show) if default_intensity_plots_to_show is not None else []
+        self.plots_to_show_popup_already_shown = False
         self.channel_checkbox_layout = QGridLayout()
         self.top_utilities_layout = QVBoxLayout()
         self.channels_checkboxes = []
