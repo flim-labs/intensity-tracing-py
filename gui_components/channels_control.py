@@ -64,11 +64,16 @@ class ChannelsControl(QWidget):
         if state:
             if index not in self.app.enabled_channels:
                 self.app.enabled_channels.append(index)
+                if not(index in self.app.intensity_plots_to_show) and len(self.app.intensity_plots_to_show) < 4:
+                    self.app.intensity_plots_to_show.append(index)
+                    self.app.intensity_plots_to_show.sort()
+                    self.app.settings.setValue(SETTINGS_INTENSITY_PLOTS_TO_SHOW, json.dumps(self.app.intensity_plots_to_show))
         else:
             if index in self.app.enabled_channels:
                 self.app.enabled_channels.remove(index)
                 filtered_intensity_plot_to_show = list(filter(lambda x: x != index, intensity_plot_to_show))
                 self.app.intensity_plots_to_show = filtered_intensity_plot_to_show
+                self.app.intensity_plots_to_show.sort()
                 self.app.settings.setValue(SETTINGS_INTENSITY_PLOTS_TO_SHOW, json.dumps(filtered_intensity_plot_to_show))
         self.app.settings.setValue(SETTINGS_ENABLED_CHANNELS, json.dumps(self.app.enabled_channels))
         DataExportActions.calc_exported_file_size(self.app)

@@ -60,6 +60,7 @@ class PhotonsTracingWindow(QMainWindow):
         self.layouts = {}
         default_intensity_plots_to_show = self.settings.value(SETTINGS_INTENSITY_PLOTS_TO_SHOW, DEFAULT_INTENSITY_PLOTS_TO_SHOW)
         self.intensity_plots_to_show = json.loads(default_intensity_plots_to_show) if default_intensity_plots_to_show is not None else []
+        self.plots_to_show_popup_already_shown = False
         self.channel_checkbox_layout = QGridLayout()
         self.top_utilities_layout = QVBoxLayout()
         self.channels_checkboxes = []
@@ -69,6 +70,7 @@ class PhotonsTracingWindow(QMainWindow):
         self.warning_box = None
         self.test_mode = False
         self.cps_ch = {}
+        self.cps_counts = {}
         self.cps_charts_widgets = []
         self.intensity_charts = []
         self.intensity_charts_wrappers = []
@@ -79,8 +81,6 @@ class PhotonsTracingWindow(QMainWindow):
         
         self.pull_from_queue_timer = QTimer()
         self.pull_from_queue_timer.timeout.connect(partial(IntensityTracing.pull_from_queue, self))
-        self.last_cps_update_time = QElapsedTimer() 
-        self.cps_update_interval = 400  
         self.overlay = LogoOverlay(self)
         self.installEventFilter(self)
         

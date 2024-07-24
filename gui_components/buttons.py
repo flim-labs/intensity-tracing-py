@@ -75,8 +75,9 @@ class ActionButtons(QWidget):
         return buttons_row_layout 
 
     def start_button_pressed(self):
-        open_popup = len(self.app.intensity_plots_to_show) == 0
+        open_popup = len(self.app.enabled_channels) > 4 and self.app.plots_to_show_popup_already_shown == False
         if open_popup: 
+            self.app.plots_to_show_popup_already_shown = True
             popup = PlotsConfigPopup(self.app, start_acquisition=True)
             popup.show()
         else: 
@@ -131,6 +132,12 @@ class ButtonsActionsController:
     def intensity_tracing_start(app):
         only_cps_widgets = [item for item in app.enabled_channels if item not in app.intensity_plots_to_show]
         only_cps_widgets.sort()
+        for ch in app.enabled_channels:
+            app.cps_counts[ch] = {
+                "last_time_ns": 0,
+                "last_count": 0,
+                "current_count": 0,
+            }    
         for i, channel in enumerate(app.intensity_plots_to_show):
             if i < len(app.intensity_charts):
                 app.intensity_charts[i].show()
@@ -145,7 +152,7 @@ class ButtonsActionsController:
     @staticmethod
     def stop_button_pressed(app):
         app.acquisition_stopped = True
-        app.last_cps_update_time.invalidate() 
+        app.cps_counts.clear()    
         app.control_inputs[START_BUTTON].setEnabled(len(app.enabled_channels) > 0)
         app.control_inputs[STOP_BUTTON].setEnabled(False)
         app.control_inputs[DOWNLOAD_BUTTON].setEnabled(app.write_data and app.acquisition_stopped)
@@ -159,7 +166,6 @@ class ButtonsActionsController:
     def reset_button_pressed(app):
         flim_labs.request_stop()
         app.pull_from_queue_timer.stop() 
-        app.last_cps_update_time.invalidate() 
         app.blank_space.show()
         app.control_inputs[START_BUTTON].setEnabled(len(app.enabled_channels) > 0)
         app.control_inputs[STOP_BUTTON].setEnabled(False)
@@ -175,6 +181,7 @@ class ButtonsActionsController:
         app.intensity_charts.clear()
         app.cps_charts_widgets.clear()
         app.cps_ch.clear()
+        app.cps_counts.clear()  
         app.intensity_charts_wrappers.clear()
         ButtonsActionsController.clear_intensity_grid_widgets(app)  
         QApplication.processEvents()    
