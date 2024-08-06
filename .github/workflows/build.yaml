@@ -27,5 +27,5 @@ jobs:
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: .exe (not signed)
-        path: D:\a\intensity-tracing-py\intensity-tracing-py\dist
+        name: ${{ github.event.repository.name }}_${{ github.sha }}_exe_not_signed
+        path: D:\a\${{ github.event.repository.name }}\${{ github.event.repository.name }}\dist
