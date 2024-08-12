@@ -28,7 +28,6 @@ class ControlsBar:
         controls_layout = QHBoxLayout()
         controls_layout.setContentsMargins(0,0,0,0)
         controls_layout.setSpacing(0)
-        controls_layout.addSpacing(10)
         blank_space = QWidget()
         blank_space.setMinimumHeight(1)
         blank_space.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)

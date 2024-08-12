@@ -209,9 +209,10 @@ class PlotsConfigPopup(QWidget):
         desc.setWordWrap(True)
         layout.addWidget(desc)
         layout.addSpacing(20)
-        desc.setStyleSheet("font-size: 16px;")
+        desc.setStyleSheet("font-size: 14px; color: #cecece")
         intensity_prompt = QLabel("INTENSITY TRACING PLOTS (MAX 4):")
         intensity_prompt.setObjectName("prompt_text")
+        intensity_prompt.setStyleSheet("font-size: 18px; color: white")
         self.intensity_ch_grid = QGridLayout()
         self.intensity_checkboxes = []
         self.intensity_checkboxes_wrappers = []
@@ -227,6 +228,8 @@ class PlotsConfigPopup(QWidget):
         self.start_btn = QPushButton("START")
         self.start_btn.setEnabled(len(self.app.intensity_plots_to_show) > 0)
         GUIStyles.set_reset_btn_style(self.start_btn)
+        self.start_btn.setFixedHeight(40)
+        self.start_btn.setFixedWidth(100)
         self.start_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self.start_btn.clicked.connect(self.start_acquisition)  
         

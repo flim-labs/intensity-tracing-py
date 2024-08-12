@@ -154,6 +154,7 @@ class PhotonsTracingWindow(QMainWindow):
         buttons_row_layout.addWidget(buttons_widget)
         collapse_button = CollapseButton(self.widgets[TOP_COLLAPSIBLE_WIDGET])
         buttons_row_layout.addWidget(collapse_button)
+        buttons_row_layout.addSpacing(10)
         blank_space, controls_layout = ControlsBar.init_gui_controls_layout(controls_row, buttons_row_layout)
         self.blank_space = blank_space
         return controls_layout
