@@ -1,12 +1,10 @@
 from functools import partial
 import json
 import os
-import queue
 import sys
-from PyQt5.QtCore import QTimer, Qt, QSettings, QElapsedTimer, QEvent
-from PyQt5.QtWidgets import (
+from PyQt6.QtCore import QTimer, Qt, QSettings, QEvent
+from PyQt6.QtWidgets import (
     QMainWindow,
-    QDesktopWidget,
     QApplication,
     QWidget,
     QVBoxLayout,
@@ -17,9 +15,9 @@ from PyQt5.QtWidgets import (
 from gui_components.buttons import ActionButtons, CollapseButton
 from gui_components.channels_control import ChannelsControl
 from gui_components.controls_bar import ControlsBar
-from gui_components.data_export_controls import DownloadDataControl, ExportDataControl
+from gui_components.data_export_controls import ExportDataControl
 from gui_components.input_params_controls import InputParamsControls
-from gui_components.intensity_tracing_controller import IntensityTracing, IntensityTracingPlot
+from gui_components.intensity_tracing_controller import IntensityTracing
 from gui_components.layout_utilities import init_ui
 from gui_components.logo_utilities import LogoOverlay
 from gui_components.settings import *
@@ -93,7 +91,7 @@ class PhotonsTracingWindow(QMainWindow):
 
     def init_ui(self):
         self.create_top_utilities_layout()
-        main_layout, charts_grid = init_ui(self, self.top_utilities_layout)
+        main_layout, _ = init_ui(self, self.top_utilities_layout)
         self.main_layout = main_layout
 
     
@@ -131,11 +129,9 @@ class PhotonsTracingWindow(QMainWindow):
     def create_header_layout(self):      
         title_row = self.create_logo_and_title()
         export_data_widget = ExportDataControl(self)
-        download_button = self.create_download_files_menu()
         header_layout = TopBar.create_header_layout(
             title_row,
             export_data_widget,
-            download_button,
         )
         return header_layout 
     
@@ -143,11 +139,7 @@ class PhotonsTracingWindow(QMainWindow):
     def create_logo_and_title(self):   
         title_row = TopBar.create_logo_and_title(self)
         return title_row    
-    
-    
-    def create_download_files_menu(self):  
-        download_button = DownloadDataControl(self)
-        return download_button
+ 
         
     def create_channels_grid(self):          
         channels_component = ChannelsControl(self)
@@ -179,11 +171,11 @@ class PhotonsTracingWindow(QMainWindow):
       
     def showEvent(self, event):
         super().showEvent(event)
-        screen_rect = QDesktopWidget().screenGeometry()
+        screen = QApplication.primaryScreen()
+        screen_rect = screen.geometry()
         x = (screen_rect.width() - self.width()) // 2
         y = (screen_rect.height() - self.height()) // 2
         self.move(x, y)
-
         
         
     def closeEvent(self, event):  

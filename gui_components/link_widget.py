@@ -1,9 +1,9 @@
 import os
 
-from PyQt5.QtCore import Qt, QUrl
-from PyQt5.QtGui import QDesktopServices
-from PyQt5.QtGui import QPixmap
-from PyQt5.QtWidgets import QLabel, QHBoxLayout, QWidget
+from PyQt6.QtCore import Qt, QUrl
+from PyQt6.QtGui import QDesktopServices
+from PyQt6.QtGui import QPixmap
+from PyQt6.QtWidgets import QLabel, QHBoxLayout, QWidget
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_path, '..'))
@@ -18,21 +18,21 @@ class LinkWidget(QWidget):
 
         if text:
             text_label = QLabel(text)
-            text_label.setStyleSheet("font-size: 18px; color: #f8f8f8;")
+            text_label.setStyleSheet("color: #f8f8f8;")
             layout.addWidget(text_label)
 
         layout.addSpacing(10)
 
         self.link_label = QLabel()
         self.link = link
-
         if icon_filename:
-            original_icon_pixmap = QPixmap(icon_filename).scaled(icon_dimensions, icon_dimensions, Qt.KeepAspectRatio,
-                                                             Qt.SmoothTransformation)
+            original_icon_pixmap = QPixmap(icon_filename).scaled(icon_dimensions, icon_dimensions, 
+                                                                Qt.AspectRatioMode.KeepAspectRatio,
+                                                                Qt.TransformationMode.SmoothTransformation)
             self.link_label.setPixmap(original_icon_pixmap)
 
         layout.addWidget(self.link_label)
-        layout.setAlignment(Qt.AlignCenter)
+        layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.setLayout(layout)
 
         if text:

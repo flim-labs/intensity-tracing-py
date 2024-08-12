@@ -1,6 +1,5 @@
 from math import log, floor
 
-
 class FormatUtils:
     @staticmethod
     def format_size(size_in_bytes):

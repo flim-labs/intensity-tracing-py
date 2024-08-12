@@ -3,9 +3,9 @@ import os
 import re
 import json
 import flim_labs
-from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QCheckBox, QHBoxLayout, QMessageBox, QGridLayout, QVBoxLayout, QLabel
-from PyQt5.QtCore import QPropertyAnimation, Qt
-from PyQt5.QtGui import QIcon, QPixmap, QColor
+from PyQt6.QtWidgets import QApplication, QWidget, QPushButton, QCheckBox, QHBoxLayout, QMessageBox, QGridLayout, QVBoxLayout, QLabel
+from PyQt6.QtCore import QPropertyAnimation, Qt
+from PyQt6.QtGui import QIcon, QPixmap, QColor
 from gui_components.data_export_controls import DataExportActions
 from gui_components.intensity_tracing_controller import IntensityTracing, IntensityTracingOnlyCPS, IntensityTracingPlot
 from gui_components.logo_utilities import TitlebarIcon
@@ -98,8 +98,6 @@ class ButtonsActionsController:
         app.acquisition_stopped = False
         app.warning_box = None
         app.settings.setValue(SETTINGS_ACQUISITION_STOPPED, False)
-        app.control_inputs[DOWNLOAD_BUTTON].setEnabled(app.write_data and app.acquisition_stopped)
-        #DataExportActions.set_download_button_icon(app)
         warn_title, warn_msg = MessagesUtilities.invalid_inputs_handler(
             app.bin_width_micros,
             app.time_span,
@@ -155,8 +153,6 @@ class ButtonsActionsController:
         app.cps_counts.clear()    
         app.control_inputs[START_BUTTON].setEnabled(len(app.enabled_channels) > 0)
         app.control_inputs[STOP_BUTTON].setEnabled(False)
-        app.control_inputs[DOWNLOAD_BUTTON].setEnabled(app.write_data and app.acquisition_stopped)
-        DataExportActions.set_download_button_icon(app)
         QApplication.processEvents()
         flim_labs.request_stop()
         app.pull_from_queue_timer.stop() 
@@ -169,8 +165,6 @@ class ButtonsActionsController:
         app.blank_space.show()
         app.control_inputs[START_BUTTON].setEnabled(len(app.enabled_channels) > 0)
         app.control_inputs[STOP_BUTTON].setEnabled(False)
-        app.control_inputs[DOWNLOAD_BUTTON].setEnabled(app.write_data and app.acquisition_stopped)
-        DataExportActions.set_download_button_icon(app)
         for chart in app.intensity_charts:
             chart.setParent(None)
             chart.deleteLater()

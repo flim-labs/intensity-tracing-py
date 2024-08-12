@@ -1,8 +1,8 @@
 import os
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QPixmap, QIcon, QPainter
-from PyQt5.QtWidgets import QWidget
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QPixmap, QIcon, QPainter
+from PyQt6.QtWidgets import QWidget
 
 from gui_components.resource_path import resource_path
 

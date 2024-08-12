@@ -24,9 +24,9 @@ SOFTWARE.
 
 """source: https://github.com/Prx001/QSwitchControl"""
 
-from PyQt5.QtCore import Qt, QPoint, QPropertyAnimation, QEasingCurve
-from PyQt5.QtGui import QPainter, QColor
-from PyQt5.QtWidgets import QWidget, QCheckBox
+from PyQt6.QtCore import Qt, QPoint, QPropertyAnimation, QEasingCurve
+from PyQt6.QtGui import QPainter, QColor, QMouseEvent
+from PyQt6.QtWidgets import QWidget, QCheckBox
 
 
 def take_closest(num, collection):
@@ -45,8 +45,8 @@ class SwitchCircle(QWidget):
     def paintEvent(self, event):
         painter = QPainter()
         painter.begin(self)
-        painter.setRenderHint(QPainter.HighQualityAntialiasing)
-        painter.setPen(Qt.NoPen)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(QColor(self.color))
         painter.drawEllipse(0, 0, 22, 22)
         painter.end()
@@ -55,23 +55,23 @@ class SwitchCircle(QWidget):
         self.color = value
         self.update()
 
-    def mousePressEvent(self, event):
+    def mousePressEvent(self, event: QMouseEvent):
         self.animation.stop()
-        self.oldX = event.globalX()
+        self.oldX = event.globalPosition().x()
         return super().mousePressEvent(event)
 
-    def mouseMoveEvent(self, event):
-        delta = event.globalX() - self.oldX
+    def mouseMoveEvent(self, event: QMouseEvent):
+        delta = event.globalPosition().x() - self.oldX
         self.new_x = delta + self.x()
         if self.new_x < self.move_range[0]:
             self.new_x += (self.move_range[0] - self.new_x)
         if self.new_x > self.move_range[1]:
             self.new_x -= (self.new_x - self.move_range[1])
         self.move(self.new_x, self.y())
-        self.oldX = event.globalX()
+        self.oldX = event.globalPosition().x()
         return super().mouseMoveEvent(event)
 
-    def mouseReleaseEvent(self, event):
+    def mouseReleaseEvent(self, event: QMouseEvent):
         try:
             go_to = take_closest(self.new_x, self.move_range)
             if go_to == self.move_range[0]:
@@ -91,12 +91,13 @@ class SwitchCircle(QWidget):
 
 class SwitchControl(QCheckBox):
     def __init__(self, parent=None, bg_color="#777777", circle_color="#DDD", active_color="#aa00ff",
-                 animation_curve=QEasingCurve.OutBounce, animation_duration=500, checked: bool = False,
-                 change_cursor=True, width=120, height=28):
+                 unchecked_color="darkgrey",
+                 animation_curve=QEasingCurve.Type.OutBounce, animation_duration=300, checked: bool = False,
+                 change_cursor=True, width=80, height=28):
         super().__init__(parent)
         self.setFixedSize(width, height)
         if change_cursor:
-            self.setCursor(Qt.PointingHandCursor)
+            self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.bg_color = bg_color
         self.circle_color = circle_color
         self.animation_curve = animation_curve
@@ -105,12 +106,13 @@ class SwitchControl(QCheckBox):
                                      self.animation_duration)
         self.__circle_position = 3
         self.active_color = active_color
+        self.unchecked_color = unchecked_color
         self.auto = False
         self.pos_on_press = None
         if checked:
             self.__circle.move(self.width() - 26, 3)
             self.setChecked(True)
-        elif not checked:
+        else:
             self.__circle.move(3, 3)
             self.setChecked(False)
         self.animation = QPropertyAnimation(self.__circle, b"pos")
@@ -119,25 +121,36 @@ class SwitchControl(QCheckBox):
 
     def paintEvent(self, event):
         painter = QPainter(self)
-        painter.setRenderHint(QPainter.HighQualityAntialiasing)
-        painter.setPen(Qt.NoPen)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setPen(Qt.PenStyle.NoPen)
+        enabled = self.isEnabled()
         if not self.isChecked():
-            painter.setBrush(QColor(self.bg_color))
+            if enabled:
+                painter.setBrush(QColor(self.unchecked_color))
+            else:
+                painter.setPen(Qt.PenStyle.SolidLine)
+                painter.setPen(QColor("white"))
+                painter.setBrush(QColor("black"))
             painter.drawRoundedRect(0, 0, self.width(), self.height(), self.height() / 2, self.height() / 2)
-        elif self.isChecked():
-            painter.setBrush(QColor(self.active_color))
+        else:
+            if enabled:
+                painter.setBrush(QColor(self.active_color))
+            else:
+                painter.setPen(Qt.PenStyle.SolidLine)
+                painter.setPen(QColor("white"))
+                painter.setBrush(QColor("black"))
             painter.drawRoundedRect(0, 0, self.width(), self.height(), self.height() / 2, self.height() / 2)
 
     def hitButton(self, pos):
         return self.contentsRect().contains(pos)
 
-    def mousePressEvent(self, event):
+    def mousePressEvent(self, event: QMouseEvent):
         self.auto = True
-        self.pos_on_press = event.globalPos()
+        self.pos_on_press = event.globalPosition()
         return super().mousePressEvent(event)
 
-    def mouseMoveEvent(self, event):
-        if event.globalPos() != self.pos_on_press:
+    def mouseMoveEvent(self, event: QMouseEvent):
+        if event.globalPosition() != self.pos_on_press:
             self.auto = False
         return super().mouseMoveEvent(event)
 
@@ -152,7 +165,7 @@ class SwitchControl(QCheckBox):
         if checked:
             self.animation.setEndValue(QPoint(self.width() - 26, self.__circle.y()))
             self.setChecked(True)
-        if not checked:
+        else:
             self.animation.setEndValue(QPoint(3, self.__circle.y()))
             self.setChecked(False)
         self.animation.start()

@@ -1,7 +1,7 @@
 import json
 import os
 
-from PyQt5.QtWidgets import QMessageBox
+from PyQt6.QtWidgets import QMessageBox
 
 from gui_components.box_message import BoxMessage
 from gui_styles import GUIStyles

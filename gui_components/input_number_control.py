@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QLabel, QVBoxLayout, QHBoxLayout, QSpinBox
+from PyQt6.QtWidgets import QLabel, QVBoxLayout, QHBoxLayout, QSpinBox
 
 
 class InputNumberControl:
@@ -14,7 +14,7 @@ class InputNumberControl:
             control_layout="vertical",
     ):
         q_label = QLabel(label)
-        q_label.setStyleSheet("font-size: 18px; color: #f8f8f8;")
+        q_label.setStyleSheet("color: #f8f8f8;")
         control = QVBoxLayout() if control_layout == "vertical" else QHBoxLayout()
         input = QSpinBox()
         input.setRange(min, max)

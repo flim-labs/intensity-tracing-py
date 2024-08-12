@@ -44,8 +44,6 @@ MAX_CHANNELS = 8
 START_BUTTON = "start_button"
 STOP_BUTTON = "stop_button"
 RESET_BUTTON = "reset_button"
-DOWNLOAD_BUTTON = "download_button"
-DOWNLOAD_MENU = "download_menu"
 
 MAIN_LAYOUT = "main_layout"
 

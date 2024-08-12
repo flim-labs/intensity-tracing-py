@@ -1,12 +1,9 @@
 import os
 import shutil
-
-from PyQt5.QtWidgets import QFileDialog, QMessageBox
-
+from PyQt6.QtWidgets import QFileDialog, QMessageBox
 from gui_components.box_message import BoxMessage
 from gui_components.gui_styles import GUIStyles
 from gui_components.messages_utilities import MessagesUtilities
-
 current_path = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_path, '..'))
 

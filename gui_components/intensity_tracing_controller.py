@@ -1,17 +1,14 @@
-import queue
-import threading
 import time
 import numpy as np
 import pyqtgraph as pg
 from flim_labs import flim_labs
-from functools import partial
 from gui_components.box_message import BoxMessage
 from gui_components.data_export_controls import DataExportActions
 from gui_components.format_utilities import FormatUtils
 from gui_components.messages_utilities import MessagesUtilities
 from gui_components.gui_styles import GUIStyles
 from gui_components.settings import *
-from PyQt5.QtWidgets import (
+from PyQt6.QtWidgets import (
     QApplication,
     QMessageBox,
     QVBoxLayout,
@@ -19,7 +16,7 @@ from PyQt5.QtWidgets import (
     QLabel,
     QWidget,
 )
-from PyQt5.QtGui import QPixmap
+from PyQt6.QtGui import QPixmap
 from gui_components.resource_path import resource_path
 
 
@@ -119,8 +116,6 @@ class IntensityTracing:
         app.cps_counts.clear()
         app.control_inputs[START_BUTTON].setEnabled(len(app.enabled_channels) > 0)
         app.control_inputs[STOP_BUTTON].setEnabled(False)
-        app.control_inputs[DOWNLOAD_BUTTON].setEnabled(app.write_data and app.acquisition_stopped)
-        DataExportActions.set_download_button_icon(app)
         QApplication.processEvents()
         flim_labs.request_stop()
         app.pull_from_queue_timer.stop() 

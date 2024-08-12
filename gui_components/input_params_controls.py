@@ -1,6 +1,6 @@
 import os
-from PyQt5.QtWidgets import QWidget, QHBoxLayout
-from PyQt5.QtCore import Qt
+from PyQt6.QtWidgets import QWidget, QHBoxLayout
+from PyQt6.QtCore import Qt
 from gui_components.controls_bar import ControlsBar
 from gui_components.data_export_controls import DataExportActions
 from gui_components.settings import *
@@ -14,7 +14,6 @@ class InputParamsControls(QWidget):
         self.app = window
         layout = QHBoxLayout()
         self.setLayout(layout)
-        self.create_channel_type_control(layout)
         self.create_bin_width_control(layout)
         running_mode_control = self.create_running_mode_control()
         layout.addLayout(running_mode_control)
@@ -24,16 +23,7 @@ class InputParamsControls(QWidget):
         show_cps_control = self.create_show_cps_control()
         layout.addSpacing(15)
         layout.addLayout(show_cps_control)
-        layout.setAlignment(Qt.AlignmentFlag.AlignBottom)
-
-
-    def create_channel_type_control(self, layout):        
-        inp = ControlsBar.create_channel_type_control(
-            layout,
-            self.app.selected_conn_channel,
-            self.conn_channel_type_value_change,
-            self.app.conn_channels)
-        self.app.control_inputs[SETTINGS_CONN_CHANNEL] = inp
+        layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
 
     def create_bin_width_control(self, layout):        
@@ -88,15 +78,6 @@ class InputParamsControls(QWidget):
             self.app.control_inputs[SETTINGS_ACQUISITION_TIME_MILLIS].setEnabled(True)
             self.app.free_running_acquisition_time = False
             self.app.settings.setValue(SETTINGS_FREE_RUNNING_MODE, False)
-
-    def conn_channel_type_value_change(self, index):       
-        self.app.selected_conn_channel = self.sender().currentText()
-        if self.app.selected_conn_channel == "USB":
-            self.app.selected_firmware = self.app.firmwares[0]
-        else:
-            self.app.selected_firmware = self.app.firmwares[1]
-        self.app.settings.setValue(SETTINGS_FIRMWARE, self.app.selected_firmware)
-        self.app.settings.setValue(SETTINGS_CONN_CHANNEL, self.app.selected_conn_channel) 
 
     def acquisition_time_value_change(self, value):        
         self.app.control_inputs[START_BUTTON].setEnabled(value != 0)
