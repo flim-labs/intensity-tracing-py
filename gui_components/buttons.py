@@ -1,12 +1,14 @@
 
+from functools import partial
 import os
 import re
 import json
 import flim_labs
 from PyQt6.QtWidgets import QApplication, QWidget, QPushButton, QCheckBox, QHBoxLayout, QMessageBox, QGridLayout, QVBoxLayout, QLabel
 from PyQt6.QtCore import QPropertyAnimation, Qt
+from PyQt6.QtCore import QTimer
 from PyQt6.QtGui import QIcon, QPixmap, QColor
-from gui_components.data_export_controls import DataExportActions
+from gui_components.data_export_controls import ExportData
 from gui_components.intensity_tracing_controller import IntensityTracing, IntensityTracingOnlyCPS, IntensityTracingPlot
 from gui_components.logo_utilities import TitlebarIcon
 from gui_components.resource_path import resource_path
@@ -156,6 +158,11 @@ class ButtonsActionsController:
         QApplication.processEvents()
         flim_labs.request_stop()
         app.pull_from_queue_timer.stop() 
+        if app.write_data:
+            QTimer.singleShot(
+                300,
+                partial(ExportData.save_intensity_data, app),
+            )
     
    
     @staticmethod

@@ -1,12 +1,6 @@
-% Get most recent intensity tracing .bin file from your local computer
-data_folder = fullfile(getenv('USERPROFILE'), '.flim-labs', 'data');
-files = dir(fullfile(data_folder, 'intensity-tracing*'));
+file_path = '<FILE-PATH>';
 
-[~, idx] = sort([files.datenum], 'descend');
-most_recent_file = files(idx(1)).name;
-
-file_path = fullfile(data_folder, most_recent_file);
-
+% Open the file  
 metadata = struct('channels', [], 'bin_width_micros', [], 'acquisition_time_millis', [], 'laser_period_ns', []);
 
 fid = fopen(file_path, 'rb');

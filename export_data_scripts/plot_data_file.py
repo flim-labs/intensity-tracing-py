@@ -1,19 +1,9 @@
-import os
 import struct
-
 import matplotlib.pyplot as plt
 
 
-def get_recent_intensity_tracing_file():
-    data_folder = os.path.join(os.environ["USERPROFILE"], ".flim-labs", "data")
-    files = [f for f in os.listdir(data_folder) if f.startswith("intensity-tracing")]
-    files.sort(key=lambda x: os.path.getmtime(os.path.join(data_folder, x)), reverse=True)
-    return os.path.join(data_folder, files[0])
-
-
-file_path = get_recent_intensity_tracing_file()
+file_path = "<FILE-PATH>"
 print("Using data file: " + file_path)
-# file_path = "INSERT DATA FILE PATH HERE" # You can also manually insert the path to the data file here
 
 times = []
 
@@ -56,15 +46,6 @@ with open(file_path, 'rb') as f:
             channel_lines[i].append(channel_values[i])
         times.append(time)
         
-    
-    print("TOTAL COUNTS:")    
-    print(len(channel_lines[0]))
-    print("FIRST 100 TIME NS:")
-    print(times[:100])
-    print("LAST 100 TIME NS:")
-    print(times[-100:])
-        
-
     
     # Plot data
     for i in range(len(metadata["channels"])):

@@ -12,7 +12,7 @@ class BoxMessage:
         if test_mode:
             message_box.show()
         else:
-            message_box.exec_()
+            message_box.exec()
         return message_box
 
     @staticmethod

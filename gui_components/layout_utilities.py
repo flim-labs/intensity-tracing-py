@@ -7,7 +7,6 @@ from PyQt6.QtWidgets import (
     QWidget,
     QVBoxLayout,
     QHBoxLayout,
-    QScrollArea,
     QGridLayout,
     QFrame,
     QSizePolicy

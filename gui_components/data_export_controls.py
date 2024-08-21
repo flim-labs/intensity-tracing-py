@@ -1,12 +1,12 @@
 
 
 from functools import partial
-from PyQt6.QtGui import QIcon
-from PyQt6.QtCore import QPoint
-from PyQt6.QtWidgets import QHBoxLayout, QWidget
-from gui_components.file_utilities import MatlabScriptUtils, PythonScriptUtils
+import os
+import shutil
+from PyQt6.QtWidgets import QHBoxLayout, QWidget, QFileDialog
+from export_data_scripts.script_files_utils import ScriptFileUtils
+from gui_components.file_utilities import FileUtils
 from gui_components.format_utilities import FormatUtils
-from gui_components.resource_path import resource_path
 from gui_components.settings import *
 from gui_components.top_bar import TopBar
 
@@ -72,3 +72,48 @@ class DataExportActions:
             
     
   
+class ExportData:
+
+    @staticmethod
+    def save_intensity_data(app):
+        try:
+            intensity_tracing_file = FileUtils.get_recent_intensity_tracing_file()
+            new_intensity_file_path, save_dir, save_name = (
+                ExportData.rename_and_move_file(
+                    intensity_tracing_file, "Save Intensity Tracing files", app
+                )
+            )
+            if not new_intensity_file_path:
+                return
+            file_paths = {"intensity_tracing": new_intensity_file_path}
+            ExportData.download_scripts(file_paths, save_name, save_dir, "intensity_tracing")
+        except Exception as e:
+            ScriptFileUtils.show_error_message(e)
+
+ 
+    @staticmethod
+    def download_scripts(bin_file_paths, file_name, directory, script_type):
+        ScriptFileUtils.export_scripts(
+            bin_file_paths, file_name, directory, script_type
+        )
+
+    @staticmethod
+    def rename_and_move_file(original_file_path, file_dialog_prompt, app):
+        dialog = QFileDialog()
+        save_path, _ = dialog.getSaveFileName(
+            app,
+            file_dialog_prompt,
+            "",
+            "All Files (*);;Binary Files (*.bin)",
+            options=QFileDialog.Option.DontUseNativeDialog,
+        )
+        if save_path:
+            save_dir = os.path.dirname(save_path)
+            save_name = os.path.basename(save_path)
+            original_filename = os.path.basename(original_file_path)
+            new_filename = f"{save_name}_{original_filename}"
+            new_file_path = os.path.join(save_dir, new_filename)
+            shutil.copyfile(original_file_path, new_file_path)
+            return new_file_path, save_dir, save_name
+        else:
+            return None, None, None
