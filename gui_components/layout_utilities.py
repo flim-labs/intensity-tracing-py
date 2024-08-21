@@ -1,4 +1,5 @@
 import os
+from flim_labs import flim_labs
 current_path = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_path, ".."))
 from PyQt6.QtCore import Qt
@@ -37,7 +38,8 @@ def draw_layout_separator(line_width=1, color="#282828", vertical_space=10):
 
 def init_ui(self, top_utilities_layout):
     TitlebarIcon.setup(self)
-    self.setWindowTitle("FlimLabs - INTENSITY TRACING v" + APP_VERSION)
+    title = "FlimLabs - INTENSITY TRACING v" + APP_VERSION + " - API v" + flim_labs.get_version()
+    self.setWindowTitle(title)
     GUIStyles.customize_theme(self)
     GUIStyles.set_fonts()
     self.resize(APP_DEFAULT_WIDTH, APP_DEFAULT_HEIGHT)

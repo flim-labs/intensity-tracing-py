@@ -1,18 +1,16 @@
 import os
-from PyQt6.QtCore import Qt, QSize
+from PyQt6.QtCore import Qt
 from gui_components import resource_path
 current_path = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_path, ".."))
 
 from PyQt6.QtWidgets import (
     QWidget,
-    QPushButton,
     QHBoxLayout,
     QLabel,
-    QSizePolicy,
-    QMenu,
+    QSizePolicy
 )
-from PyQt6.QtGui import QPixmap, QAction
+from PyQt6.QtGui import QPixmap
 from gui_components.gui_styles import GUIStyles
 from gui_components.switch_control import SwitchControl
 from gui_components.gradient_text import GradientText

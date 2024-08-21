@@ -3,7 +3,6 @@ import numpy as np
 import pyqtgraph as pg
 from flim_labs import flim_labs
 from gui_components.box_message import BoxMessage
-from gui_components.data_export_controls import DataExportActions
 from gui_components.format_utilities import FormatUtils
 from gui_components.messages_utilities import MessagesUtilities
 from gui_components.gui_styles import GUIStyles

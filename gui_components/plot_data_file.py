@@ -55,6 +55,15 @@ with open(file_path, 'rb') as f:
         for i in range(len(channel_lines)):
             channel_lines[i].append(channel_values[i])
         times.append(time)
+        
+    
+    print("TOTAL COUNTS:")    
+    print(len(channel_lines[0]))
+    print("FIRST 100 TIME NS:")
+    print(times[:100])
+    print("LAST 100 TIME NS:")
+    print(times[-100:])
+        
 
     
     # Plot data
