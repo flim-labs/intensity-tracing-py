@@ -1,9 +1,8 @@
 from functools import partial
 import json
 import os
-import queue
 import sys
-from PyQt5.QtCore import QTimer, Qt, QSettings, QElapsedTimer, QEvent
+from PyQt5.QtCore import QTimer, Qt, QSettings, QEvent
 from PyQt5.QtWidgets import (
     QMainWindow,
     QDesktopWidget,
@@ -19,7 +18,7 @@ from gui_components.channels_control import ChannelsControl
 from gui_components.controls_bar import ControlsBar
 from gui_components.data_export_controls import DownloadDataControl, ExportDataControl
 from gui_components.input_params_controls import InputParamsControls
-from gui_components.intensity_tracing_controller import IntensityTracing, IntensityTracingPlot
+from gui_components.intensity_tracing_controller import IntensityTracing
 from gui_components.layout_utilities import init_ui
 from gui_components.logo_utilities import LogoOverlay
 from gui_components.settings import *
