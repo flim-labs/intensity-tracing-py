@@ -3,5 +3,5 @@ py -3.9 -m venv .venv-intensity-tracing
 pip install pyinstaller
 pip install -r .\requirements.txt
 pip install PyQt6 --force-reinstall
-pyinstaller --noconsole --onefile --icon .\assets\intensity-tracing-logo.png --add-data "assets/*:assets"  .\intensity_tracing.py
+pyinstaller --noconsole --onefile --icon .\assets\intensity-tracing-logo.png --add-data "assets/*:assets" --add-data "export_data_scripts/*:export_data_scripts" --hidden-import=matplotlib.backends.backend_ps --hidden-import=matplotlib.backends.backend_agg  .\intensity_tracing.py
 deactivate
