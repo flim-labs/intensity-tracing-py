@@ -4,5 +4,5 @@ PyQt6-sip==13.6.0
 matplotlib
 numpy==1.26.4
 pyqtgraph==0.13.4
+inquirer
 flim-labs==1.0.56
-
