@@ -76,10 +76,19 @@ class ReadData:
             )
             return None
         try:
+            app.loading_overlay.set_loading_text("Processing data...")
             app.loading_overlay.toggle_overlay()
             signals = ProcessBinDataWorkerSignals()
-            signals.success.connect(partial(ReadData.handle_intensity_bin_data_result, app))
-            signals.error.connect(partial(ReadData.show_warning_message, "Error reading file", f"Error reading Intensity Tracing file"))
+            signals.success.connect(
+                partial(ReadData.handle_intensity_bin_data_result, app)
+            )
+            signals.error.connect(
+                partial(
+                    ReadData.show_warning_message,
+                    "Error reading file",
+                    f"Error reading Intensity Tracing file",
+                )
+            )
             task = DataReaderWorker(file_name, signals)
             QThreadPool.globalInstance().start(task)
         except Exception as e:
@@ -87,8 +96,7 @@ class ReadData:
                 "Error reading file", f"Error reading Intensity Tracing file"
             )
             return None
-        
-    
+
     @staticmethod
     def handle_intensity_bin_data_result(app, result):
         if not result:
@@ -101,7 +109,7 @@ class ReadData:
         app.reader_data["intensity"]["data"] = {
             "times": times,
             "channels_lines": channels_lines,
-        }   
+        }
         ReaderPopup.handle_bin_file_result_ui(app.widgets[READER_POPUP])
 
     @staticmethod
@@ -133,7 +141,7 @@ class ReadData:
         return channels_lines, times, metadata
 
     @staticmethod
-    def save_plot_image(plot):
+    def save_plot_image(app, plot):
         dialog = QFileDialog()
         base_path, _ = dialog.getSaveFileName(
             None,
@@ -144,6 +152,7 @@ class ReadData:
         )
 
         def show_success_message():
+            app.loading_overlay.toggle_overlay()
             info_title, info_msg = MessagesUtilities.info_handler("SavedPlotImage")
             BoxMessage.setup(
                 info_title,
@@ -158,6 +167,8 @@ class ReadData:
             )
 
         if base_path:
+            app.loading_overlay.set_loading_text("Processing image...")
+            app.loading_overlay.toggle_overlay()
             signals = PostSavePlotImageWorkerSignals()
             signals.success.connect(show_success_message)
             signals.error.connect(show_error_message)
@@ -179,7 +190,9 @@ class ReadDataControls:
         app.widgets[TOP_COLLAPSIBLE_WIDGET].setVisible(not read_mode)
         app.widgets[COLLAPSE_BUTTON].setVisible(not read_mode)
         app.control_inputs[SETTINGS_BIN_WIDTH_MICROS].setEnabled(not read_mode)
-        app.control_inputs[SETTINGS_ACQUISITION_TIME_MILLIS].setEnabled(not read_mode)
+        app.control_inputs[SETTINGS_ACQUISITION_TIME_MILLIS].setEnabled(
+            not read_mode and not app.free_running_acquisition_time
+        )
         app.control_inputs[SETTINGS_FREE_RUNNING_MODE].setEnabled(not read_mode)
         app.control_inputs[SETTINGS_CPS_THRESHOLD].setEnabled(not read_mode)
         app.control_inputs[SETTINGS_TIME_SPAN].setEnabled(not read_mode)
@@ -250,9 +263,7 @@ class ReaderPopup(QWidget):
             load_file_btn.setCursor(Qt.CursorShape.PointingHandCursor)
             GUIStyles.set_start_btn_style(load_file_btn)
             load_file_btn.setFixedHeight(36)
-            load_file_btn.clicked.connect(
-                partial(self.on_load_file_btn_clicked)
-            )
+            load_file_btn.clicked.connect(partial(self.on_load_file_btn_clicked))
             control_row.addWidget(input)
             control_row.addWidget(load_file_btn)
             v_box.addWidget(input_desc)
@@ -372,8 +383,7 @@ class ReaderPopup(QWidget):
 
             ButtonsActionsController.clear_plots(self.app)
         self.app.reader_data["intensity"]["files"][file_type] = text
-   
-        
+
     @classmethod
     def handle_bin_file_result_ui(cls, instance):
         app = instance.app
@@ -382,18 +392,18 @@ class ReaderPopup(QWidget):
         if file_name is not None and len(file_name) > 0:
             bin_metadata_btn_visible = ReadDataControls.read_bin_metadata_enabled(app)
             app.control_inputs[BIN_METADATA_BUTTON].setVisible(bin_metadata_btn_visible)
-            app.control_inputs[EXPORT_PLOT_IMG_BUTTON].setVisible(bin_metadata_btn_visible)
+            app.control_inputs[EXPORT_PLOT_IMG_BUTTON].setVisible(
+                bin_metadata_btn_visible
+            )
             widget_key = "load_intensity_input"
             instance.widgets[widget_key].setText(file_name)
             instance.remove_channels_grid()
             channels_layout = instance.init_channels_layout()
             if channels_layout is not None:
                 instance.layout.insertLayout(2, channels_layout)
-        
 
     def on_load_file_btn_clicked(self):
         ReadData.read_bin_data(self, self.app)
-       
 
     def on_plot_data_btn_clicked(self):
         from gui_components.buttons import ButtonsActionsController
@@ -501,20 +511,22 @@ class ReaderMetadataPopup(QWidget):
 class ProcessBinDataWorkerSignals(QObject):
     success = pyqtSignal(object)
     error = pyqtSignal(str)
-    
-    
+
+
 class DataReaderWorker(QRunnable):
     def __init__(self, file_name, signals):
         super().__init__()
         self.file_name = file_name
         self.signals = signals
-        
+
     def run(self):
         try:
-            with open(self.file_name, 'rb') as file:
+            with open(self.file_name, "rb") as file:
                 if file.read(4) != b"IT02":
-                    self.signals.error.emit("The file is not a valid Intensity Tracing file") 
-                    
+                    self.signals.error.emit(
+                        "The file is not a valid Intensity Tracing file"
+                    )
+
                 json_length = struct.unpack("I", file.read(4))[0]
                 metadata = json.loads(file.read(json_length).decode("utf-8"))
                 number_of_channels = len(metadata["channels"])
@@ -526,19 +538,24 @@ class DataReaderWorker(QRunnable):
                     if not data:
                         break
                     (time,) = struct.unpack("d", data[:8])
-                    channel_values = struct.unpack(channel_values_unpack_string, data[8:])
+                    channel_values = struct.unpack(
+                        channel_values_unpack_string, data[8:]
+                    )
                     for i in range(len(channels_lines)):
                         channels_lines[i].append(channel_values[i])
-                    times.append(time)  
-                self.signals.success.emit((self.file_name, times, channels_lines, metadata))
+                    times.append(time)
+                self.signals.success.emit(
+                    (self.file_name, times, channels_lines, metadata)
+                )
         except Exception as e:
-            self.signals.error.emit(f"Error reading Intensity Tracing file: {e}")  
+            self.signals.error.emit(f"Error reading Intensity Tracing file: {e}")
 
 
 class BuildIntensityPlotWorkerSignals(QObject):
     success = pyqtSignal(object)
     error = pyqtSignal(str)
-    
+
+
 class BuildIntensityPlotTask(QRunnable):
     def __init__(self, channels_lines, times, metadata, show_plot, signals):
         super().__init__()
@@ -551,18 +568,19 @@ class BuildIntensityPlotTask(QRunnable):
     @pyqtSlot()
     def run(self):
         try:
-            plot = plot_intensity_data(self.channels_lines, self.times, self.metadata, show_plot=self.show_plot)
-            self.signals.success.emit(
-              plot
+            plot = plot_intensity_data(
+                self.channels_lines, self.times, self.metadata, show_plot=self.show_plot
             )
+            self.signals.success.emit(plot)
         except Exception as e:
             plt.close(self.plot)
             self.signals.error.emit(str(e))
-    
+
 
 class PostSavePlotImageWorkerSignals(QObject):
     success = pyqtSignal(str)
     error = pyqtSignal(str)
+
 
 class SavePlotTask(QRunnable):
     def __init__(self, plot, base_path, signals):

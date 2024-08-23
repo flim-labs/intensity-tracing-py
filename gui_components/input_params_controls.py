@@ -53,7 +53,7 @@ class InputParamsControls(QWidget):
         self.app.control_inputs[SETTINGS_TIME_SPAN] = inp 
 
 
-    def create_acquisition_time_control(self, layout):        
+    def create_acquisition_time_control(self, layout):  
         inp = ControlsBar.create_acquisition_time_control(
             layout,
             self.app.acquisition_time_millis,

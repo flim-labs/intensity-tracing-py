@@ -39,7 +39,10 @@ class LoadingOverlay(QWidget):
         loading_row.addSpacing(5)
         loading_row.addWidget(self.gif_label)
         loading_widget.setLayout(loading_row)
-        return loading_widget        
+        return loading_widget     
+    
+    def set_loading_text(self, text):
+        self.loading_text.setText(text)   
 
     def toggle_overlay(self):
         if self.isVisible():

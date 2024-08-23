@@ -61,6 +61,7 @@ class DataExportActions:
              return 
         chunk_bytes = 8 + (4 * len(app.enabled_channels))
         chunk_bytes_in_us =  (1000 * (chunk_bytes * 1000)) / app.bin_width_micros
+        print(app.free_running_acquisition_time)
         if app.free_running_acquisition_time is True or app.acquisition_time_millis is None:
             file_size_bytes = int(chunk_bytes_in_us)
             app.bin_file_size = FormatUtils.format_size(file_size_bytes)

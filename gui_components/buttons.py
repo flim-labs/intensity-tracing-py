@@ -85,6 +85,7 @@ class ExportPlotImageButton(QWidget):
     
     
     def on_export_plot_image(self):
+        self.app.loading_overlay.set_loading_text("Processing data...")
         self.app.loading_overlay.toggle_overlay()
         channels_lines, times, metadata = ReadData.prepare_intensity_data_for_export_img(self.app)
         signals = BuildIntensityPlotWorkerSignals()
@@ -94,7 +95,7 @@ class ExportPlotImageButton(QWidget):
    
     def on_intensity_plot_built(self, plot):
         self.app.loading_overlay.toggle_overlay()
-        ReadData.save_plot_image(plot)
+        ReadData.save_plot_image(self.app, plot)
   
 
 
