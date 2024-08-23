@@ -3,6 +3,7 @@ import time
 import numpy as np
 import pyqtgraph as pg
 from flim_labs import flim_labs
+from gui_components.animations import VibrantAnimation
 from gui_components.box_message import BoxMessage
 from gui_components.data_export_controls import ExportData
 from gui_components.format_utilities import FormatUtils
@@ -83,6 +84,8 @@ class IntensityTracing:
                     break
                 ((time_ns), (intensities)) = v
                 IntensityTracing.process_data(app, time_ns[0], intensities)
+                IntensityTracing.update_acquisition_countdowns(app, time_ns[0])
+            
 
     @staticmethod
     def process_data(app, time_ns, counts):
@@ -92,32 +95,66 @@ class IntensityTracing:
         for i, channel in enumerate(app.intensity_plots_to_show):
             intensity = counts[channel] / adjustment
             IntensityTracingPlot.update_plots2(channel, i, time_ns, intensity, app)
-
+                
     @staticmethod
     def update_cps(app, time_ns, counts, channel_index):
-        if channel_index in app.cps_counts:
-            cps = app.cps_counts[channel_index]
-            if cps["last_time_ns"] == 0:
-                cps["last_time_ns"] = time_ns
-                cps["last_count"] = counts[channel_index]
-                cps["current_count"] = counts[channel_index]
-                return
-            cps["current_count"] = cps["current_count"] + counts[channel_index]
-            time_elapsed = time_ns - cps["last_time_ns"]
-            if time_elapsed > 330_000_000:
-                cps_value = (cps["current_count"] - cps["last_count"]) / (
-                    time_elapsed / 1_000_000_000
-                )
-                app.cps_ch[channel_index].setText(
-                    FormatUtils.format_cps(cps_value) + " CPS"
-                )
-                cps["last_time_ns"] = time_ns
-                cps["last_count"] = cps["current_count"]
+        if not (channel_index in app.cps_counts):
+            return
+        cps = app.cps_counts[channel_index]
+        if cps["last_time_ns"] == 0:
+            cps["last_time_ns"] = time_ns
+            cps["last_count"] = counts[channel_index]
+            cps["current_count"] = counts[channel_index]
+            return
+        cps["current_count"] = cps["current_count"] + + counts[channel_index]
+        time_elapsed = time_ns - cps["last_time_ns"]
+        if time_elapsed > 330_000_000:
+            cps_value = (cps["current_count"] - cps["last_count"]) / (
+                time_elapsed / 1_000_000_000
+            )
+            humanized_number = FormatUtils.format_cps(cps_value) + " CPS"
+            app.cps_ch[channel_index].setText(humanized_number)
+            cps_threshold = app.control_inputs[SETTINGS_CPS_THRESHOLD].value()
+            if cps_threshold > 0:
+                if cps_value > cps_threshold:
+                    app.cps_widgets_animation[channel_index].start()
+                else:
+                    app.cps_widgets_animation[channel_index].stop()
+            cps["last_time_ns"] = time_ns
+            cps["last_count"] = cps["current_count"]    
+            
+    
+    @staticmethod        
+    def update_acquisition_countdowns(app, time_ns):
+        free_running = app.free_running_acquisition_time
+        acquisition_time = app.control_inputs[SETTINGS_ACQUISITION_TIME_MILLIS].value()
+        if free_running is True or free_running == "true":
+            return
+        elapsed_time_sec = time_ns / 1_000_000_000
+        remaining_time_sec = max(0, acquisition_time - elapsed_time_sec)
+        seconds = int(remaining_time_sec)
+        milliseconds = int((remaining_time_sec - seconds) * 1000)
+        milliseconds = milliseconds // 10
+        for _, countdown_widget in app.acquisition_time_countdown_widgets.items():
+            if countdown_widget:
+                if not countdown_widget.isVisible():
+                    countdown_widget.setVisible(True)
+                countdown_widget.setText(
+                    f"Remaining time: {seconds:02}:{milliseconds:02} (s)")                  
 
     @staticmethod
     def stop_button_pressed(app):
         app.acquisition_stopped = True
         app.cps_counts.clear()
+        def clear_cps_and_countdown_widgets():
+            for _, animation in app.cps_widgets_animation.items():
+                if animation:
+                    animation.stop()
+            for _, widget in app.acquisition_time_countdown_widgets.items():
+                if widget and isinstance(widget, QWidget):
+                    widget.setVisible(False)
+        QTimer.singleShot(400, clear_cps_and_countdown_widgets)
+        app.cps_widgets_animation.clear()
         app.control_inputs[START_BUTTON].setEnabled(len(app.enabled_channels) > 0)
         app.control_inputs[STOP_BUTTON].setEnabled(False)
         QApplication.processEvents()
@@ -153,6 +190,13 @@ class IntensityTracingPlot:
         # cps indicator
         cps_label = QLabel("0 CPS")
         return cps_label
+    
+    @staticmethod
+    def create_countdown_label():
+        # acquisition countdown
+        countdown_label = QLabel("Remaining time:")
+        countdown_label.setStyleSheet(GUIStyles.acquisition_time_countdown_style())
+        return countdown_label
 
     @staticmethod
     def update_plots2(channel_index, plots_to_show_index, time_ns, intensity, app):
@@ -174,18 +218,32 @@ class IntensityTracingPlot:
             time.sleep(0.01)
 
     @staticmethod
-    def create_chart_widget(app, index, channel):
+    def create_chart_widget(app, index, channel, read_data):
         chart, connector = IntensityTracingPlot.generate_chart(
             app.intensity_plots_to_show[index], app
         )
         cps = IntensityTracingPlot.create_cps_label()
         cps.setStyleSheet(GUIStyles.set_cps_label_style())
+        app.cps_widgets_animation[channel] = VibrantAnimation(
+            cps,
+            stop_color="#a877f7",
+            bg_color="transparent",
+            start_color="#DA1212",
+        )
+        countdown_label = IntensityTracingPlot.create_countdown_label()
+        countdown_label.setVisible(False)
+        app.acquisition_time_countdown_widgets[channel] = countdown_label
+        
         chart_widget = QWidget()
         chart_layout = QVBoxLayout()
-        chart_layout.addWidget(cps)
+        cps_row = QHBoxLayout()
+        cps_row.addWidget(cps)
+        cps_row.addStretch(1)
+        cps_row.addWidget(countdown_label)
+        chart_layout.addLayout(cps_row)
         chart_layout.addWidget(chart)
         chart_widget.setLayout(chart_layout)
-        cps.setVisible(app.show_cps)
+        cps.setVisible(app.show_cps and not read_data)
         row, col = divmod(index, 2)
         app.layouts[INTENSITY_PLOTS_GRID].addWidget(chart_widget, row, col)
         app.intensity_charts.append(chart)
@@ -200,9 +258,16 @@ class IntensityTracingOnlyCPS:
     def create_only_cps_widget(app, index, channel):
         only_cps_widget = QWidget()
         only_cps_widget.setObjectName("container")
+        container = QVBoxLayout()
         row_cps = QHBoxLayout()
         cps = IntensityTracingPlot.create_cps_label()
         cps.setObjectName("cps")
+        app.cps_widgets_animation[channel] = VibrantAnimation(
+            cps,
+            stop_color="#FB8C00",
+            bg_color="transparent",
+            start_color="#DA1212",
+        )
         channel_label = QLabel(f"Channel {channel + 1}")
         channel_label.setObjectName("ch")
         row_cps.addWidget(channel_label)
@@ -212,8 +277,20 @@ class IntensityTracingOnlyCPS:
         )
         row_cps.addWidget(arrow_icon)
         row_cps.addWidget(cps)
+        row_cps.addSpacing(20)
         row_cps.addStretch(1)
-        only_cps_widget.setLayout(row_cps)
+        
+        row_countdown = QHBoxLayout()
+        countdown_label = IntensityTracingPlot.create_countdown_label()
+        countdown_label.setVisible(False)
+        app.acquisition_time_countdown_widgets[channel] = countdown_label
+        row_countdown.addStretch(1)
+        row_countdown.addWidget(countdown_label)
+        
+        container.addLayout(row_cps)
+        container.addSpacing(10)
+        container.addLayout(row_countdown)
+        only_cps_widget.setLayout(container)
         only_cps_widget.setStyleSheet(GUIStyles.only_cps_widget())
         app.cps_ch[channel] = cps
         row, col = divmod(index, 1)

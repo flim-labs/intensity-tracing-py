@@ -23,6 +23,8 @@ class InputParamsControls(QWidget):
         show_cps_control = self.create_show_cps_control()
         layout.addSpacing(15)
         layout.addLayout(show_cps_control)
+        layout.addSpacing(20)
+        self.create_cps_threshold_control(layout)
         layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
 
@@ -60,6 +62,17 @@ class InputParamsControls(QWidget):
         )
         self.app.control_inputs[SETTINGS_ACQUISITION_TIME_MILLIS] = inp  
         
+        
+    def create_cps_threshold_control(self, layout):
+        value = int(self.app.settings.value(SETTINGS_CPS_THRESHOLD, DEFAULT_CPS_THRESHOLD))
+        inp = ControlsBar.create_cps_threshold_control(
+            layout,
+            value,
+            self.cps_threshold_value_change,
+            self.app.show_cps  
+        )
+        self.app.control_inputs[SETTINGS_CPS_THRESHOLD] = inp
+            
     
     def create_show_cps_control(self):    
         show_cps_control, inp = ControlsBar.create_show_cps_control(
@@ -90,6 +103,10 @@ class InputParamsControls(QWidget):
         self.app.time_span = value
         self.app.settings.setValue(SETTINGS_TIME_SPAN, value)
         
+    def cps_threshold_value_change(self, value):
+        self.app.cps_threshold = value
+        self.app.settings.setValue(SETTINGS_CPS_THRESHOLD, value)  
+        
 
     def bin_width_micros_value_change(self, value):
         self.app.control_inputs[START_BUTTON].setEnabled(value != 0)
@@ -102,9 +119,11 @@ class InputParamsControls(QWidget):
         if state:
             self.app.show_cps = True
             self.app.settings.setValue(SETTINGS_SHOW_CPS, True)
+            self.app.control_inputs[SETTINGS_CPS_THRESHOLD].setEnabled(True)
         else:
             self.app.show_cps = False
             self.app.settings.setValue(SETTINGS_SHOW_CPS, False)
+            self.app.control_inputs[SETTINGS_CPS_THRESHOLD].setEnabled(False)
             
         if len(self.app.cps_charts_widgets) > 0:
             for widget in self.app.cps_charts_widgets:

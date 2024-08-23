@@ -1,5 +1,7 @@
 import os
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QSize
+from PyQt6.QtGui import QIcon
+from gui_components.resource_path import resource_path
 current_path = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_path, ".."))
 
@@ -48,7 +50,10 @@ class ControlsBar:
             start_btn_pressed_cb,
             stop_btn_pressed_cb,
             reset_btn_pressed_cb,
-            enabled_channels
+            plot_read_data_btn_pressed_cb,
+            read_bin_metadata_btn_pressed_cb,
+            enabled_channels,
+            app
     ):
         # ACTION BUTTONS
         buttons_row_layout = QHBoxLayout()
@@ -85,9 +90,30 @@ class ControlsBar:
         reset_button.setEnabled(True)
         reset_button.clicked.connect(reset_btn_pressed_cb)
         buttons_row_layout.addWidget(reset_button)
+        # read/plot bin data button
+        read_bin_data_button = QPushButton("READ/PLOT")
+        read_bin_data_button.setFlat(True)
+        read_bin_data_button.setFixedHeight(55)
+        read_bin_data_button.setFixedWidth(110)
+        read_bin_data_button.setCursor(Qt.CursorShape.PointingHandCursor)
+        GUIStyles.set_start_btn_style(read_bin_data_button)
+        read_bin_data_button.clicked.connect(plot_read_data_btn_pressed_cb)
+        # read bin metadata button
+        bin_metadata_button = QPushButton()
+        bin_metadata_button.setIcon(QIcon(resource_path("assets/metadata-icon.png")))
+        bin_metadata_button.setIconSize(QSize(30, 30))
+        bin_metadata_button.setStyleSheet("background-color: white; padding: 0 14px;")
+        bin_metadata_button.setFixedHeight(55)
+        bin_metadata_button.setCursor(Qt.CursorShape.PointingHandCursor)
+        bin_metadata_button.clicked.connect(read_bin_metadata_btn_pressed_cb)
+        # export plot image button
+        from gui_components.buttons import ExportPlotImageButton
+        export_plot_img_button = ExportPlotImageButton(app)        
+        buttons_row_layout.addWidget(bin_metadata_button)
+        buttons_row_layout.addWidget(export_plot_img_button)
+        buttons_row_layout.addWidget(read_bin_data_button)
         buttons_row_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
-
-        return buttons_row_layout, start_button, stop_button, reset_button
+        return buttons_row_layout, start_button, stop_button, reset_button, read_bin_data_button, bin_metadata_button
 
     @staticmethod
     def create_channel_type_control(controls_row, value, change_cb, options):
@@ -116,6 +142,24 @@ class ControlsBar:
         )
         inp.setStyleSheet(GUIStyles.set_input_number_style())
         return inp
+    
+    @staticmethod
+    def create_cps_threshold_control(controls_row, value, change_cb, show_cps):
+        # CPS threshold control
+        _, inp = InputNumberControl.setup(
+            "Pile-up threshold (CPS):",
+            0,
+            100000000,
+            value,
+            controls_row,
+            change_cb,
+        )
+        inp.setStyleSheet(GUIStyles.set_input_number_style())
+        inp.setEnabled(
+            show_cps
+        )
+        return inp
+
 
     @staticmethod
     def create_running_mode_control(value, change_cb):

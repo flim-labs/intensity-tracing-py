@@ -5,18 +5,19 @@ import re
 import json
 import flim_labs
 from PyQt6.QtWidgets import QApplication, QWidget, QPushButton, QCheckBox, QHBoxLayout, QMessageBox, QGridLayout, QVBoxLayout, QLabel
-from PyQt6.QtCore import QPropertyAnimation, Qt
-from PyQt6.QtCore import QTimer
+from PyQt6.QtCore import QPropertyAnimation, Qt, QTimer, QSize
 from PyQt6.QtGui import QIcon, QPixmap, QColor
 from gui_components.data_export_controls import ExportData
 from gui_components.intensity_tracing_controller import IntensityTracing, IntensityTracingOnlyCPS, IntensityTracingPlot
 from gui_components.logo_utilities import TitlebarIcon
+from gui_components.read_data import ReadData, ReadDataControls, ReaderMetadataPopup, ReaderPopup
 from gui_components.resource_path import resource_path
 from gui_components.gui_styles import GUIStyles
 from gui_components.controls_bar import ControlsBar
 from gui_components.messages_utilities import MessagesUtilities
 from  gui_components.box_message import BoxMessage
 from gui_components.settings import *
+from load_data import plot_intensity_data
 current_path = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_path))
 
@@ -51,9 +52,43 @@ class CollapseButton(QWidget):
             self.animation.setEndValue(0)
             self.toggle_button.setIcon(QIcon(resource_path("assets/arrow-down-dark-grey.png")))
         self.animation.start()
-       
-       
-       
+        
+        
+        
+class ExportPlotImageButton(QWidget):
+    def __init__(self, app, show = True, parent=None):
+        super().__init__(parent)
+        self.app = app
+        self.show = show
+        self.data = None
+        self.export_img_button = self.create_button()
+        layout = QVBoxLayout()
+        layout.setSpacing(0)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self.export_img_button)
+        self.setLayout(layout)
+        
+    def create_button(self):
+        export_img_button = QPushButton()
+        export_img_button.setIcon(
+            QIcon(resource_path("assets/save-img-icon.png"))
+        )
+        export_img_button.setIconSize(QSize(30, 30))
+        export_img_button.setStyleSheet("background-color: #1e90ff; padding: 0 14px;")
+        export_img_button.setFixedHeight(55)
+        export_img_button.setCursor(Qt.CursorShape.PointingHandCursor)
+        export_img_button.clicked.connect(self.on_export_plot_image)
+        button_visible = ReadDataControls.read_bin_metadata_enabled(self.app) and self.show
+        export_img_button.setVisible(button_visible)
+        self.app.control_inputs[EXPORT_PLOT_IMG_BUTTON] = export_img_button
+        return export_img_button
+    
+    
+    def on_export_plot_image(self):
+        channels_lines, times, metadata = ReadData.prepare_intensity_data_for_export_img(self.app)
+        plot = plot_intensity_data(channels_lines, times, metadata, show_plot=False)
+        ReadData.save_plot_image(plot)
+   
 
 
 class ActionButtons(QWidget):
@@ -65,15 +100,23 @@ class ActionButtons(QWidget):
         self.setLayout(layout)
 
     def create_buttons(self):        
-        buttons_row_layout, start_button, stop_button, reset_button = ControlsBar.create_buttons(
+        buttons_row_layout, start_button, stop_button, reset_button, read_bin_data_button, bin_metadata_button = ControlsBar.create_buttons(
             self.start_button_pressed,
             self.stop_button_pressed,
             self.reset_button_pressed,
-            self.app.enabled_channels
+            self.plot_read_data_button_pressed,
+            self.read_bin_metadata_button_pressed,
+            self.app.enabled_channels,
+            self.app
         )
         self.app.control_inputs[START_BUTTON] = start_button
         self.app.control_inputs[STOP_BUTTON] = stop_button
         self.app.control_inputs[RESET_BUTTON] = reset_button
+        bin_metadata_btn_visible = ReadDataControls.read_bin_metadata_enabled(self.app)
+        bin_metadata_button.setVisible(bin_metadata_btn_visible)
+        read_bin_data_button.setVisible(self.app.acquire_read_mode == "read")
+        self.app.control_inputs[READ_FILE_BUTTON] = read_bin_data_button
+        self.app.control_inputs[BIN_METADATA_BUTTON] = bin_metadata_button
         return buttons_row_layout 
 
     def start_button_pressed(self):
@@ -91,7 +134,14 @@ class ActionButtons(QWidget):
     def reset_button_pressed(self):
         ButtonsActionsController.reset_button_pressed(self.app)  
         
-        
+    def plot_read_data_button_pressed(self):
+        popup = ReaderPopup(self.app)
+        popup.show()   
+    
+    def read_bin_metadata_button_pressed(self):
+        popup = ReaderMetadataPopup(self.app)
+        popup.show()
+    
         
 class ButtonsActionsController:
     @staticmethod
@@ -129,30 +179,41 @@ class ButtonsActionsController:
 
 
     @staticmethod
-    def intensity_tracing_start(app):
-        only_cps_widgets = [item for item in app.enabled_channels if item not in app.intensity_plots_to_show]
-        only_cps_widgets.sort()
-        for ch in app.enabled_channels:
-            app.cps_counts[ch] = {
-                "last_time_ns": 0,
-                "last_count": 0,
-                "current_count": 0,
-            }    
+    def intensity_tracing_start(app, read_data=False):
+        if not read_data:
+            only_cps_widgets = [item for item in app.enabled_channels if item not in app.intensity_plots_to_show]
+            only_cps_widgets.sort()
+            for ch in app.enabled_channels:
+                app.cps_counts[ch] = {
+                    "last_time_ns": 0,
+                    "last_count": 0,
+                    "current_count": 0,
+                }    
+            if len(only_cps_widgets) > 0:        
+                for index, channel in enumerate(only_cps_widgets):
+                    IntensityTracingOnlyCPS.create_only_cps_widget(app, index, channel)                    
         for i, channel in enumerate(app.intensity_plots_to_show):
             if i < len(app.intensity_charts):
                 app.intensity_charts[i].show()
             else:
-                IntensityTracingPlot.create_chart_widget(app, i, channel)
-        if len(only_cps_widgets) > 0:        
-            for index, channel in enumerate(only_cps_widgets):
-                IntensityTracingOnlyCPS.create_only_cps_widget(app, index, channel)
+                IntensityTracingPlot.create_chart_widget(app, i, channel, read_data)
+
 
 
 
     @staticmethod
     def stop_button_pressed(app):
         app.acquisition_stopped = True
-        app.cps_counts.clear()    
+        app.cps_counts.clear()   
+        def clear_cps_and_countdown_widgets():
+            for _, animation in app.cps_widgets_animation.items():
+                if animation:
+                    animation.stop()
+            for _, widget in app.acquisition_time_countdown_widgets.items():
+                if widget and isinstance(widget, QWidget):
+                    widget.setVisible(False)
+        QTimer.singleShot(400, clear_cps_and_countdown_widgets)
+        app.cps_widgets_animation.clear()         
         app.control_inputs[START_BUTTON].setEnabled(len(app.enabled_channels) > 0)
         app.control_inputs[STOP_BUTTON].setEnabled(False)
         QApplication.processEvents()
@@ -169,9 +230,14 @@ class ButtonsActionsController:
     def reset_button_pressed(app):
         flim_labs.request_stop()
         app.pull_from_queue_timer.stop() 
-        app.blank_space.show()
+        app.blank_space.show()      
         app.control_inputs[START_BUTTON].setEnabled(len(app.enabled_channels) > 0)
         app.control_inputs[STOP_BUTTON].setEnabled(False)
+        ButtonsActionsController.clear_plots(app) 
+        
+        
+    @staticmethod
+    def clear_plots(app):
         for chart in app.intensity_charts:
             chart.setParent(None)
             chart.deleteLater()
@@ -183,10 +249,11 @@ class ButtonsActionsController:
         app.cps_charts_widgets.clear()
         app.cps_ch.clear()
         app.cps_counts.clear()  
+        app.cps_widgets_animation.clear()              
         app.intensity_charts_wrappers.clear()
         ButtonsActionsController.clear_intensity_grid_widgets(app)  
-        QApplication.processEvents()    
- 
+        QApplication.processEvents()            
+        
 
     @staticmethod
     def clear_intensity_grid_widgets(app):
@@ -337,6 +404,101 @@ class PlotsConfigPopup(QWidget):
         ch_num = int(ch) 
         ch_num_index = ch_num - 1 
         return ch_num_index
+    
+    
+    
+    
+class ReadAcquireModeButton(QWidget):
+    def __init__(self, app, parent=None):
+        super().__init__(parent)
+        self.app = app
+        layout = QVBoxLayout()
+        buttons_row = self.create_buttons()
+        layout.setSpacing(0)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addLayout(buttons_row)
+        self.setLayout(layout)
+
+    def create_buttons(self):
+        buttons_row_layout = QHBoxLayout()
+        buttons_row_layout.setSpacing(0)
+        # Acquire button
+        acquire_button = QPushButton("ACQUIRE")
+        acquire_button.setCursor(Qt.CursorShape.PointingHandCursor)
+        acquire_button.setCheckable(True)
+        acquire_button.setObjectName("acquire_btn")  # Set objectName
+        acquire_button.setChecked(self.app.acquire_read_mode == "acquire")
+        acquire_button.clicked.connect(self.on_acquire_btn_pressed)
+        buttons_row_layout.addWidget(acquire_button)
+        # Read button
+        read_button = QPushButton("READ")
+        read_button.setCheckable(True)
+        read_button.setCursor(Qt.CursorShape.PointingHandCursor)
+        read_button.setObjectName("read_btn")  # Set objectName
+        read_button.setChecked(self.app.acquire_read_mode != "acquire")
+        read_button.clicked.connect(self.on_read_btn_pressed)
+        buttons_row_layout.addWidget(read_button)
+        self.app.control_inputs[ACQUIRE_BUTTON] = acquire_button
+        self.app.control_inputs[READ_BUTTON] = read_button
+        self.apply_base_styles()
+        self.set_buttons_styles()
+        return buttons_row_layout
+
+    def apply_base_styles(self):
+        base_style = GUIStyles.acquire_read_btn_style()
+        self.app.control_inputs[ACQUIRE_BUTTON].setStyleSheet(base_style)
+        self.app.control_inputs[READ_BUTTON].setStyleSheet(base_style)
+
+    def set_buttons_styles(self):
+        def get_buttons_style(color_acquire, color_read, bg_acquire, bg_read):
+            return f"""
+            QPushButton {{
+                font-family: "Montserrat";
+                letter-spacing: 0.1em;
+                padding: 10px 12px;
+                font-size: 14px;
+                font-weight: bold;
+                min-width: 60px;
+            }}
+            QPushButton#acquire_btn {{
+                border-top-left-radius: 3px;
+                border-bottom-left-radius: 3px;
+                color: {color_acquire};
+                background-color: {bg_acquire};
+            }}
+            QPushButton#read_btn {{
+                border-top-right-radius: 3px;
+                border-bottom-right-radius: 3px;
+                color: {color_read};
+                background-color: {bg_read};
+            }}
+        """
+        read_mode = self.app.acquire_read_mode == 'read'
+        if read_mode:
+            style = get_buttons_style(color_acquire="#8c8b8b", color_read="white", bg_acquire="#cecece", bg_read="#8d4ef2")
+        else:
+            style = get_buttons_style(color_acquire="white", color_read="#8c8b8b", bg_acquire="#8d4ef2", bg_read="#cecece")
+        self.app.control_inputs[ACQUIRE_BUTTON].setStyleSheet(style)
+        self.app.control_inputs[READ_BUTTON].setStyleSheet(style)
+
+    def on_acquire_btn_pressed(self, checked):
+        ButtonsActionsController.clear_plots(self.app)
+        self.app.control_inputs[ACQUIRE_BUTTON].setChecked(checked)
+        self.app.control_inputs[READ_BUTTON].setChecked(not checked)
+        self.app.acquire_read_mode = 'acquire' if checked else 'read'
+        self.app.settings.setValue(SETTINGS_ACQUIRE_READ_MODE, self.app.acquire_read_mode)
+        self.set_buttons_styles()
+        self.app.reader_data = deepcopy(DEFAULT_READER_DATA)
+        ReadDataControls.handle_widgets_visibility(self.app, self.app.acquire_read_mode == 'read')
+
+    def on_read_btn_pressed(self, checked):
+        ButtonsActionsController.clear_plots(self.app)
+        self.app.control_inputs[ACQUIRE_BUTTON].setChecked(not checked)
+        self.app.control_inputs[READ_BUTTON].setChecked(checked)
+        self.app.acquire_read_mode = 'read' if checked else 'acquire'
+        self.app.settings.setValue(SETTINGS_ACQUIRE_READ_MODE, self.app.acquire_read_mode)
+        self.set_buttons_styles()
+        ReadDataControls.handle_widgets_visibility(self.app, self.app.acquire_read_mode == 'read')
 
     
  

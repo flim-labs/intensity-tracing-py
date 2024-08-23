@@ -226,6 +226,25 @@ class GUIStyles:
             selection-background-color: #8d4ef2;
             }   
         """
+        
+    @staticmethod    
+    def set_input_text_style():
+        return """
+        QLineEdit  {
+                color: #13B6B4;
+                font-family: "Montserrat";
+                font-size: 14px;
+                padding: 8px;
+                min-width: 60px;
+                border: 1px solid #13B6B4;
+                border-radius: 5px;
+                background-color: transparent;
+            }
+            QLineEdit:disabled, QLineEdit:disabled {
+            color: #404040;  
+            border-color: #3c3c3c;
+            }        
+        """           
 
     @staticmethod
     def set_msg_box_style():
@@ -391,15 +410,15 @@ class GUIStyles:
             }}
         """  
         
-    @staticmethod        
+    @staticmethod            
     def checkbox_wrapper_style():
         return """
-            QWidget#ch_checkbox_wrapper, QWidget#tau_checkbox_wrapper{
+            QWidget#ch_checkbox_wrapper, QWidget#simple_checkbox_wrapper {
                 border: 1px solid #3b3b3b;
                 background-color: transparent;
                 padding: 0;
             } 
-            QWidget#tau_checkbox_wrapper{
+            QWidget#simple_checkbox_wrapper {
                 border-radius: 5px;
             } 
             QWidget{
@@ -441,5 +460,37 @@ class GUIStyles:
                 color: #cecece;
                 margin-left: 8px;
             }
-        """                      
+        """        
+        
+    @staticmethod   
+    def acquire_read_btn_style():
+        return f"""
+            QPushButton {{
+                font-family: "Montserrat";
+                letter-spacing: 0.1em;
+                padding: 10px 12px;
+                font-size: 14px;
+                font-weight: bold;;
+                min-width: 60px;
+            }}
+            QPushButton#acquire_btn{{ 
+                border-top-left-radius: 3px;
+                border-bottom-left-radius: 3px;   
+            }}
+            QPushButton#read_btn{{  
+                border-top-right-radius: 3px;
+                border-bottom-right-radius: 3px;
+                
+            }}
+        """ 
+        
+    @staticmethod
+    def acquisition_time_countdown_style():
+        return """
+            QLabel {
+                color: #13B6B4;
+                font-size: 16px;
+                padding: 0 8px;
+            }
+        """                               
          

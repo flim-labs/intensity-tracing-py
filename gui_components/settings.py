@@ -1,3 +1,6 @@
+from copy import deepcopy
+
+
 APP_VERSION = "1.7"
 APP_NAME = "INTENSITY TRACING"
 APP_DEFAULT_WIDTH = 1460
@@ -36,6 +39,9 @@ DEFAULT_ENABLED_CHANNELS = "[0]"
 SETTINGS_SHOW_CPS = "show_cps"
 DEFAULT_SHOW_CPS = False
 
+SETTINGS_CPS_THRESHOLD = "cps_threshold"
+DEFAULT_CPS_THRESHOLD = 0
+
 SETTINGS_INTENSITY_PLOTS_TO_SHOW = "intensity_plots_to_show"
 DEFAULT_INTENSITY_PLOTS_TO_SHOW = "[0]"
 
@@ -44,6 +50,12 @@ MAX_CHANNELS = 8
 START_BUTTON = "start_button"
 STOP_BUTTON = "stop_button"
 RESET_BUTTON = "reset_button"
+COLLAPSE_BUTTON = "collapse_button"
+ACQUIRE_BUTTON = "acquire_button"
+READ_BUTTON = "read_button"
+EXPORT_PLOT_IMG_BUTTON = "export_plot_img_button"
+BIN_METADATA_BUTTON = "bin_metadata_button"
+READ_FILE_BUTTON = "read_file_button"
 
 MAIN_LAYOUT = "main_layout"
 
@@ -68,3 +80,22 @@ REALTIME_SECS = REALTIME_MS / 1000
 NS_IN_S = 1_000_000_000
 
 EXPORTED_DATA_BYTES_UNIT = 12083.2
+
+
+READER_POPUP = "reader_popup"
+READER_METADATA_POPUP = "reader_metadata_popup"
+SETTINGS_ACQUIRE_READ_MODE = "acquire_read_mode"
+DEFAULT_ACQUIRE_READ_MODE = "acquire"
+
+
+
+READER_DATA = {
+    "intensity": {
+        "files": {"intensity": ""},
+        "plots": [],
+        "metadata": {},
+        "data": {},
+    },
+}
+
+DEFAULT_READER_DATA = deepcopy(READER_DATA)

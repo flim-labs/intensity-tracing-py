@@ -14,11 +14,12 @@ class FormatUtils:
     @staticmethod
     def format_cps(number):
         if number == 0:
-            return '0'
-        units = ['', 'K', 'M', 'G', 'T', 'P']
+            return "0"
+        units = ["", "K", "M", "G", "T", "P"]
         k = 1000.0
         magnitude = int(floor(log(number, k)))
-        return '%.2f%s' % (number / k ** magnitude, units[magnitude])
+        scaled_number = number / k**magnitude
+        return f"{int(scaled_number)}.{str(scaled_number).split('.')[1][:2]}{units[magnitude]}"
     
     @staticmethod
     def calc_bytes_in_micro(micro_value, bytes_in_1000_micro):

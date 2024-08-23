@@ -24,6 +24,7 @@ class TopBar:
     def create_header_layout(
             logo_and_title,
             export_data_widget,
+            acquire_read_mode_buttons
     ):
         header_layout = QHBoxLayout()
         # Header row: Link to User Guide
@@ -33,6 +34,8 @@ class TopBar:
         app_guide_link_widget.setCursor(Qt.CursorShape.PointingHandCursor)
         header_layout.addLayout(logo_and_title)
         header_layout.addStretch(1)
+        header_layout.addWidget(acquire_read_mode_buttons)
+        header_layout.addSpacing(10)
         header_layout.addWidget(export_data_widget)
         header_layout.addSpacing(20)
         header_layout.addWidget(app_guide_link_widget)
