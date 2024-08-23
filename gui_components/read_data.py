@@ -110,6 +110,8 @@ class ReadData:
             "times": times,
             "channels_lines": channels_lines,
         }
+        last_time_s = round(times[-1] / 1_000_000_000, 5)
+        app.reader_data["intensity"]["metadata"]["last_time_s"] = last_time_s
         ReaderPopup.handle_bin_file_result_ui(app.widgets[READER_POPUP])
 
     @staticmethod
@@ -487,7 +489,10 @@ class ReaderMetadataPopup(QWidget):
                             ["Channel " + str(ch + 1) for ch in metadata[key]]
                         )
                     if key == "acquisition_time_millis":
-                        metadata_value = str(metadata[key] / 1000)
+                        if metadata[key] is not None:
+                            metadata_value = str(metadata[key] / 1000)
+                        else:
+                            metadata_value = str(metadata["last_time_s"])   
                 h_box = QHBoxLayout()
                 h_box.setContentsMargins(0, 0, 0, 0)
                 h_box.setSpacing(0)
