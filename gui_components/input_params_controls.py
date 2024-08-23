@@ -91,6 +91,7 @@ class InputParamsControls(QWidget):
             self.app.control_inputs[SETTINGS_ACQUISITION_TIME_MILLIS].setEnabled(True)
             self.app.free_running_acquisition_time = False
             self.app.settings.setValue(SETTINGS_FREE_RUNNING_MODE, False)
+        DataExportActions.calc_exported_file_size(self.app)    
 
     def acquisition_time_value_change(self, value):        
         self.app.control_inputs[START_BUTTON].setEnabled(value != 0)
