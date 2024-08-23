@@ -19,6 +19,7 @@ from gui_components.data_export_controls import ExportDataControl
 from gui_components.input_params_controls import InputParamsControls
 from gui_components.intensity_tracing_controller import IntensityTracing
 from gui_components.layout_utilities import init_ui
+from gui_components.loading import LoadingOverlay
 from gui_components.logo_utilities import LogoOverlay
 from gui_components.read_data import ReadDataControls
 from gui_components.settings import *
@@ -126,6 +127,9 @@ class PhotonsTracingWindow(QMainWindow):
         self.init_ui()
         ReadDataControls.handle_widgets_visibility(
             self, self.acquire_read_mode == "read")
+        # Loading overlay
+        self.loading_overlay = LoadingOverlay(self)
+
 
     @staticmethod
     def init_settings():
@@ -239,6 +243,7 @@ class PhotonsTracingWindow(QMainWindow):
         x = (screen_rect.width() - self.width()) // 2
         y = (screen_rect.height() - self.height()) // 2
         self.move(x, y)
+        self.loading_overlay.resize_overlay(self.rect())
 
     def closeEvent(self, event):
         if PLOTS_CONFIG_POPUP in self.widgets:
@@ -261,6 +266,11 @@ class PhotonsTracingWindow(QMainWindow):
             return super().eventFilter(source, event)
         except:
             pass
+        
+    def resizeEvent(self, event):
+        self.loading_overlay.resize_overlay(self.rect())
+        super().resizeEvent(event)
+
 
 
 if __name__ == "__main__":

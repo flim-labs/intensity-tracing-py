@@ -47,6 +47,8 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt, QRunnable, QThreadPool, pyqtSignal, QObject, pyqtSlot
 from PyQt6.QtGui import QColor, QIcon
 
+from load_data import plot_intensity_data
+
 current_path = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_path))
 
@@ -54,19 +56,7 @@ project_root = os.path.abspath(os.path.join(current_path))
 class ReadData:
     @staticmethod
     def read_bin_data(window, app, file_type="intensity"):
-        result = ReadData.read_intensity_bin(window, app)
-        if not result:
-            return
-        file_name, *data, metadata = result
-        app.reader_data["intensity"]["plots"] = []
-        app.reader_data["intensity"]["metadata"] = metadata
-        app.reader_data["intensity"]["files"][file_type] = file_name
-        if file_type == "intensity":
-            times, channels_lines = data
-            app.reader_data["intensity"]["data"] = {
-                "times": times,
-                "channels_lines": channels_lines,
-            }
+        ReadData.read_intensity_bin(window, app)
 
     @staticmethod
     def read_intensity_bin(window, app):
@@ -86,45 +76,33 @@ class ReadData:
             )
             return None
         try:
-            with open(file_name, "rb") as f:
-                if f.read(4) != b"IT02":
-                    ReadData.show_warning_message(
-                        "Invalid file",
-                        f"Invalid file. The file is not a valid Intensity Tracing file.",
-                    )
-                    return None
-                return ReadData.read_intensity_data(f, file_name, app)
-        except Exception:
+            app.loading_overlay.toggle_overlay()
+            signals = ProcessBinDataWorkerSignals()
+            signals.success.connect(partial(ReadData.handle_intensity_bin_data_result, app))
+            signals.error.connect(partial(ReadData.show_warning_message, "Error reading file", f"Error reading Intensity Tracing file"))
+            task = DataReaderWorker(file_name, signals)
+            QThreadPool.globalInstance().start(task)
+        except Exception as e:
             ReadData.show_warning_message(
                 "Error reading file", f"Error reading Intensity Tracing file"
             )
             return None
-
+        
+    
     @staticmethod
-    def read_intensity_data(file, file_name, app):
-        try:
-            json_length = struct.unpack("I", file.read(4))[0]
-            metadata = json.loads(file.read(json_length).decode("utf-8"))
-            number_of_channels = len(metadata["channels"])
-            channel_values_unpack_string = "I" * number_of_channels
-            channels_lines = [[] for _ in range(len(metadata["channels"]))]
-            times = []
-            while True:
-                data = file.read(4 * number_of_channels + 8)
-                if not data:
-                    break
-                (time,) = struct.unpack("d", data[:8])
-                channel_values = struct.unpack(channel_values_unpack_string, data[8:])
-                for i in range(len(channels_lines)):
-                    channels_lines[i].append(channel_values[i])
-                times.append(time)
-
-            return file_name, times, channels_lines, metadata
-        except Exception as e:
-            ReadData.show_warning_message(
-                "Error reading file", "Error reading Intensity Tracing file"
-            )
-            return None
+    def handle_intensity_bin_data_result(app, result):
+        if not result:
+            return
+        file_name, *data, metadata = result
+        app.reader_data["intensity"]["plots"] = []
+        app.reader_data["intensity"]["metadata"] = metadata
+        app.reader_data["intensity"]["files"]["intensity"] = file_name
+        times, channels_lines = data
+        app.reader_data["intensity"]["data"] = {
+            "times": times,
+            "channels_lines": channels_lines,
+        }   
+        ReaderPopup.handle_bin_file_result_ui(app.widgets[READER_POPUP])
 
     @staticmethod
     def show_warning_message(title, message):
@@ -180,7 +158,7 @@ class ReadData:
             )
 
         if base_path:
-            signals = WorkerSignals()
+            signals = PostSavePlotImageWorkerSignals()
             signals.success.connect(show_success_message)
             signals.error.connect(show_error_message)
             task = SavePlotTask(plot, base_path, signals)
@@ -273,7 +251,7 @@ class ReaderPopup(QWidget):
             GUIStyles.set_start_btn_style(load_file_btn)
             load_file_btn.setFixedHeight(36)
             load_file_btn.clicked.connect(
-                partial(self.on_load_file_btn_clicked, file_type)
+                partial(self.on_load_file_btn_clicked)
             )
             control_row.addWidget(input)
             control_row.addWidget(load_file_btn)
@@ -394,26 +372,28 @@ class ReaderPopup(QWidget):
 
             ButtonsActionsController.clear_plots(self.app)
         self.app.reader_data["intensity"]["files"][file_type] = text
-
-    def on_load_file_btn_clicked(self, file_type="intensity"):
-        ReadData.read_bin_data(self, self.app)
-        file_name = self.app.reader_data["intensity"]["files"][file_type]
+   
+        
+    @classmethod
+    def handle_bin_file_result_ui(cls, instance):
+        app = instance.app
+        app.loading_overlay.toggle_overlay()
+        file_name = app.reader_data["intensity"]["files"]["intensity"]
         if file_name is not None and len(file_name) > 0:
-            bin_metadata_btn_visible = ReadDataControls.read_bin_metadata_enabled(
-                self.app
-            )
-            self.app.control_inputs[BIN_METADATA_BUTTON].setVisible(
-                bin_metadata_btn_visible
-            )
-            self.app.control_inputs[EXPORT_PLOT_IMG_BUTTON].setVisible(
-                bin_metadata_btn_visible
-            )
-            widget_key = f"load_{file_type}_input"
-            self.widgets[widget_key].setText(file_name)
-            self.remove_channels_grid()
-            channels_layout = self.init_channels_layout()
+            bin_metadata_btn_visible = ReadDataControls.read_bin_metadata_enabled(app)
+            app.control_inputs[BIN_METADATA_BUTTON].setVisible(bin_metadata_btn_visible)
+            app.control_inputs[EXPORT_PLOT_IMG_BUTTON].setVisible(bin_metadata_btn_visible)
+            widget_key = "load_intensity_input"
+            instance.widgets[widget_key].setText(file_name)
+            instance.remove_channels_grid()
+            channels_layout = instance.init_channels_layout()
             if channels_layout is not None:
-                self.layout.insertLayout(2, channels_layout)
+                instance.layout.insertLayout(2, channels_layout)
+        
+
+    def on_load_file_btn_clicked(self):
+        ReadData.read_bin_data(self, self.app)
+       
 
     def on_plot_data_btn_clicked(self):
         from gui_components.buttons import ButtonsActionsController
@@ -519,10 +499,71 @@ class ReaderMetadataPopup(QWidget):
         self.move(window_geometry.topLeft())
 
 
-class WorkerSignals(QObject):
+class ProcessBinDataWorkerSignals(QObject):
+    success = pyqtSignal(object)
+    error = pyqtSignal(str)
+    
+    
+class DataReaderWorker(QRunnable):
+    def __init__(self, file_name, signals):
+        super().__init__()
+        self.file_name = file_name
+        self.signals = signals
+        
+    def run(self):
+        try:
+            with open(self.file_name, 'rb') as file:
+                if file.read(4) != b"IT02":
+                    self.signals.error.emit("The file is not a valid Intensity Tracing file") 
+                    
+                json_length = struct.unpack("I", file.read(4))[0]
+                metadata = json.loads(file.read(json_length).decode("utf-8"))
+                number_of_channels = len(metadata["channels"])
+                channel_values_unpack_string = "I" * number_of_channels
+                channels_lines = [[] for _ in range(len(metadata["channels"]))]
+                times = []
+                while True:
+                    data = file.read(4 * number_of_channels + 8)
+                    if not data:
+                        break
+                    (time,) = struct.unpack("d", data[:8])
+                    channel_values = struct.unpack(channel_values_unpack_string, data[8:])
+                    for i in range(len(channels_lines)):
+                        channels_lines[i].append(channel_values[i])
+                    times.append(time)  
+                self.signals.success.emit((self.file_name, times, channels_lines, metadata))
+        except Exception as e:
+            self.signals.error.emit(f"Error reading Intensity Tracing file: {e}")  
+
+
+class BuildIntensityPlotWorkerSignals(QObject):
+    success = pyqtSignal(object)
+    error = pyqtSignal(str)
+    
+class BuildIntensityPlotTask(QRunnable):
+    def __init__(self, channels_lines, times, metadata, show_plot, signals):
+        super().__init__()
+        self.channels_lines = channels_lines
+        self.times = times
+        self.metadata = metadata
+        self.show_plot = show_plot
+        self.signals = signals
+
+    @pyqtSlot()
+    def run(self):
+        try:
+            plot = plot_intensity_data(self.channels_lines, self.times, self.metadata, show_plot=self.show_plot)
+            self.signals.success.emit(
+              plot
+            )
+        except Exception as e:
+            plt.close(self.plot)
+            self.signals.error.emit(str(e))
+    
+
+class PostSavePlotImageWorkerSignals(QObject):
     success = pyqtSignal(str)
     error = pyqtSignal(str)
-
 
 class SavePlotTask(QRunnable):
     def __init__(self, plot, base_path, signals):

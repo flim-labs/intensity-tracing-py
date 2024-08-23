@@ -5,12 +5,12 @@ import re
 import json
 import flim_labs
 from PyQt6.QtWidgets import QApplication, QWidget, QPushButton, QCheckBox, QHBoxLayout, QMessageBox, QGridLayout, QVBoxLayout, QLabel
-from PyQt6.QtCore import QPropertyAnimation, Qt, QTimer, QSize
+from PyQt6.QtCore import QPropertyAnimation, Qt, QTimer, QSize, QThreadPool
 from PyQt6.QtGui import QIcon, QPixmap, QColor
 from gui_components.data_export_controls import ExportData
 from gui_components.intensity_tracing_controller import IntensityTracing, IntensityTracingOnlyCPS, IntensityTracingPlot
 from gui_components.logo_utilities import TitlebarIcon
-from gui_components.read_data import ReadData, ReadDataControls, ReaderMetadataPopup, ReaderPopup
+from gui_components.read_data import BuildIntensityPlotTask, BuildIntensityPlotWorkerSignals, ReadData, ReadDataControls, ReaderMetadataPopup, ReaderPopup
 from gui_components.resource_path import resource_path
 from gui_components.gui_styles import GUIStyles
 from gui_components.controls_bar import ControlsBar
@@ -85,10 +85,17 @@ class ExportPlotImageButton(QWidget):
     
     
     def on_export_plot_image(self):
+        self.app.loading_overlay.toggle_overlay()
         channels_lines, times, metadata = ReadData.prepare_intensity_data_for_export_img(self.app)
-        plot = plot_intensity_data(channels_lines, times, metadata, show_plot=False)
-        ReadData.save_plot_image(plot)
+        signals = BuildIntensityPlotWorkerSignals()
+        signals.success.connect(self.on_intensity_plot_built)
+        task = BuildIntensityPlotTask(channels_lines, times, metadata, False, signals)
+        QThreadPool.globalInstance().start(task)
    
+    def on_intensity_plot_built(self, plot):
+        self.app.loading_overlay.toggle_overlay()
+        ReadData.save_plot_image(plot)
+  
 
 
 class ActionButtons(QWidget):

@@ -113,3 +113,6 @@ def clear_layout_widgets(layout):
         if widget is not None:
             widget.setParent(None)
             widget.deleteLater()      
+            
+            
+

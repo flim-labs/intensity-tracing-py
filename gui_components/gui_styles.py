@@ -492,5 +492,15 @@ class GUIStyles:
                 font-size: 16px;
                 padding: 0 8px;
             }
-        """                               
-         
+        """       
+        
+    @staticmethod
+    def set_loading_widget_style():
+        return """
+            QWidget#loading_widget {
+                background-color: black;
+                border-top: 1px solid #50b3d7;
+            }
+    
+    """                             
+            

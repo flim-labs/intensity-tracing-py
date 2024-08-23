@@ -99,3 +99,5 @@ READER_DATA = {
 }
 
 DEFAULT_READER_DATA = deepcopy(READER_DATA)
+
+LOADING_OVERLAY = "loading_overlay"
