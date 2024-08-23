@@ -440,7 +440,6 @@ class ReaderMetadataPopup(QWidget):
             "channels": "Enabled Channels",
             "bin_width_micros": "Bin width (μs)",
             "acquisition_time_millis": "Acquisition time (s)",
-            "laser_period_ns": "Laser period (ns)",
         }
 
     def create_metadata_table(self):
