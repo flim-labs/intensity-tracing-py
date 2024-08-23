@@ -58,9 +58,8 @@ with open(file_path, 'rb') as f:
         )
 
     # Set plot title with metadata information
-    title_str = 'Bin Width: {} us, Laser Period: {} ns'.format(
-        metadata['bin_width_micros'],
-        metadata['laser_period_ns']
+    title_str = 'Bin Width: {} us'.format(
+        metadata['bin_width_micros']
     )
 
     if metadata['acquisition_time_millis'] is not None:
