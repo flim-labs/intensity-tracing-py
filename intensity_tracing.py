@@ -80,7 +80,7 @@ class PhotonsTracingWindow(QMainWindow):
             True,
         ]
         
-        self.cps_threshold = int(self.settings.value(SETTINGS_TIME_SPAN, DEFAULT_TIME_SPAN))
+        self.cps_threshold = int(self.settings.value(SETTINGS_CPS_THRESHOLD, DEFAULT_CPS_THRESHOLD))
         
         self.write_data = self.settings.value(
             SETTINGS_WRITE_DATA, DEFAULT_WRITE_DATA

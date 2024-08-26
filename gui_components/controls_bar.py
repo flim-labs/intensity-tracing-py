@@ -94,7 +94,7 @@ class ControlsBar:
         read_bin_data_button = QPushButton("READ/PLOT")
         read_bin_data_button.setFlat(True)
         read_bin_data_button.setFixedHeight(55)
-        read_bin_data_button.setFixedWidth(110)
+        read_bin_data_button.setFixedWidth(120)
         read_bin_data_button.setCursor(Qt.CursorShape.PointingHandCursor)
         GUIStyles.set_start_btn_style(read_bin_data_button)
         read_bin_data_button.clicked.connect(plot_read_data_btn_pressed_cb)

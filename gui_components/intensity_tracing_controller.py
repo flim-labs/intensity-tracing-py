@@ -177,7 +177,7 @@ class IntensityTracingPlot:
         intensity_widget.setLabel("left", "AVG. Photon counts", units="")
         intensity_widget.setLabel("bottom", "Time", units="s")
         intensity_widget.setTitle("Channel " + str(channel_index + 1))
-        intensity_plot = intensity_widget.plot(x, y, pen="#23F3AB")
+        intensity_plot = intensity_widget.plot(x, y, pen=pg.mkPen(color="#23F3AB", width=2))
         intensity_widget.setStyleSheet("border: 1px solid #3b3b3b")
         intensity_widget.setBackground("#141414")
         intensity_widget.getAxis("left").setTextPen("#FFA726")
