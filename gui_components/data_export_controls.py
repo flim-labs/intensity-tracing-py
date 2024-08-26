@@ -1,12 +1,12 @@
 
 
 from functools import partial
-from PyQt5.QtGui import QIcon
-from PyQt5.QtCore import QPoint
-from PyQt5.QtWidgets import QHBoxLayout, QWidget
-from gui_components.file_utilities import MatlabScriptUtils, PythonScriptUtils
+import os
+import shutil
+from PyQt6.QtWidgets import QHBoxLayout, QWidget, QFileDialog
+from export_data_scripts.script_files_utils import ScriptFileUtils
+from gui_components.file_utilities import FileUtils
 from gui_components.format_utilities import FormatUtils
-from gui_components.resource_path import resource_path
 from gui_components.settings import *
 from gui_components.top_bar import TopBar
 
@@ -43,60 +43,15 @@ class ExportDataControl(QWidget):
     def toggle_export_data(self, state):        
         if state:
             self.app.write_data = True
-            self.app.control_inputs[DOWNLOAD_BUTTON].setEnabled(self.app.write_data and self.app.acquisition_stopped)
-            DataExportActions.set_download_button_icon(self.app)
             self.app.settings.setValue(SETTINGS_WRITE_DATA, True)
             self.app.bin_file_size_label.show()
             DataExportActions.calc_exported_file_size(self.app)
         else:
             self.app.write_data = False
-            self.app.control_inputs[DOWNLOAD_BUTTON].setEnabled(self.app.write_data and self.app.acquisition_stopped)
-            DataExportActions.set_download_button_icon(self.app)
             self.app.settings.setValue(SETTINGS_WRITE_DATA, False)
             self.app.bin_file_size_label.hide()          
 
 
-class DownloadDataControl(QWidget):
-    def __init__(self, window, parent=None):
-        super().__init__(parent)
-        self.app = window
-        self.download_button, self.download_menu = self.create_download_files_menu()
-        layout = QHBoxLayout()
-        layout.addWidget(self.download_button)
-
-        self.setLayout(layout)
-
-    def create_download_files_menu(self):    
-        download_button, download_menu = TopBar.create_download_files_menu(
-            self.app,
-            self.app.write_data,
-            self.app.acquisition_stopped,
-            self.show_download_options,
-            self.download_matlab,
-            self.download_python
-        )
-        self.app.control_inputs[DOWNLOAD_BUTTON] = download_button
-        self.app.control_inputs[DOWNLOAD_MENU] = download_menu
-        DataExportActions.set_download_button_icon(self.app)
-        return download_button, download_menu 
-    
-    
-    def show_download_options(self):
-        self.app.control_inputs[DOWNLOAD_MENU].exec_(
-            self.app.control_inputs[DOWNLOAD_BUTTON].mapToGlobal(QPoint(0, self.app.control_inputs[DOWNLOAD_BUTTON].height()))
-        )
-       
-    def download_matlab(self):    
-        MatlabScriptUtils.download_matlab(self)
-        self.app.control_inputs[DOWNLOAD_BUTTON].setEnabled(False)
-        self.app.control_inputs[DOWNLOAD_BUTTON].setEnabled(True)
-
-    def download_python(self):
-        PythonScriptUtils.download_python(self)
-        self.app.control_inputs[DOWNLOAD_BUTTON].setEnabled(False)
-        self.app.control_inputs[DOWNLOAD_BUTTON].setEnabled(True) 
-
-   
 
 class DataExportActions: 
     @staticmethod
@@ -116,11 +71,49 @@ class DataExportActions:
             app.bin_file_size_label.setText("File size: " + str(app.bin_file_size))
             
     
+  
+class ExportData:
+
     @staticmethod
-    def set_download_button_icon(app):    
-        if app.control_inputs[DOWNLOAD_BUTTON].isEnabled():
-            icon = resource_path("assets/arrow-down-icon-white.png")
-            app.control_inputs[DOWNLOAD_BUTTON].setIcon(QIcon(icon))
+    def save_intensity_data(app):
+        try:
+            intensity_tracing_file = FileUtils.get_recent_intensity_tracing_file()
+            new_intensity_file_path, save_dir, save_name = (
+                ExportData.rename_and_move_file(
+                    intensity_tracing_file, "Save Intensity Tracing files", app
+                )
+            )
+            if not new_intensity_file_path:
+                return
+            file_paths = {"intensity_tracing": new_intensity_file_path}
+            ExportData.download_scripts(file_paths, save_name, save_dir, "intensity_tracing")
+        except Exception as e:
+            ScriptFileUtils.show_error_message(e)
+
+ 
+    @staticmethod
+    def download_scripts(bin_file_paths, file_name, directory, script_type):
+        ScriptFileUtils.export_scripts(
+            bin_file_paths, file_name, directory, script_type
+        )
+
+    @staticmethod
+    def rename_and_move_file(original_file_path, file_dialog_prompt, app):
+        dialog = QFileDialog()
+        save_path, _ = dialog.getSaveFileName(
+            app,
+            file_dialog_prompt,
+            "",
+            "All Files (*);;Binary Files (*.bin)",
+            options=QFileDialog.Option.DontUseNativeDialog,
+        )
+        if save_path:
+            save_dir = os.path.dirname(save_path)
+            save_name = os.path.basename(save_path)
+            original_filename = os.path.basename(original_file_path)
+            new_filename = f"{save_name}_{original_filename}"
+            new_file_path = os.path.join(save_dir, new_filename)
+            shutil.copyfile(original_file_path, new_file_path)
+            return new_file_path, save_dir, save_name
         else:
-            icon = resource_path("assets/arrow-down-icon-grey.png")
-            app.control_inputs[DOWNLOAD_BUTTON].setIcon(QIcon(icon))        
+            return None, None, None

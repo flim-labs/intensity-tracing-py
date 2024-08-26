@@ -1,9 +1,10 @@
 import os
 import json
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QIcon
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QIcon
 from gui_components.buttons import PlotsConfigPopup
+from gui_components.controls_bar import ControlsBar
 from gui_components.data_export_controls import DataExportActions
 from gui_components.resource_path import resource_path
 from gui_components.gui_styles import GUIStyles
@@ -21,22 +22,43 @@ class ChannelsControl(QWidget):
 
         self.channels_grid = QHBoxLayout()
         layout.addLayout(self.channels_grid)
-
         self.setLayout(layout)
         self.ch_checkboxes = []
+        self.create_channel_type_control(self.channels_grid)
         self.plots_config_btn = QPushButton("PLOTS CONFIG")
         self.plots_config_btn.setIcon(QIcon(resource_path("assets/chart-icon.png")))
         self.plots_config_btn.setFixedWidth(150)
+        self.plots_config_btn.setFixedHeight(40)
         self.plots_config_btn.setStyleSheet(GUIStyles.channels_btn_style(base="#FB8C00", hover="#FFA726", pressed="#FB8C00", text="white"))
         self.plots_config_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self.plots_config_btn.clicked.connect(self.open_plots_config_popup) 
-        self.widgets = self.ch_checkboxes + [self.plots_config_btn] 
+        self.widgets = [self.app.control_inputs[SETTINGS_CONN_CHANNEL]] + self.ch_checkboxes + [self.plots_config_btn] 
         self.init_ch_grid()
+        
+
+    def create_channel_type_control(self, layout):        
+        inp = ControlsBar.create_channel_type_control(
+            layout,
+            self.app.selected_conn_channel,
+            self.conn_channel_type_value_change,
+            self.app.conn_channels)
+        inp.setFixedHeight(40)
+        self.app.control_inputs[SETTINGS_CONN_CHANNEL] = inp     
+        
+
+    def conn_channel_type_value_change(self, index):       
+        self.app.selected_conn_channel = self.sender().currentText()
+        if self.app.selected_conn_channel == "USB":
+            self.app.selected_firmware = self.app.firmwares[0]
+        else:
+            self.app.selected_firmware = self.app.firmwares[1]
+        self.app.settings.setValue(SETTINGS_FIRMWARE, self.app.selected_firmware)
+        self.app.settings.setValue(SETTINGS_CONN_CHANNEL, self.app.selected_conn_channel)            
  
 
     def init_ch_grid(self):
         self.update_ch_checkboxes()
-        self.channels_grid.addWidget(self.plots_config_btn)
+        self.channels_grid.addWidget(self.plots_config_btn, alignment=Qt.AlignmentFlag.AlignBottom)
         return 
 
     def update_ch_checkboxes(self):
@@ -53,10 +75,11 @@ class ChannelsControl(QWidget):
             row.addWidget(checkbox)
             ch_checkbox_wrapper.setLayout(row)
             ch_checkbox_wrapper.setStyleSheet(GUIStyles.checkbox_wrapper_style())
+            ch_checkbox_wrapper.setFixedHeight(40)
             self.ch_checkboxes.append(ch_checkbox_wrapper)
-            self.widgets = self.ch_checkboxes + [self.plots_config_btn]
+            self.widgets = [self.app.control_inputs[SETTINGS_CONN_CHANNEL]] + self.ch_checkboxes + [self.plots_config_btn]
         for checkbox in  self.ch_checkboxes:
-            self.channels_grid.addWidget(checkbox)    
+            self.channels_grid.addWidget(checkbox, alignment=Qt.AlignmentFlag.AlignBottom)    
     
 
     def on_ch_toggled(self, state, index):

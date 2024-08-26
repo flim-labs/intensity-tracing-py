@@ -1,6 +1,6 @@
-from PyQt5.QtCore import Qt, QRectF
-from PyQt5.QtGui import QPainter, QLinearGradient, QColor, QPen, QTextOption
-from PyQt5.QtWidgets import QLabel
+from PyQt6.QtCore import Qt, QRectF
+from PyQt6.QtGui import QPainter, QLinearGradient, QColor, QPen, QTextOption
+from PyQt6.QtWidgets import QLabel
 
 
 class GradientText(QLabel):

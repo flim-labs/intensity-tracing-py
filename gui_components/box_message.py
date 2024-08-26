@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QMessageBox
+from PyQt6.QtWidgets import QMessageBox
 
 
 class BoxMessage:
@@ -12,7 +12,7 @@ class BoxMessage:
         if test_mode:
             message_box.show()
         else:
-            message_box.exec_()
+            message_box.exec()
         return message_box
 
     @staticmethod

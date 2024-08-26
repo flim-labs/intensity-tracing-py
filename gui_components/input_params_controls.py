@@ -1,6 +1,6 @@
 import os
-from PyQt5.QtWidgets import QWidget, QHBoxLayout
-from PyQt5.QtCore import Qt
+from PyQt6.QtWidgets import QWidget, QHBoxLayout
+from PyQt6.QtCore import Qt
 from gui_components.controls_bar import ControlsBar
 from gui_components.data_export_controls import DataExportActions
 from gui_components.settings import *
@@ -14,7 +14,6 @@ class InputParamsControls(QWidget):
         self.app = window
         layout = QHBoxLayout()
         self.setLayout(layout)
-        self.create_channel_type_control(layout)
         self.create_bin_width_control(layout)
         running_mode_control = self.create_running_mode_control()
         layout.addLayout(running_mode_control)
@@ -24,16 +23,9 @@ class InputParamsControls(QWidget):
         show_cps_control = self.create_show_cps_control()
         layout.addSpacing(15)
         layout.addLayout(show_cps_control)
-        layout.setAlignment(Qt.AlignmentFlag.AlignBottom)
-
-
-    def create_channel_type_control(self, layout):        
-        inp = ControlsBar.create_channel_type_control(
-            layout,
-            self.app.selected_conn_channel,
-            self.conn_channel_type_value_change,
-            self.app.conn_channels)
-        self.app.control_inputs[SETTINGS_CONN_CHANNEL] = inp
+        layout.addSpacing(20)
+        self.create_cps_threshold_control(layout)
+        layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
 
     def create_bin_width_control(self, layout):        
@@ -61,7 +53,7 @@ class InputParamsControls(QWidget):
         self.app.control_inputs[SETTINGS_TIME_SPAN] = inp 
 
 
-    def create_acquisition_time_control(self, layout):        
+    def create_acquisition_time_control(self, layout):  
         inp = ControlsBar.create_acquisition_time_control(
             layout,
             self.app.acquisition_time_millis,
@@ -70,6 +62,17 @@ class InputParamsControls(QWidget):
         )
         self.app.control_inputs[SETTINGS_ACQUISITION_TIME_MILLIS] = inp  
         
+        
+    def create_cps_threshold_control(self, layout):
+        value = int(self.app.settings.value(SETTINGS_CPS_THRESHOLD, DEFAULT_CPS_THRESHOLD))
+        inp = ControlsBar.create_cps_threshold_control(
+            layout,
+            value,
+            self.cps_threshold_value_change,
+            self.app.show_cps  
+        )
+        self.app.control_inputs[SETTINGS_CPS_THRESHOLD] = inp
+            
     
     def create_show_cps_control(self):    
         show_cps_control, inp = ControlsBar.create_show_cps_control(
@@ -88,15 +91,7 @@ class InputParamsControls(QWidget):
             self.app.control_inputs[SETTINGS_ACQUISITION_TIME_MILLIS].setEnabled(True)
             self.app.free_running_acquisition_time = False
             self.app.settings.setValue(SETTINGS_FREE_RUNNING_MODE, False)
-
-    def conn_channel_type_value_change(self, index):       
-        self.app.selected_conn_channel = self.sender().currentText()
-        if self.app.selected_conn_channel == "USB":
-            self.app.selected_firmware = self.app.firmwares[0]
-        else:
-            self.app.selected_firmware = self.app.firmwares[1]
-        self.app.settings.setValue(SETTINGS_FIRMWARE, self.app.selected_firmware)
-        self.app.settings.setValue(SETTINGS_CONN_CHANNEL, self.app.selected_conn_channel) 
+        DataExportActions.calc_exported_file_size(self.app)    
 
     def acquisition_time_value_change(self, value):        
         self.app.control_inputs[START_BUTTON].setEnabled(value != 0)
@@ -108,6 +103,10 @@ class InputParamsControls(QWidget):
         self.app.control_inputs[START_BUTTON].setEnabled(value != 0)
         self.app.time_span = value
         self.app.settings.setValue(SETTINGS_TIME_SPAN, value)
+        
+    def cps_threshold_value_change(self, value):
+        self.app.cps_threshold = value
+        self.app.settings.setValue(SETTINGS_CPS_THRESHOLD, value)  
         
 
     def bin_width_micros_value_change(self, value):
@@ -121,9 +120,11 @@ class InputParamsControls(QWidget):
         if state:
             self.app.show_cps = True
             self.app.settings.setValue(SETTINGS_SHOW_CPS, True)
+            self.app.control_inputs[SETTINGS_CPS_THRESHOLD].setEnabled(True)
         else:
             self.app.show_cps = False
             self.app.settings.setValue(SETTINGS_SHOW_CPS, False)
+            self.app.control_inputs[SETTINGS_CPS_THRESHOLD].setEnabled(False)
             
         if len(self.app.cps_charts_widgets) > 0:
             for widget in self.app.cps_charts_widgets:

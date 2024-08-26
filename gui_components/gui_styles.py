@@ -1,34 +1,47 @@
-from PyQt5.QtGui import QColor, QPalette, QFont
-from PyQt5.QtWidgets import QApplication
-from PyQt5.QtWidgets import QStyleFactory
-
+from PyQt6.QtGui import QColor, QPalette, QFont
+from PyQt6.QtWidgets import QApplication
+from PyQt6.QtWidgets import QStyleFactory, QWidget, QLabel
 
 class GUIStyles:
     @staticmethod
     def set_default_theme(theme):
         QApplication.setStyle(QStyleFactory.create(theme))
-
-    @staticmethod    
+        
+    @staticmethod        
     def customize_theme(window, bg = QColor(28, 28, 28, 128), fg = QColor(255, 255, 255)):
         palette = QPalette()
         background_color = bg
         palette.setColor(QPalette.ColorRole.Window, background_color)
         palette.setColor(QPalette.ColorRole.WindowText, fg)
-        window.setPalette(palette)
+        window.setPalette(palette)  
+        window.setStyleSheet(
+            """
+        QLabel {
+            color: #f8f8f8;
+            font-family: "Montserrat";
+        }
+        """
+        )  
 
     @staticmethod
-    def set_fonts():
+    def set_fonts(font_name="Montserrat", font_size=10):
         general_font = QFont("Montserrat", 10)
         QApplication.setFont(general_font)
 
     @staticmethod
-    def set_label_style(color="#f8f8f8"):
-        return """
-            QLabel{
-                color: #f8f8f8;
-                font-family: "Montserrat";
-            }
-        """
+    def set_fonts_deep(root):
+        if root is None:
+            return
+        for child in root.findChildren(QWidget):
+            if child.objectName() == "font":
+                child.setFont(QFont("Montserrat", 14, QFont.Weight.Thin))
+            if child.metaObject().className() == "QPushButton":
+                child.setFont(QFont("Montserrat", 14, QFont.Weight.Thin))
+            GUIStyles.set_fonts_deep(child)
+        for child in root.findChildren(QLabel):
+            child.setFont(QFont("Montserrat", 14, QFont.Weight.Bold))
+            GUIStyles.set_fonts_deep(child)
+            
 
     @staticmethod
     def set_main_title_style():
@@ -43,7 +56,7 @@ class GUIStyles:
         """
 
     @staticmethod
-    def button_style(color_base, color_border, color_hover, color_pressed, min_width):
+    def button_style(color_base, color_border, color_hover, color_pressed):
         return f"""
             QPushButton {{
                 background-color: {color_base};
@@ -51,8 +64,7 @@ class GUIStyles:
                 font-family: "Montserrat";
                 color: white;
                 letter-spacing: 0.1em;
-                min-width: {min_width};
-                padding: 12px;
+                padding: 8px;
                 border-radius: 4px;
                 font-size: 14px;
                 font-weight: bold;
@@ -82,7 +94,7 @@ class GUIStyles:
         """
 
     @staticmethod
-    def _set_button_style(button, color_dict, min_width):
+    def _set_button_style(button, color_dict):
         color_base, color_border, color_hover, color_pressed = (
             color_dict["base"],
             color_dict["border"],
@@ -91,7 +103,7 @@ class GUIStyles:
         )
         button.setStyleSheet(
             GUIStyles.button_style(
-                color_base, color_border, color_hover, color_pressed, min_width
+                color_base, color_border, color_hover, color_pressed
             )
         )
 
@@ -103,7 +115,7 @@ class GUIStyles:
             "hover": "#1EC99F",
             "pressed": "#1AAE88",
         }
-        GUIStyles._set_button_style(button, color_dict, min_width="200px")
+        GUIStyles._set_button_style(button, color_dict)
 
     @staticmethod
     def set_stop_btn_style(button):
@@ -113,7 +125,7 @@ class GUIStyles:
             "hover": "#FB8C00",
             "pressed": "#E65100",
         }
-        GUIStyles._set_button_style(button, color_dict, min_width="200px")
+        GUIStyles._set_button_style(button, color_dict)
 
     @staticmethod
     def set_reset_btn_style(button):
@@ -123,7 +135,7 @@ class GUIStyles:
             "hover": "#a179ff",
             "pressed": "#6b3da5",
         }
-        GUIStyles._set_button_style(button, color_dict, min_width="100px")
+        GUIStyles._set_button_style(button, color_dict)
 
     @staticmethod
     def set_config_btn_style(button):
@@ -133,7 +145,7 @@ class GUIStyles:
             "hover": "#FB8C00",
             "pressed": "#E65100",
         }
-        GUIStyles._set_button_style(button, color_dict, min_width="100px")
+        GUIStyles._set_button_style(button, color_dict)
 
     @staticmethod
     def set_checkbox_style():
@@ -169,10 +181,10 @@ class GUIStyles:
             QDoubleSpinBox, QSpinBox {
                 color: #f8f8f8;
                 font-family: "Montserrat";
-                font-size: 16px;
+                font-size: 14px;
                 padding: 8px;
                 min-width: 100px;
-                border: 1px solid #8d4ef2;
+                border: 1px solid #3b3b3b;
                 border-radius: 5px;
                 background-color: transparent;
             }
@@ -188,10 +200,10 @@ class GUIStyles:
             QComboBox {
                 color: #f8f8f8;
                 font-family: "Montserrat";
-                font-size: 16px;
+                font-size: 14px;
                 padding: 8px;
                 min-width: 100px;
-                border: 1px solid #8d4ef2;
+                border: 1px solid #3b3b3b;
                 border-radius: 5px;
                 background-color: transparent;
             }
@@ -206,7 +218,7 @@ class GUIStyles:
 
            QComboBox QAbstractItemView {
             font-family: "Montserrat";
-            border: 1px solid #8d4ef2;
+            border: 1px solid #3b3b3b;
             border-bottom-left-radius: 5px;
             border-bottom-right-radius: 5px;
             background-color: #181818;
@@ -214,6 +226,25 @@ class GUIStyles:
             selection-background-color: #8d4ef2;
             }   
         """
+        
+    @staticmethod    
+    def set_input_text_style():
+        return """
+        QLineEdit  {
+                color: #13B6B4;
+                font-family: "Montserrat";
+                font-size: 14px;
+                padding: 8px;
+                min-width: 60px;
+                border: 1px solid #13B6B4;
+                border-radius: 5px;
+                background-color: transparent;
+            }
+            QLineEdit:disabled, QLineEdit:disabled {
+            color: #404040;  
+            border-color: #3c3c3c;
+            }        
+        """           
 
     @staticmethod
     def set_msg_box_style():
@@ -276,7 +307,7 @@ class GUIStyles:
             margin: 5px 0px 5px 0px;
             border-radius: 4px;   
             font-family: "Montserrat";
-            font-size: 14px;
+            font-size: 12px;
             font-weight: bold;
             padding:10px 13px 10px 10px;
             min-width:120px
@@ -307,11 +338,10 @@ class GUIStyles:
             QPushButton, QPushButton:released {{
                 font-family: "Montserrat";
                 letter-spacing: 0.1em;
-                padding: 10px 12px;
+                padding: 8px;
                 font-size: 14px;
                 font-weight: bold;
                 border-radius: 4px;
-                min-width: 160px;
                 background-color: {base};
                 border: 2px solid {base};
                 color: {text};
@@ -380,21 +410,21 @@ class GUIStyles:
             }}
         """  
         
-    @staticmethod        
+    @staticmethod            
     def checkbox_wrapper_style():
         return """
-            QWidget#ch_checkbox_wrapper, QWidget#tau_checkbox_wrapper{
+            QWidget#ch_checkbox_wrapper, QWidget#simple_checkbox_wrapper {
                 border: 1px solid #3b3b3b;
                 background-color: transparent;
                 padding: 0;
             } 
-            QWidget#tau_checkbox_wrapper{
+            QWidget#simple_checkbox_wrapper {
                 border-radius: 5px;
             } 
             QWidget{
                 color: #f8f8f8;
                 font-family: "Montserrat";
-                font-size: 16px;
+                font-size: 12px;
                 padding: 0;
             }        
         """ 
@@ -430,5 +460,47 @@ class GUIStyles:
                 color: #cecece;
                 margin-left: 8px;
             }
-        """                      
-         
+        """        
+        
+    @staticmethod   
+    def acquire_read_btn_style():
+        return f"""
+            QPushButton {{
+                font-family: "Montserrat";
+                letter-spacing: 0.1em;
+                padding: 10px 12px;
+                font-size: 14px;
+                font-weight: bold;;
+                min-width: 60px;
+            }}
+            QPushButton#acquire_btn{{ 
+                border-top-left-radius: 3px;
+                border-bottom-left-radius: 3px;   
+            }}
+            QPushButton#read_btn{{  
+                border-top-right-radius: 3px;
+                border-bottom-right-radius: 3px;
+                
+            }}
+        """ 
+        
+    @staticmethod
+    def acquisition_time_countdown_style():
+        return """
+            QLabel {
+                color: #13B6B4;
+                font-size: 16px;
+                padding: 0 8px;
+            }
+        """       
+        
+    @staticmethod
+    def set_loading_widget_style():
+        return """
+            QWidget#loading_widget {
+                background-color: black;
+                border-top: 1px solid #50b3d7;
+            }
+    
+    """                             
+            
