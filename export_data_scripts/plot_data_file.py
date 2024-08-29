@@ -50,6 +50,7 @@ with open(file_path, 'rb') as f:
     # Plot data
     for i in range(len(metadata["channels"])):
         channel_line = channel_lines[i]
+        times = [time / 1_000_000_000 for time in times]
         plt.plot(
             times,
             channel_line,

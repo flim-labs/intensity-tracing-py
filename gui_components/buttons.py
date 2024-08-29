@@ -168,7 +168,7 @@ class ButtonsActionsController:
         )
         if warn_title and warn_msg:
             message_box = BoxMessage.setup(
-                warn_title, warn_msg, QMessageBox.Warning, GUIStyles.set_msg_box_style(), app.test_mode
+                warn_title, warn_msg, QMessageBox.Icon.Warning, GUIStyles.set_msg_box_style(), app.test_mode
             )
             app.warning_box = message_box
             return
