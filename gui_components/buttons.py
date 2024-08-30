@@ -168,7 +168,7 @@ class ButtonsActionsController:
         )
         if warn_title and warn_msg:
             message_box = BoxMessage.setup(
-                warn_title, warn_msg, QMessageBox.Warning, GUIStyles.set_msg_box_style(), app.test_mode
+                warn_title, warn_msg, QMessageBox.Icon.Warning, GUIStyles.set_msg_box_style(), app.test_mode
             )
             app.warning_box = message_box
             return
@@ -213,15 +213,16 @@ class ButtonsActionsController:
     def stop_button_pressed(app):
         app.acquisition_stopped = True
         app.cps_counts.clear()   
+        for _, widget in app.acquisition_time_countdown_widgets.items():
+            if widget and isinstance(widget, QWidget):
+                widget.setVisible(False)        
         def clear_cps_and_countdown_widgets():
             for _, animation in app.cps_widgets_animation.items():
                 if animation:
                     animation.stop()
-            for _, widget in app.acquisition_time_countdown_widgets.items():
-                if widget and isinstance(widget, QWidget):
-                    widget.setVisible(False)
         QTimer.singleShot(400, clear_cps_and_countdown_widgets)
-        app.cps_widgets_animation.clear()         
+        app.cps_widgets_animation.clear()   
+        app.acquisition_time_countdown_widgets.clear()      
         app.control_inputs[START_BUTTON].setEnabled(len(app.enabled_channels) > 0)
         app.control_inputs[STOP_BUTTON].setEnabled(False)
         QApplication.processEvents()
@@ -257,7 +258,8 @@ class ButtonsActionsController:
         app.cps_charts_widgets.clear()
         app.cps_ch.clear()
         app.cps_counts.clear()  
-        app.cps_widgets_animation.clear()              
+        app.cps_widgets_animation.clear()     
+        app.acquisition_time_countdown_widgets.clear()         
         app.intensity_charts_wrappers.clear()
         ButtonsActionsController.clear_intensity_grid_widgets(app)  
         QApplication.processEvents()            

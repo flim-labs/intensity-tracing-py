@@ -1,5 +1,13 @@
 # Intensity Tracing Changelog
 
+## Version 1.7
+- Fixes on binned intensity counts granularity
+- User can choose "Reader" mode to read external intensity .bin acquisitions
+- User can set a CPS threshold to highlight values ​​that exceed the limit
+- User can view the acquisition time countdown
+- Enhanced user-friendliness of bin file/scripts export
+- UI library updated to the latest version
+
 ## Version 1.6
 - Fixes on time span
 - Fixes on exported .bin file size calculation
