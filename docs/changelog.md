@@ -1,5 +1,8 @@
 # Intensity Tracing Changelog
 
+## Version 1.8
+- Realtime improvements during acquisition
+
 ## Version 1.7
 - Fixes on binned intensity counts granularity
 - User can choose "Reader" mode to read external intensity .bin acquisitions
