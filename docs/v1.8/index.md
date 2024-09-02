@@ -38,7 +38,6 @@
     <li><a href="#reader-mode">Reader Mode</a></li>
     <li><a href="#console-usage">Console Usage</a></li>
      <li><a href="#exported-data-visualization">Exported Data Visualization</a></li>
-     <li><a href="#download-acquired-data">Download Acquired Data</a></li>
     <li><a href="#license">License</a></li>
     <li><a href="#contact">Contact</a></li>
   </ol>
@@ -150,18 +149,6 @@ Refers to this sections for more details:
 
 <hr>
 
-#### Download scripts and data files
-
-If the _Export data_ option is enabled, the acquisition .bin file and the **Python** and **Matlab** scripts for manipulating and displaying the acquired data are automatically downloaded at the end of the acquisition, after the user selects a name for the files.
-
-Note: a requirements.txt file — indicating the dependencies needed to run the Python script -  will also be automatically downloaded.
-
-Refer to these sections for more details:
-
-- [Download Acquired Data](#download-acquired-data)
-- [Intensity Tracing Data Export guide ](../python-flim-labs/intensity-tracing-file-format.md)
-
-<hr>
 
 
 #### Parameters table summary
@@ -283,13 +270,14 @@ For a detailed guide about data export and binary file structure see:
 
 ## Download Acquired Data
 
-Besides the [Exported Data Visualization](#exported-data-visualization) feature, users can download raw data and its reader file by clicking the `DOWNLOAD` button in the top-right corner of the GUI.
+If the _Export data_ option is enabled, the acquisition .bin file and the **Python** and **Matlab** scripts for manipulating and displaying the acquired data are automatically downloaded at the end of the acquisition, after the user selects a name for the files.
 
-During the download, users need to choose the preferred reader file format (`MATLAB` (.m) or `Python` (.py)) and specify a directory for saving both the `.bin` file and its corresponding reader file. It's important to provide a specific name before completing the save operation.
+Note: a requirements.txt file — indicating the dependencies needed to run the Python script -  will also be automatically downloaded.
 
-After downloading, visualize the raw data by running the saved script (reader file). This script reads binary data from the locally stored file and uses the [matplotlib](https://matplotlib.org/) library to create a graphical representation of photon intensity information.
+Refer to these sections for more details:
 
-For more details on how to run the saved script. data export and binary file structure and refer to: [Intensity Tracing Data Export guide ](../python-flim-labs/intensity-tracing-file-format.md)
+- [Download Acquired Data](#download-acquired-data)
+- [Intensity Tracing Data Export guide ](../python-flim-labs/intensity-tracing-file-format.md)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
