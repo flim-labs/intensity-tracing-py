@@ -85,11 +85,25 @@ class IntensityTracing:
                 ((time_ns), (intensities)) = v
                 IntensityTracing.process_data(app, time_ns[0], intensities)
                 IntensityTracing.update_acquisition_countdowns(app, time_ns[0])
+                
+    @staticmethod
+    def get_realtime_adjustment_value(enabled_channels):
+        if len(enabled_channels) == 1:
+            return 50 * 1000
+        elif len(enabled_channels) == 2:
+            return 100 * 1000
+        elif len(enabled_channels) == 3:
+            return 150 * 1000
+        elif len(enabled_channels) >= 4:
+            return 200 * 1000
+        else:
+            return 0
             
 
     @staticmethod
     def process_data(app, time_ns, counts):
-        adjustment = REALTIME_ADJUSTMENT / app.bin_width_micros
+        enabled_channels = app.enabled_channels
+        adjustment = IntensityTracing.get_realtime_adjustment_value(enabled_channels) / app.bin_width_micros
         for channel, cps in app.cps_ch.items():
             IntensityTracing.update_cps(app, time_ns, counts, channel)
         for i, channel in enumerate(app.intensity_plots_to_show):
