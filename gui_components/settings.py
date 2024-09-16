@@ -33,6 +33,9 @@ DEFAULT_FREE_RUNNING_MODE = True
 SETTINGS_WRITE_DATA = "write_data"
 DEFAULT_WRITE_DATA = True
 
+SETTINGS_TIME_TAGGER = "time_tagger"
+DEFAULT_TIME_TAGGER = True
+
 SETTINGS_ENABLED_CHANNELS = "enabled_channels"
 DEFAULT_ENABLED_CHANNELS = "[0]"
 
@@ -56,6 +59,9 @@ READ_BUTTON = "read_button"
 EXPORT_PLOT_IMG_BUTTON = "export_plot_img_button"
 BIN_METADATA_BUTTON = "bin_metadata_button"
 READ_FILE_BUTTON = "read_file_button"
+
+TIME_TAGGER_PROGRESS_BAR = "time_tagger_progress_bar"
+TIME_TAGGER_WIDGET = "time_tagger_widget"
 
 MAIN_LAYOUT = "main_layout"
 

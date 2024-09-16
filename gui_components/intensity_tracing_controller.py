@@ -21,6 +21,7 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtCore import QTimer
 from gui_components.resource_path import resource_path
+from gui_components.time_tagger import TimeTaggerController
 
 
 class IntensityTracing:
@@ -49,7 +50,7 @@ class IntensityTracing:
             result = flim_labs.start_intensity_tracing(
                 enabled_channels=app.enabled_channels,
                 bin_width_micros=app.bin_width_micros,
-                write_bin=False,
+                write_bin=app.time_tagger,
                 write_data=app.write_data,
                 acquisition_time_millis=acquisition_time_millis,
                 firmware_file=app.selected_firmware,
@@ -175,11 +176,14 @@ class IntensityTracing:
         QApplication.processEvents()
         flim_labs.request_stop()
         app.pull_from_queue_timer.stop()
-        if app.write_data:
+        if app.write_data and not app.time_tagger:
             QTimer.singleShot(
                 300,
                 partial(ExportData.save_intensity_data, app),
             )
+        if app.write_data and app.time_tagger:
+            app.widgets[TIME_TAGGER_PROGRESS_BAR].set_visible(True)
+            TimeTaggerController.init_time_tagger_processing(app)            
 
 
 class IntensityTracingPlot:

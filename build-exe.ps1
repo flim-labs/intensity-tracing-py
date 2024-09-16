@@ -1,4 +1,4 @@
-py -3.9 -m venv .venv-intensity-tracing
+py -3.12 -m venv .venv-intensity-tracing
 .venv-intensity-tracing\Scripts\Activate.ps1
 pip install pyinstaller
 pip install -r .\requirements.txt
