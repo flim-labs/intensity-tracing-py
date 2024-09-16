@@ -85,6 +85,12 @@ class PhotonsTracingWindow(QMainWindow):
         self.write_data = self.settings.value(
             SETTINGS_WRITE_DATA, DEFAULT_WRITE_DATA
         ) in ["true", True]
+        
+        # Time tagger
+        time_tagger = self.settings.value(SETTINGS_TIME_TAGGER, DEFAULT_TIME_TAGGER)
+        self.time_tagger = time_tagger == "true" or time_tagger == True
+        
+        
         self.cached_time_span_seconds = 3
 
         self.acquisition_stopped = False
@@ -202,7 +208,7 @@ class PhotonsTracingWindow(QMainWindow):
         buttons_row_layout.addWidget(collapse_button)
         buttons_row_layout.addSpacing(10)
         blank_space, controls_layout = ControlsBar.init_gui_controls_layout(
-            controls_row, buttons_row_layout
+            controls_row, buttons_row_layout, self
         )
         self.blank_space = blank_space
         return controls_layout

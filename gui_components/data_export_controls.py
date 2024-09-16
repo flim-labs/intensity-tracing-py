@@ -15,6 +15,7 @@ from gui_components.top_bar import TopBar
 class ExportDataControl(QWidget):
     def __init__(self, window, parent=None):
         super().__init__(parent)
+        from gui_components.buttons import TimeTaggerWidget
         self.app = window
         self.info_link_widget, self.export_data_control = self.create_export_data_input()
         self.file_size_info_layout = self.create_file_size_info_row()
@@ -23,7 +24,10 @@ class ExportDataControl(QWidget):
         layout.addLayout(self.export_data_control)
         self.export_data_control.addSpacing(10)
         layout.addLayout(self.file_size_info_layout)
-
+        layout.addSpacing(5)
+        # Time Tagger
+        time_tagger = TimeTaggerWidget(self.app)  
+        layout.addWidget(time_tagger)    
         self.setLayout(layout)
 
     def create_export_data_input(self):        
@@ -43,13 +47,15 @@ class ExportDataControl(QWidget):
     def toggle_export_data(self, state):        
         if state:
             self.app.write_data = True
-            self.app.settings.setValue(SETTINGS_WRITE_DATA, True)
+            self.app.settings.setValue(SETTINGS_WRITE_DATA, True)         
             self.app.bin_file_size_label.show()
             DataExportActions.calc_exported_file_size(self.app)
         else:
             self.app.write_data = False
             self.app.settings.setValue(SETTINGS_WRITE_DATA, False)
-            self.app.bin_file_size_label.hide()          
+            self.app.bin_file_size_label.hide()    
+        if TIME_TAGGER_WIDGET in self.app.widgets:
+            self.app.widgets[TIME_TAGGER_WIDGET].setVisible(state)                     
 
 
 
@@ -78,6 +84,7 @@ class ExportData:
     @staticmethod
     def save_intensity_data(app):
         try:
+            time_tagger = app.time_tagger
             intensity_tracing_file = FileUtils.get_recent_intensity_tracing_file()
             new_intensity_file_path, save_dir, save_name = (
                 ExportData.rename_and_move_file(
@@ -86,17 +93,40 @@ class ExportData:
             )
             if not new_intensity_file_path:
                 return
+            if time_tagger:
+                time_tagger_file = FileUtils.get_recent_time_tagger_file()
+                new_time_tagger_path = ExportData.copy_file(
+                    time_tagger_file, save_name, save_dir
+                )
+            new_time_tagger_path = (
+                ""
+                if not time_tagger or not new_time_tagger_path
+                else new_time_tagger_path
+            )
+            
+            
             file_paths = {"intensity_tracing": new_intensity_file_path}
-            ExportData.download_scripts(file_paths, save_name, save_dir, "intensity_tracing")
+            ExportData.download_scripts(file_paths, save_name, save_dir, "intensity_tracing",time_tagger=time_tagger,
+                time_tagger_file_path=new_time_tagger_path)
         except Exception as e:
             ScriptFileUtils.show_error_message(e)
 
  
     @staticmethod
-    def download_scripts(bin_file_paths, file_name, directory, script_type):
+    def download_scripts(bin_file_paths, file_name, directory, script_type, time_tagger=False,
+        time_tagger_file_path=""):
         ScriptFileUtils.export_scripts(
-            bin_file_paths, file_name, directory, script_type
+            bin_file_paths, file_name, directory, script_type, time_tagger, time_tagger_file_path,
         )
+        
+    @staticmethod
+    def copy_file(origin_file_path, save_name, save_dir):
+        origin_file_name = os.path.basename(origin_file_path)
+        new_file_name = f"{save_name}_{origin_file_name}"
+        new_file_path = os.path.join(save_dir, new_file_name)
+        shutil.copyfile(origin_file_path, new_file_path)
+        return new_file_path
+            
 
     @staticmethod
     def rename_and_move_file(original_file_path, file_dialog_prompt, app):

@@ -1,9 +1,14 @@
 PyQt6==6.7.0
 PyQt6-Qt6==6.7.0
 PyQt6-sip==13.6.0
-flim-labs==1.0.59
 matplotlib
 numpy==1.26.4
 pyqtgraph==0.13.4
 inquirer
+pandas
+tqdm 
+pyarrow 
+colorama
+keyboard
+
 

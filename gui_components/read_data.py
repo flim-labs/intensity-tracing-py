@@ -59,18 +59,24 @@ class ReadData:
         ReadData.read_intensity_bin(window, app)
 
     @staticmethod
-    def read_intensity_bin(window, app):
+    def read_intensity_bin(window, app, filter_string = "intensity"):
         dialog = QFileDialog()
         dialog.setAcceptMode(QFileDialog.AcceptMode.AcceptOpen)
-        dialog.setNameFilter("Bin files (*.bin)")
+        if filter_string:
+            filter_pattern = f"Bin files (*{filter_string}*.bin)"
+        else:
+            filter_pattern = "Bin files (*.bin)"
+        dialog.setNameFilter(filter_pattern)            
         file_name, _ = dialog.getOpenFileName(
             window,
             f"Load Intensity Tracing file",
             "",
-            "Bin files (*.bin)",
+            filter_pattern,
             options=QFileDialog.Option.DontUseNativeDialog,
         )
-        if not file_name or not file_name.endswith(".bin"):
+        if not file_name:
+            return None
+        if file_name is not None and not file_name.endswith(".bin"):        
             ReadData.show_warning_message(
                 "Invalid extension", "Invalid extension. File should be a .bin"
             )
