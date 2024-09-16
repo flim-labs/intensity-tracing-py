@@ -53,7 +53,7 @@ class ScriptFileUtils:
             "skip_pattern": "def get_recent_spectroscopy_file():",
             "end_pattern": "times = []",
             "replace_pattern": "times = []",
-            "requirements": ["matplotlib", "numpy"] if not time_tagger else ["matplotlib", "numpy", "pandas", "tqdm", "pyarrow",  "colorama", "keyboard"],
+            "requirements": ["matplotlib", "numpy"] if not time_tagger else ["matplotlib", "numpy", "pandas", "tqdm", "pyarrow",  "colorama"],
         }
         matlab_modifier = {
             "source_file": intensity_tracing_m_script_path,      
