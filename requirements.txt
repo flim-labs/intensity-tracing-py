@@ -6,10 +6,6 @@ numpy==1.26.4
 pyqtgraph==0.13.4
 flim-labs==1.0.62
 inquirer
-pandas
-tqdm 
-pyarrow 
-colorama
 
 
 
