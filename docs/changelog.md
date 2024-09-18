@@ -1,5 +1,8 @@
 # Intensity Tracing Changelog
 
+## Version 1.9
+- Time Tagger feature (.bin export/reader script) added
+
 ## Version 1.8
 - Realtime improvements during acquisition
 
