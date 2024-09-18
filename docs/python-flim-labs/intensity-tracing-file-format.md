@@ -103,7 +103,7 @@ The script files are automatically downloaded along with the acquisition .bin fi
 For more details about the project follow these links:
 
 - [Intensity Tracing introduction](../index.md)
-- [Intensity Tracing GUI guide](../v1.8/index.md)
+- [Intensity Tracing GUI guide](../v1.9/index.md)
 - [Intensity Tracing Console guide ](./intensity-tracing-console.md)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>

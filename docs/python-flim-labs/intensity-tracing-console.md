@@ -47,7 +47,7 @@ Here a table summary of the configurable parameters on code side:
 For more details about the project follow these links:
 
 - [Intensity Tracing introduction](../index.md)
-- [Intensity Tracing GUI guide](../v1.8/index.md)
+- [Intensity Tracing GUI guide](../v1.9/index.md)
 - [Intensity Tracing Data Export guide ](./intensity-tracing-file-format.md)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
