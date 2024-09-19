@@ -1,4 +1,5 @@
 import os
+import re
 current_path = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_path, '..'))
 
@@ -21,6 +22,11 @@ class FileUtils:
         files.sort(
             key=lambda x: os.path.getmtime(os.path.join(data_folder, x)), reverse=True
         )
-        return os.path.join(data_folder, files[0])    
-
+        return os.path.join(data_folder, files[0])   
+    
+     
+    @staticmethod
+    def clean_filename(filename):
+        # Keep only letters, numbers and underscores
+        return re.sub(r'[^a-zA-Z0-9_]', '', filename)      
 
