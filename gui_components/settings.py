@@ -60,6 +60,10 @@ EXPORT_PLOT_IMG_BUTTON = "export_plot_img_button"
 BIN_METADATA_BUTTON = "bin_metadata_button"
 READ_FILE_BUTTON = "read_file_button"
 
+CHECK_CARD_BUTTON = "check_card_button"
+CHECK_CARD_MESSAGE = "check_card_message"
+
+
 TIME_TAGGER_PROGRESS_BAR = "time_tagger_progress_bar"
 TIME_TAGGER_WIDGET = "time_tagger_widget"
 

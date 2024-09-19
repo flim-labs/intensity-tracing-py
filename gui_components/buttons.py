@@ -251,7 +251,7 @@ class ButtonsActionsController:
 
 
     @staticmethod
-    def stop_button_pressed(app):
+    def stop_button_pressed(app, app_close = False):
         app.acquisition_stopped = True
         app.cps_counts.clear()   
         for _, widget in app.acquisition_time_countdown_widgets.items():
@@ -276,7 +276,8 @@ class ButtonsActionsController:
                 )
         if app.write_data and app.time_tagger:
             app.widgets[TIME_TAGGER_PROGRESS_BAR].set_visible(True)
-            TimeTaggerController.init_time_tagger_processing(app)    
+            if app_close == False:
+                TimeTaggerController.init_time_tagger_processing(app)    
     
    
     @staticmethod

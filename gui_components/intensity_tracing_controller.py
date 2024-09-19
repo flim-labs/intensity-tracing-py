@@ -5,6 +5,7 @@ import pyqtgraph as pg
 from flim_labs import flim_labs
 from gui_components.animations import VibrantAnimation
 from gui_components.box_message import BoxMessage
+from gui_components.check_card import CheckCard
 from gui_components.data_export_controls import ExportData
 from gui_components.format_utilities import FormatUtils
 from gui_components.messages_utilities import MessagesUtilities
@@ -28,6 +29,8 @@ class IntensityTracing:
     @staticmethod
     def start_photons_tracing(app):
         try:
+            # Check card connection
+            CheckCard.check_card_connection(app)     
             free_running_mode = app.control_inputs[
                 SETTINGS_FREE_RUNNING_MODE
             ].isChecked()
@@ -64,11 +67,13 @@ class IntensityTracing:
             # app.pull_from_queue_timer2.start(1)
 
         except Exception as e:
+            # Check card connection
+            CheckCard.check_card_connection(app)                
             error_title, error_msg = MessagesUtilities.error_handler(str(e))
             BoxMessage.setup(
                 error_title,
                 error_msg,
-                QMessageBox.Critical,
+                QMessageBox.Icon.Critical,
                 GUIStyles.set_msg_box_style(),
                 app.test_mode,
             )
@@ -158,7 +163,7 @@ class IntensityTracing:
                     f"Remaining time: {seconds:02}:{milliseconds:02} (s)")                  
 
     @staticmethod
-    def stop_button_pressed(app):
+    def stop_button_pressed(app, app_close=False):
         app.acquisition_stopped = True
         app.cps_counts.clear()
         for _, widget in app.acquisition_time_countdown_widgets.items():
@@ -183,7 +188,8 @@ class IntensityTracing:
             )
         if app.write_data and app.time_tagger:
             app.widgets[TIME_TAGGER_PROGRESS_BAR].set_visible(True)
-            TimeTaggerController.init_time_tagger_processing(app)            
+            if app_close == False:
+                TimeTaggerController.init_time_tagger_processing(app)            
 
 
 class IntensityTracingPlot:

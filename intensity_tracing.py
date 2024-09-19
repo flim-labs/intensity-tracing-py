@@ -14,6 +14,7 @@ from PyQt6.QtWidgets import (
 )
 from gui_components.buttons import ActionButtons, CollapseButton, ReadAcquireModeButton
 from gui_components.channels_control import ChannelsControl
+from gui_components.check_card import CheckCard
 from gui_components.controls_bar import ControlsBar
 from gui_components.data_export_controls import ExportDataControl
 from gui_components.input_params_controls import InputParamsControls
@@ -135,6 +136,9 @@ class PhotonsTracingWindow(QMainWindow):
             self, self.acquire_read_mode == "read")
         # Loading overlay
         self.loading_overlay = LoadingOverlay(self)
+        
+        # Check card connection
+        CheckCard.check_card_connection(self)        
 
 
     @staticmethod
@@ -286,5 +290,5 @@ if __name__ == "__main__":
     window.showMaximized()
     window.show()
     exit_code = app.exec()
-    IntensityTracing.stop_button_pressed(window)
+    IntensityTracing.stop_button_pressed(window, app_close=True)
     sys.exit(exit_code)

@@ -76,11 +76,6 @@ class GUIStyles:
                 border: 2px solid {color_hover};
             }}
 
-            QPushButton:focus {{
-                background-color: {color_pressed};
-                border: 2px solid {color_pressed};
-            }}
-
             QPushButton:pressed {{
                 background-color: {color_pressed};
                 border: 2px solid {color_pressed};
@@ -351,12 +346,7 @@ class GUIStyles:
                 background-color: {hover};
                 border: 2px solid {hover};
             }}
-
-            QPushButton:focus {{
-                background-color: {base};
-                border: 2px solid {base};
-            }}
-
+            
             QPushButton:pressed {{
                 background-color: {base};
                 border: 2px solid {base};
@@ -562,5 +552,19 @@ class GUIStyles:
             QCheckBox::indicator:checked {{
                 background-color: #FB8C00;
             }}                   
-        """                                      
-            
+        """ 
+                                             
+    @staticmethod
+    def check_card_message(color):
+        return f"""
+            QLabel {{
+                color: {color}; 
+                background-color: #242424;
+                border-left: 1px solid {color}; 
+                border-right: 1px solid {color}; 
+                border-radius: 0; 
+                padding: 0 4px;
+                font-weight: 800;
+                font-size: 14px;
+            }}                
+        """                         
