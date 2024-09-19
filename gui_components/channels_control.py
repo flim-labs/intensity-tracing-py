@@ -4,6 +4,7 @@ from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QIcon
 from gui_components.buttons import PlotsConfigPopup
+from gui_components.check_card import CheckCard
 from gui_components.controls_bar import ControlsBar
 from gui_components.data_export_controls import DataExportActions
 from gui_components.resource_path import resource_path
@@ -23,6 +24,11 @@ class ChannelsControl(QWidget):
         self.channels_grid = QHBoxLayout()
         layout.addLayout(self.channels_grid)
         self.setLayout(layout)
+        
+        #Check card connection
+        check_card_widget = CheckCard(self.app)
+        self.channels_grid.addWidget(check_card_widget)
+        self.channels_grid.addSpacing(20)
         self.ch_checkboxes = []
         self.create_channel_type_control(self.channels_grid)
         self.plots_config_btn = QPushButton("PLOTS CONFIG")
