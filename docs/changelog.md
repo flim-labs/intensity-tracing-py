@@ -1,5 +1,9 @@
 # Intensity Tracing Changelog
 
+## Version 2.0
+- Add automatic card connection detection
+- Improvements/simplification on exported data naming system
+
 ## Version 1.9
 - Time Tagger feature (.bin export/reader script) added
 
