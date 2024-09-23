@@ -22,7 +22,7 @@ class ScriptFileUtils:
         try:
             if time_tagger:
                 python_modifier = cls.get_time_tagger_content_modifiers()
-                cls.write_new_scripts_content(python_modifier, {"time_tagger": time_tagger_file_path}, file_name, directory, "py", "time_tagger")            
+                cls.write_new_scripts_content(python_modifier, {"time_tagger": time_tagger_file_path}, file_name, directory, "py", "time_tagger_intensity")            
             if script_type == 'intensity_tracing':
                 python_modifier, matlab_modifier = cls.get_intensity_tracing_content_modifiers(time_tagger)
                 cls.write_new_scripts_content(python_modifier, bin_file_paths, file_name, directory, "py", script_type)
