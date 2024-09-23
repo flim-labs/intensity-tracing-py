@@ -16,7 +16,7 @@ warnings.filterwarnings("ignore", category=FutureWarning, module="pandas")
 def read_time_tagger_bin(file_path, chunk_size=100000):
     """
     Reads data from a Intensity Tracing Time Tagger binary file (.bin) and yields data in chunks as DataFrames.
-    The .bin file consists of records with a length of 9 bytes, where 1 byte represents the event type, 
+    The .bin file consists of records with a length of 9 bytes, where 1 byte represents the event type (Channel, Pixel, Line, Frame), 
     and 8 bytes represent the time (ns) value. 
     The first 4 bytes are magic bytes used to uniquely identify an "intensity tracing time tagger" .bin file. 
     The .bin file also has a variable-length header containing information about the enabled channels and 
@@ -84,8 +84,17 @@ def read_time_tagger_bin(file_path, chunk_size=100000):
     for i, (record, enabled_channels, laser_period) in enumerate(
         record_generator(file_path, record_size)
     ):
-        channel, time = record
-        records.append((f"ch{channel + 1}", time))
+        event, time = record
+        event_string = ""
+        if event == 70:
+            event_string = "F" # Frame
+        elif event == 76:
+            event_string = "L"  # Line
+        elif event == 80:
+            event_string = "P"  # Pixel
+        else:
+            event_string = f"ch{event + 1}" # Channel          
+        records.append((event_string, time))
 
         if (i + 1) % chunk_size == 0:
             yield pd.DataFrame(
