@@ -59,7 +59,7 @@ class ReadData:
         ReadData.read_intensity_bin(window, app)
 
     @staticmethod
-    def read_intensity_bin(window, app, filter_string = "intensity"):
+    def read_intensity_bin(window, app, filter_string = None):
         dialog = QFileDialog()
         dialog.setAcceptMode(QFileDialog.AcceptMode.AcceptOpen)
         if filter_string:
