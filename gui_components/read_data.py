@@ -8,6 +8,7 @@ from matplotlib import pyplot as plt
 import numpy as np
 from gui_components.box_message import BoxMessage
 from gui_components.gui_styles import GUIStyles
+from gui_components.helpers import extract_channel_from_label
 from gui_components.input_text_control import InputTextControl
 from gui_components.layout_utilities import clear_layout
 from gui_components.logo_utilities import TitlebarIcon
@@ -15,6 +16,7 @@ from gui_components.messages_utilities import MessagesUtilities
 from gui_components.resource_path import resource_path
 from gui_components.settings import (
     BIN_METADATA_BUTTON,
+    CHECK_CARD_WIDGET,
     COLLAPSE_BUTTON,
     EXPORT_PLOT_IMG_BUTTON,
     READ_FILE_BUTTON,
@@ -204,6 +206,8 @@ class ReadDataControls:
         app.control_inputs[SETTINGS_FREE_RUNNING_MODE].setEnabled(not read_mode)
         app.control_inputs[SETTINGS_CPS_THRESHOLD].setEnabled(not read_mode)
         app.control_inputs[SETTINGS_TIME_SPAN].setEnabled(not read_mode)
+        if CHECK_CARD_WIDGET in app.widgets:
+            app.widgets[CHECK_CARD_WIDGET].setVisible(not read_mode)            
 
     @staticmethod
     def read_bin_metadata_enabled(app):
@@ -358,7 +362,7 @@ class ReaderPopup(QWidget):
 
     def on_channel_toggled(self, state, checkbox):
         label_text = checkbox.text()
-        ch_index = self.extract_channel_from_label(label_text)
+        ch_index = extract_channel_from_label(label_text)
         if state:
             if ch_index not in self.app.intensity_plots_to_show:
                 self.app.intensity_plots_to_show.append(ch_index)
@@ -427,11 +431,6 @@ class ReaderPopup(QWidget):
         window_geometry.moveCenter(screen_geometry)
         self.move(window_geometry.topLeft())
 
-    def extract_channel_from_label(self, text):
-        ch = re.search(r"\d+", text).group()
-        ch_num = int(ch)
-        ch_num_index = ch_num - 1
-        return ch_num_index
 
 
 class ReaderMetadataPopup(QWidget):

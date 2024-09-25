@@ -4,6 +4,7 @@ from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QIcon
 from gui_components.buttons import PlotsConfigPopup
+from gui_components.channels_detection import DetectChannelsButton
 from gui_components.check_card import CheckCard
 from gui_components.controls_bar import ControlsBar
 from gui_components.data_export_controls import DataExportActions
@@ -24,12 +25,10 @@ class ChannelsControl(QWidget):
         self.channels_grid = QHBoxLayout()
         layout.addLayout(self.channels_grid)
         self.setLayout(layout)
-        
-        #Check card connection
-        check_card_widget = CheckCard(self.app)
-        self.channels_grid.addWidget(check_card_widget)
-        self.channels_grid.addSpacing(20)
         self.ch_checkboxes = []
+        # Detect channels button
+        self.detect_channels_btn =  DetectChannelsButton(self.app)
+        self.channels_grid.addWidget(self.detect_channels_btn)
         self.create_channel_type_control(self.channels_grid)
         self.plots_config_btn = QPushButton("PLOTS CONFIG")
         self.plots_config_btn.setIcon(QIcon(resource_path("assets/chart-icon.png")))
@@ -83,6 +82,7 @@ class ChannelsControl(QWidget):
             ch_checkbox_wrapper.setStyleSheet(GUIStyles.checkbox_wrapper_style())
             ch_checkbox_wrapper.setFixedHeight(40)
             self.ch_checkboxes.append(ch_checkbox_wrapper)
+            self.app.channels_checkboxes.append(checkbox)
             self.widgets = [self.app.control_inputs[SETTINGS_CONN_CHANNEL]] + self.ch_checkboxes + [self.plots_config_btn]
         for checkbox in  self.ch_checkboxes:
             self.channels_grid.addWidget(checkbox, alignment=Qt.AlignmentFlag.AlignBottom)    

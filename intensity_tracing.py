@@ -2,7 +2,7 @@ from functools import partial
 import json
 import os
 import sys
-from PyQt6.QtCore import QTimer, Qt, QSettings, QEvent
+from PyQt6.QtCore import QTimer, Qt, QSettings, QEvent, QtMsgType, qInstallMessageHandler
 from PyQt6.QtWidgets import (
     QMainWindow,
     QApplication,
@@ -189,7 +189,7 @@ class PhotonsTracingWindow(QMainWindow):
         # Acquire/read mode buttons
         acquire_read_mode_buttons = ReadAcquireModeButton(self)
         header_layout = TopBar.create_header_layout(
-            title_row, export_data_widget, acquire_read_mode_buttons
+            title_row, export_data_widget, acquire_read_mode_buttons, self
         )
         return header_layout
 
@@ -289,6 +289,12 @@ if __name__ == "__main__":
     window = PhotonsTracingWindow()
     window.showMaximized()
     window.show()
+    def custom_message_handler(msg_type, context, message):
+        if msg_type == QtMsgType.QtWarningMsg:
+            if "QWindowsWindow::setGeometry" in message:
+                return  
+        print(message) 
+    qInstallMessageHandler(custom_message_handler)        
     exit_code = app.exec()
     IntensityTracing.stop_button_pressed(window, app_close=True)
     sys.exit(exit_code)
