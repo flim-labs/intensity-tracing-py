@@ -1,7 +1,7 @@
 <a name="readme-top"></a>
 
 <div align="center">
-  <h1>Intensity Tracing v2.0</h1>
+  <h1>Intensity Tracing v2.1</h1>
 </div>
 <div align="center">
   <a href="https://www.flimlabs.com/">
@@ -37,6 +37,7 @@
     <li><a href="#parameters-configuration-saving">Parameters Configuration Saving</a></li>
     <li><a href="#long-time-acquisitions-and-ring-buffers">Long Time Acquisitions and Ring Buffers</a></li>
        <li><a href="#card-connection-detection">Card Connection Detection</a></li>
+           <li><a href="#channels-connections-detection">Channels Connections Detection</a></li>  
     <li><a href="#reader-mode">Reader Mode</a></li>
     <li><a href="#console-usage">Console Usage</a></li>
      <li><a href="#exported-data-visualization">Exported Data Visualization</a></li>
@@ -49,7 +50,7 @@
 
 ## Introduction
 
-Welcome to [FLIM LABS Intensity Tracing](https://github.com/flim-labs/intensity-tracing-py) _v2.0_ usage guide. In this documentation section, you will find all the necessary information for the proper use of the application's **graphical user interface** (GUI).
+Welcome to [FLIM LABS Intensity Tracing](https://github.com/flim-labs/intensity-tracing-py) _v2.1_ usage guide. In this documentation section, you will find all the necessary information for the proper use of the application's **graphical user interface** (GUI).
 For a general introduction to the aims, technical requirements and installation of the project, read the [Intensity Tracing Homepage](../index.md). You can also follow the [Console mode](../python-flim-labs/intensity-tracing-console.md) and [Data export](../python-flim-labs/intensity-tracing-file-format.md) dedicated guides links.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -59,7 +60,7 @@ For a general introduction to the aims, technical requirements and installation 
 ## GUI Usage
 
 <div align="center">
-    <img src="../assets/images/python/intensity-tracing-gui-2.0.png" alt="GUI" width="100%">
+    <img src="../assets/images/python/intensity-tracing-gui-2.1.png" alt="GUI" width="100%">
 </div>
 
 The GUI mode provides advanced functionality for configuring analysis **parameters** and displaying live-streamed photon data. It allows simultaneous acquisition from up to **8 channels**, offering real-time data visualization in the form of plots:
@@ -223,6 +224,13 @@ It's important to note that, due to the continuous nature of long-time acquisiti
 
 Since version _2.0_, the software supports **automatic detection of the Flim Card connection**.
 The detection is performed automatically when the app starts and when acquisition begins. The user can also manually run this check at any time by clicking the _CHECK DEVICE_ button. If the card is connected, its ID will be displayed next to the button; otherwise, an error message will appear.
+
+<hr>
+
+#### Channels Connections Detection
+
+Since version _2.1_, the software supports **automatic detection of channels connections**, simply clicking on the _Detect Channels_ button.
+If connections are found, the system allows the user to update the configuration settings (Channel Type and enabled channels) in an automated way.
 
 <hr>
 

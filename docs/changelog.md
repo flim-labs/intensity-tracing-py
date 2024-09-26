@@ -1,5 +1,8 @@
 # Intensity Tracing Changelog
 
+## Version 2.1
+- Add automatic channels connections detection
+
 ## Version 2.0
 - Add automatic card connection detection
 - Improvements/simplification on exported data naming system

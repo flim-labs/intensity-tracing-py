@@ -10,8 +10,8 @@ project_root = os.path.abspath(os.path.join(current_path, '..'))
 
 
 class LinkWidget(QWidget):
-    def __init__(self, icon_filename=None, text=None, parent=None, icon_dimensions=25, icon_hover_dimensions=28,
-                 link='https://flim-labs.github.io/intensity-tracing-py/v1.3/#gui-usage'):
+    def __init__(self, icon_filename=None, text=None, parent=None, icon_dimensions=30, icon_hover_dimensions=36,
+                 link='https://flim-labs.github.io/intensity-tracing-py/v2.1/#gui-usage'):
         super(LinkWidget, self).__init__(parent)
 
         layout = QHBoxLayout()
@@ -20,9 +20,7 @@ class LinkWidget(QWidget):
             text_label = QLabel(text)
             text_label.setStyleSheet("color: #f8f8f8;")
             layout.addWidget(text_label)
-
-        layout.addSpacing(10)
-
+            layout.addSpacing(10)
         self.link_label = QLabel()
         self.link = link
         if icon_filename:

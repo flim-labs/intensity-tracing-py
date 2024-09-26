@@ -7,7 +7,7 @@ import flim_labs
 
 from gui_components.gui_styles import GUIStyles
 from gui_components.resource_path import resource_path
-from gui_components.settings import CHECK_CARD_BUTTON, CHECK_CARD_MESSAGE
+from gui_components.settings import CHECK_CARD_BUTTON, CHECK_CARD_MESSAGE, CHECK_CARD_WIDGET
 
 
 current_path = os.path.dirname(os.path.abspath(__file__))
@@ -38,17 +38,18 @@ class CheckCard(QWidget):
         # Check message
         self.check_message = QLabel("")
         self.check_message.setStyleSheet(GUIStyles.check_card_message(color="#285da6"))
+        self.check_message.setFixedHeight(36)
         self.app.widgets[CHECK_CARD_MESSAGE] = self.check_message
         
         self.layout.addWidget(self.check_button)
         self.layout.addSpacing(5)
         self.layout.addWidget(self.check_message)
         self.check_message.hide()
-        
-        layout_container.addStretch()
+     
         layout_container.addLayout(self.layout)
         widget_container.setLayout(layout_container)
         self.setLayout(layout_container)
+        self.app.widgets[CHECK_CARD_WIDGET] = self
 
     @staticmethod
     def update_check_message(app, message, error):

@@ -1,6 +1,7 @@
 import os
 from PyQt6.QtCore import Qt
 from gui_components import resource_path
+from gui_components.check_card import CheckCard
 current_path = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_path, ".."))
 
@@ -24,20 +25,25 @@ class TopBar:
     def create_header_layout(
             logo_and_title,
             export_data_widget,
-            acquire_read_mode_buttons
+            acquire_read_mode_buttons,
+            app
     ):
         header_layout = QHBoxLayout()
+        #Check card connection
+        check_card_widget = CheckCard(app)
         # Header row: Link to User Guide
         app_guide_link_widget = LinkWidget(
-            icon_filename=resource_path.resource_path("assets/info-icon.png"), text="User Guide", link=GUI_GUIDE_LINK
+            icon_filename=resource_path.resource_path("assets/user-guide-icon.png"), text="", link=GUI_GUIDE_LINK
         )
         app_guide_link_widget.setCursor(Qt.CursorShape.PointingHandCursor)
         header_layout.addLayout(logo_and_title)
+        header_layout.addSpacing(10)
+        header_layout.addWidget(check_card_widget)
         header_layout.addStretch(1)
         header_layout.addWidget(acquire_read_mode_buttons)
         header_layout.addSpacing(10)
         header_layout.addWidget(export_data_widget)
-        header_layout.addSpacing(20)
+        header_layout.addSpacing(5)
         header_layout.addWidget(app_guide_link_widget)
         return header_layout
  
@@ -48,7 +54,7 @@ class TopBar:
         title_row = QHBoxLayout()
         pixmap = QPixmap(
             resource_path.resource_path("assets/intensity-tracing-logo-white.png")
-        ).scaledToWidth(40)
+        ).scaledToWidth(36)
         ctl = QLabel(pixmap=pixmap)
         title_row.addWidget(ctl)
         title_row.addSpacing(10)
@@ -58,7 +64,7 @@ class TopBar:
                            stylesheet=GUIStyles.set_main_title_style())
         ctl.setAlignment(Qt.AlignmentFlag.AlignCenter)
         title_row.addWidget(ctl)
-        title_row.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        title_row.setAlignment(Qt.AlignmentFlag.AlignBaseline)
         ctl = QWidget()
         ctl.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         title_row.addWidget(ctl)

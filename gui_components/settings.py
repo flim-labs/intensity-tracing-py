@@ -1,7 +1,7 @@
 from copy import deepcopy
 
 
-APP_VERSION = "2.0"
+APP_VERSION = "2.1"
 APP_NAME = "INTENSITY TRACING"
 APP_DEFAULT_WIDTH = 1460
 APP_DEFAULT_HEIGHT = 800
@@ -62,6 +62,7 @@ READ_FILE_BUTTON = "read_file_button"
 
 CHECK_CARD_BUTTON = "check_card_button"
 CHECK_CARD_MESSAGE = "check_card_message"
+CHECK_CARD_WIDGET = "check_card_widget"
 
 
 TIME_TAGGER_PROGRESS_BAR = "time_tagger_progress_bar"
@@ -96,6 +97,8 @@ READER_POPUP = "reader_popup"
 READER_METADATA_POPUP = "reader_metadata_popup"
 SETTINGS_ACQUIRE_READ_MODE = "acquire_read_mode"
 DEFAULT_ACQUIRE_READ_MODE = "acquire"
+
+CHANNELS_DETECTION_BUTTON = "channels_detection_button"
 
 
 
