@@ -21,9 +21,6 @@ class LinkWidget(QWidget):
             text_label.setStyleSheet("color: #f8f8f8;")
             layout.addWidget(text_label)
             layout.addSpacing(10)
-
-        
-
         self.link_label = QLabel()
         self.link = link
         if icon_filename:

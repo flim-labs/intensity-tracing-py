@@ -45,7 +45,7 @@ class DetectChannelsDialog(QDialog):
         self.app = app
         self.setWindowTitle("Detect Channels")
         self.setWindowIcon(QIcon(resource_path("assets/channel-icon-blue.png")))
-        self.setMinimumWidth(350)
+        self.setMinimumWidth(450)
         self.setWindowModality(Qt.WindowModality.ApplicationModal)
         self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
 
