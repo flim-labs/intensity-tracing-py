@@ -66,7 +66,7 @@ class CheckCard(QWidget):
                 app.widgets[CHECK_CARD_MESSAGE].setVisible(True)
 
     @staticmethod
-    def check_card_connection(app):
+    def check_card_connection(app, start_experiment = False):
         try:
             card_serial_number = flim_labs.check_card()
             CheckCard.update_check_message(app, str(card_serial_number), error=False)
@@ -75,3 +75,5 @@ class CheckCard(QWidget):
                 CheckCard.update_check_message(app, "Card Not Found", error=True)
             else:
                 CheckCard.update_check_message(app, str(e), error=True)
+            if start_experiment:
+                raise    
