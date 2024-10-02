@@ -38,7 +38,9 @@ class IntensityTracing:
                         "Error starting experiment: " + str(e),
                         QMessageBox.Icon.Warning,
                         GUIStyles.set_msg_box_style(),
-                    )  
+                    ) 
+                app.control_inputs[START_BUTTON].setEnabled(True)
+                app.control_inputs[STOP_BUTTON].setEnabled(False)   
                 return     
             free_running_mode = app.control_inputs[
                 SETTINGS_FREE_RUNNING_MODE
