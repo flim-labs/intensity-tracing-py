@@ -91,7 +91,6 @@ class TimeTaggerWidget(QWidget):
         self.setVisible(write_data)
         
     def on_time_tagger_state_changed(self, checked):
-        self.app.settings.setValue(SETTINGS_TIME_TAGGER, checked)
         self.app.time_tagger = checked        
         
         

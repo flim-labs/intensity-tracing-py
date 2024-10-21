@@ -64,8 +64,9 @@ class IntensityTracing:
             result = flim_labs.start_intensity_tracing(
                 enabled_channels=app.enabled_channels,
                 bin_width_micros=app.bin_width_micros,
-                write_bin=app.time_tagger,
+                write_bin=False,
                 write_data=app.write_data,
+                time_tagger=app.time_tagger,
                 acquisition_time_millis=acquisition_time_millis,
                 firmware_file=app.selected_firmware,
             )
@@ -192,15 +193,15 @@ class IntensityTracing:
         QApplication.processEvents()
         flim_labs.request_stop()
         app.pull_from_queue_timer.stop()
-        if app.write_data and not app.time_tagger:
+        if app.write_data:
             QTimer.singleShot(
                 300,
                 partial(ExportData.save_intensity_data, app),
             )
-        if app.write_data and app.time_tagger:
-            app.widgets[TIME_TAGGER_PROGRESS_BAR].set_visible(True)
-            if app_close == False:
-                TimeTaggerController.init_time_tagger_processing(app)            
+        #if app.write_data and app.time_tagger:
+            #app.widgets[TIME_TAGGER_PROGRESS_BAR].set_visible(True)
+            #if app_close == False:
+                #TimeTaggerController.init_time_tagger_processing(app)            
 
 
 class IntensityTracingPlot:

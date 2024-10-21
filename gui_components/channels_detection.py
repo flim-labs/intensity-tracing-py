@@ -14,6 +14,7 @@ from PyQt6.QtCore import Qt, QThread, pyqtSignal, QTimer
 import flim_labs
 
 
+from gui_components.check_card import CheckCard
 from gui_components.fancy_checkbox import FancyButton
 from gui_components.gui_styles import GUIStyles
 from gui_components.helpers import extract_channel_from_label
@@ -180,6 +181,7 @@ class DetectChannelsDialog(QDialog):
 
 
     def on_detection_complete(self, result):
+        CheckCard.check_card_connection(self.app)
         self.connections_obj = result
         self.flip_timer.stop()
         self.loader_label.setVisible(False)
@@ -226,6 +228,8 @@ class DetectChannelsDialog(QDialog):
                 self.result_layout.addWidget(connection_type_choose_container) 
                 self.no_button.setEnabled(self.connection_type is  not None)
             else:
+                if channels_usb != "[]" or channels_sma != "[]":
+                    self.connection_type = "USB" if channels_usb != "[]" else "SMA"
                 self.no_button.setEnabled(len(detection_result[0]) > 1)              
             self.yes_button.setEnabled(True)
             self.yes_button.setVisible(True)
@@ -320,6 +324,7 @@ class DetectChannelsDialog(QDialog):
         return parsed_detection
 
     def on_detection_error(self, error_msg):
+        CheckCard.check_card_connection(self.app)
         self.flip_timer.stop()
         if hasattr(self, 'connection_type_choose_container'):
             self.choose_connection_container.setVisible(False)        
