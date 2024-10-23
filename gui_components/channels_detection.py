@@ -202,6 +202,8 @@ class DetectChannelsDialog(QDialog):
             self.success_icon.setVisible(True)
             detection_result = self.process_detection_result(self.connections_obj)
             self.label.setVisible(False)
+            channels_sma = []
+            channels_usb = []
             channels_usb_sma = False
             if len(detection_result[0]) > 1:
                 channels_sma = detection_result[0][0][1]
