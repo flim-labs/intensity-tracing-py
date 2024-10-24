@@ -1,5 +1,9 @@
 # Intensity Tracing Changelog
 
+## Version 2.2
+- Fix Time Tagger functionality
+- Improve Card Detection user experience
+
 ## Version 2.1
 - Add automatic channels connections detection
 

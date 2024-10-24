@@ -15,7 +15,7 @@ Welcome to [FLIM LABS Intensity Tracing](https://github.com/flim-labs/intensity-
 
 <!-- GETTING STARTED -->
 ## Getting Started
-To directly test the application, skipping the prerequisites and installation requirements you can download an installer at this [link](https://github.com/flim-labs/intensity-tracing-py/releases/tag/v2.1) (_Note: you still need to have the FLIM LABS Data Acquisition Card_). 
+To directly test the application, skipping the prerequisites and installation requirements you can download an installer at this [link](https://github.com/flim-labs/intensity-tracing-py/releases/tag/v2.2) (_Note: you still need to have the FLIM LABS Data Acquisition Card_). 
 
 To get a local copy up and running follow these steps.
 
@@ -58,7 +58,7 @@ To be able to run this project locally on your machine you need to satisfy these
 
 Navigate to the following links to view detailed application usage guides:
 
-- [Intensity Tracing GUI guide](./docs/v2.1/index.md)
+- [Intensity Tracing GUI guide](./docs/v2.2/index.md)
 - [Intensity Tracing Console guide ](./docs/python-flim-labs/intensity-tracing-console.md)
 - [Intensity Tracing Data export guide](./docs/python-flim-labs/intensity-tracing-file-format.md)
 

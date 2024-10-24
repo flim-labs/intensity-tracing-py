@@ -91,7 +91,6 @@ class TimeTaggerWidget(QWidget):
         self.setVisible(write_data)
         
     def on_time_tagger_state_changed(self, checked):
-        self.app.settings.setValue(SETTINGS_TIME_TAGGER, checked)
         self.app.time_tagger = checked        
         
         
@@ -269,15 +268,11 @@ class ButtonsActionsController:
         QApplication.processEvents()
         flim_labs.request_stop()
         app.pull_from_queue_timer.stop() 
-        if app.write_data and not app.time_tagger:
+        if app.write_data:
                 QTimer.singleShot(
                     300,
                     partial(ExportData.save_intensity_data, app),
                 )
-        if app.write_data and app.time_tagger:
-            app.widgets[TIME_TAGGER_PROGRESS_BAR].set_visible(True)
-            if app_close == False:
-                TimeTaggerController.init_time_tagger_processing(app)    
     
    
     @staticmethod
