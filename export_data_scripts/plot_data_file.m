@@ -1,4 +1,4 @@
-file_path = '<FILE-PATH>';
+file_path = "<FILE-PATH>";
 
 % Open the file  
 metadata = struct('channels', [], 'bin_width_micros', [], 'acquisition_time_millis', [], 'laser_period_ns', []);
@@ -80,8 +80,8 @@ for i = 1:numel(active_channels)
 end
 
 % Set plot title with metadata information
-title_str = sprintf('Bin Width: %s us, Laser Period: %s ns',
-    num2str(metadata.bin_width_micros),
+title_str = sprintf('Bin Width: %s us, Laser Period: %s ns',...
+    num2str(metadata.bin_width_micros),...
     num2str(metadata.laser_period_ns));
 
 if ~isempty(metadata.acquisition_time_millis)
