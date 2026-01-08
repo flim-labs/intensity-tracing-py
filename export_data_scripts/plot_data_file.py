@@ -33,18 +33,35 @@ with open(file_path, 'rb') as f:
     channel_lines = [[] for _ in range(len(metadata["channels"]))]
 
     number_of_channels = len(metadata["channels"])
-    channel_values_unpack_string = 'I' * number_of_channels
     bin_width_seconds = metadata["bin_width_micros"] / 1000000
 
+    # Formato BITMASK: [time_ns(8B)] [bitmask(1B)] [count(4B)]* (solo canali con bit=1)
     while True:
-        data = f.read(4 * number_of_channels + 8)
-        if not data:
+        # Leggi timestamp (8 bytes)
+        time_data = f.read(8)
+        if not time_data or len(time_data) < 8:
             break
-        (time,) = struct.unpack('d', data[:8])
-        channel_values = struct.unpack(channel_values_unpack_string, data[8:])
-        for i in range(len(channel_lines)):
-            channel_lines[i].append(channel_values[i])
+        (time,) = struct.unpack('d', time_data)
         times.append(time)
+        
+        # Leggi bitmask (1 byte)
+        bitmask_data = f.read(1)
+        if not bitmask_data:
+            break
+        (bitmask,) = struct.unpack('B', bitmask_data)
+        
+        # Leggi counts solo per canali con bit=1
+        for bit_position in range(number_of_channels):
+            if (bitmask & (1 << bit_position)) != 0:
+                # Bit acceso: leggi count
+                count_data = f.read(4)
+                if not count_data or len(count_data) < 4:
+                    break
+                (count,) = struct.unpack('I', count_data)
+                channel_lines[bit_position].append(count)
+            else:
+                # Bit spento: canale omesso, inserisci 0
+                channel_lines[bit_position].append(0)
         
     
     # Plot data

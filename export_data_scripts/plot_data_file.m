@@ -51,22 +51,38 @@ channel_lines = cell(1, number_of_channels);
 bin_width_seconds = metadata.bin_width_micros / 1e6;
 times = [];
 
+% Formato BITMASK: [time_ns(8B)] [bitmask(1B)] [count(4B)]* (solo canali con bit=1)
 while true
-    data = fread(fid, 4 * number_of_channels + 8, 'uint8=>uint8');
-
-    if isempty(data)
+    % Leggi timestamp (8 bytes)
+    time_data = fread(fid, 8, 'uint8=>uint8');
+    if isempty(time_data) || numel(time_data) < 8
         break;
     end
-
-    time = typecast(data(1:8), 'double');
-    channel_values = typecast(data(9:end), 'uint32');
-
-    for i = 1:numel(channel_lines)
-        channel_lines{i} = [channel_lines{i}, channel_values(i)];
-    end
-
+    time = typecast(time_data, 'double');
     times = [times, time / 1e9];
-
+    
+    % Leggi bitmask (1 byte)
+    bitmask_data = fread(fid, 1, 'uint8=>uint8');
+    if isempty(bitmask_data)
+        break;
+    end
+    bitmask = bitmask_data(1);
+    
+    % Leggi counts solo per canali con bit=1
+    for bit_position = 0:(number_of_channels-1)
+        if bitand(bitmask, bitshift(1, bit_position)) ~= 0
+            % Bit acceso: leggi count
+            count_data = fread(fid, 4, 'uint8=>uint8');
+            if isempty(count_data) || numel(count_data) < 4
+                break;
+            end
+            count = typecast(count_data, 'uint32');
+            channel_lines{bit_position + 1} = [channel_lines{bit_position + 1}, count];
+        else
+            % Bit spento: canale omesso, inserisci 0
+            channel_lines{bit_position + 1} = [channel_lines{bit_position + 1}, 0];
+        end
+    end
 end
 
 fclose(fid);
