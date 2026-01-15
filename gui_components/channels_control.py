@@ -105,7 +105,7 @@ class ChannelsControl(QWidget):
                 self.app.intensity_plots_to_show.sort()
                 self.app.settings.setValue(SETTINGS_INTENSITY_PLOTS_TO_SHOW, json.dumps(filtered_intensity_plot_to_show))
         self.app.settings.setValue(SETTINGS_ENABLED_CHANNELS, json.dumps(self.app.enabled_channels))
-        DataExportActions.calc_exported_file_size(self.app)
+        # DataExportActions.calc_exported_file_size(self.app)
  
 
     def open_plots_config_popup(self):
