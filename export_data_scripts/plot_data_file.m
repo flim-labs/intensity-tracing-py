@@ -33,6 +33,10 @@ end
 
 if ~isempty(metadata.acquisition_time_millis)
     disp(['Acquisition time: ' num2str(metadata.acquisition_time_millis / 1000) 's']);
+elseif ~isempty(times)
+    % Calcola dall'ultimo timestamp se acquisition_time è null
+    calculated_acq_time_s = times(end);
+    disp(['Acquisition time (calculated): ' num2str(calculated_acq_time_s) 's']);
 end
 
 if ~isempty(metadata.laser_period_ns)
@@ -79,12 +83,31 @@ fclose(fid);
 
 bin_width_ns = metadata.bin_width_micros * 1000;
 
-
+% Calcola expected_bins
 if ~isempty(metadata.acquisition_time_millis)
+    % Se acquisition_time è definito, usalo
+    total_time_ns = metadata.acquisition_time_millis * 1e6;
+    expected_bins = floor(total_time_ns / bin_width_ns);
+elseif ~isempty(times)
+    % Se acquisition_time è null, calcolalo dall'ultimo timestamp
+    % Se l'ultimo bin ha tutti zeri, usa il penultimo timestamp
+    last_bin_is_empty = true;
+    for i = 1:number_of_channels
+        if channel_lines{i}(end) ~= 0
+            last_bin_is_empty = false;
+            break;
+        end
+    end
     
-    expected_bins = floor((times(end) * 1e9) / bin_width_ns) + 1;
+    if last_bin_is_empty && length(times) > 1
+        % Usa il penultimo timestamp
+        expected_bins = floor((times(end-1) * 1e9) / bin_width_ns) + 1;
+    else
+        % Usa l'ultimo timestamp
+        expected_bins = floor((times(end) * 1e9) / bin_width_ns) + 1;
+    end
 else
-   
+    % Nessun bin trovato
     expected_bins = 0;
 end
 
@@ -96,7 +119,22 @@ if expected_bins > 0
     end
     
     if ~isempty(times)
-        for i = 1:numel(times)
+        % Se l'ultimo bin è vuoto, non includerlo nella ricostruzione
+        last_bin_is_empty = true;
+        for i = 1:number_of_channels
+            if channel_lines{i}(end) ~= 0
+                last_bin_is_empty = false;
+                break;
+            end
+        end
+        
+        if last_bin_is_empty && length(times) > 1
+            num_bins_to_process = length(times) - 1;
+        else
+            num_bins_to_process = length(times);
+        end
+        
+        for i = 1:num_bins_to_process
             calculated = round((times(i) * 1e9) / bin_width_ns);
             bin_index = max(1, calculated);
             if bin_index >= 1 && bin_index <= expected_bins
