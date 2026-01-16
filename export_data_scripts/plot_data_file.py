@@ -22,8 +22,13 @@ with open(file_path, 'rb') as f:
     if "bin_width_micros" in metadata and metadata["bin_width_micros"] is not None:
         print("Bin width: " + str(metadata["bin_width_micros"]) + "\u00B5s")
 
-    if "acquisition_time_millis" in metadata and metadata["acquisition_time_millis"] is not None:
-        print("Acquisition time: " + str(metadata["acquisition_time_millis"] / 1000) + "s")
+    if "acquisition_time_millis" in metadata:
+        if metadata["acquisition_time_millis"] is not None:
+            print("Acquisition time: " + str(metadata["acquisition_time_millis"] / 1000) + "s")
+        elif times:
+            # Calcola dall'ultimo timestamp se acquisition_time è None
+            calculated_acq_time_s = times[-1] / 1_000_000_000
+            print("Acquisition time (calculated): " + str(calculated_acq_time_s) + "s")
 
     if "laser_period_ns" in metadata and metadata["laser_period_ns"] is not None:
         print("Laser period: " + str(metadata["laser_period_ns"]) + "ns")
@@ -57,11 +62,29 @@ with open(file_path, 'rb') as f:
     
     bin_width_ns = metadata["bin_width_micros"] * 1000
     
+    # DEBUG: Stampa info sull'ultimo bin
+    if times:
+        print(f"\n[DEBUG] Ultimo timestamp: {times[-1] / 1_000_000_000:.3f}s")
+        print(f"[DEBUG] Numero bin letti: {len(times)}")
+        print("[DEBUG] Ultimo bin valori:")
+        for ch_idx in range(len(channel_lines)):
+            print(f"  Channel {metadata['channels'][ch_idx]}: {channel_lines[ch_idx][-1]}")
+        print()
+    
     if metadata["acquisition_time_millis"] is not None:
         total_time_ns = metadata["acquisition_time_millis"] * 1_000_000
         expected_bins = int(total_time_ns / bin_width_ns)
     elif times:
-        expected_bins = int(times[-1] / bin_width_ns) + 1
+        # Se l'ultimo bin ha tutti zeri, usa il penultimo timestamp
+        # (l'ultimo bin vuoto viene scritto solo per avere il timestamp finale)
+        last_bin_is_empty = all(channel_lines[ch][-1] == 0 for ch in range(len(channel_lines)))
+        
+        if last_bin_is_empty and len(times) > 1:
+            # Usa il penultimo timestamp
+            expected_bins = int(times[-2] / bin_width_ns) + 1
+        else:
+            # Usa l'ultimo timestamp
+            expected_bins = int(times[-1] / bin_width_ns) + 1
     else:
         print("\n⚠️  ATTENZIONE: Nessun bin con fotoni trovato!")
         print("   Impossibile ricostruire la timeline senza acquisition_time.")
@@ -72,7 +95,12 @@ with open(file_path, 'rb') as f:
         full_channel_lines = [[0] * expected_bins for _ in range(number_of_channels)]
         
         if times:
-            for i, time in enumerate(times):
+            # Se l'ultimo bin è vuoto, non includerlo nella ricostruzione
+            last_bin_is_empty = all(channel_lines[ch][-1] == 0 for ch in range(len(channel_lines)))
+            num_bins_to_process = len(times) - 1 if last_bin_is_empty and len(times) > 1 else len(times)
+            
+            for i in range(num_bins_to_process):
+                time = times[i]
                 calculated = int(round(time / bin_width_ns))
                 bin_index = max(0, calculated - 1)
                 if 0 <= bin_index < expected_bins:
