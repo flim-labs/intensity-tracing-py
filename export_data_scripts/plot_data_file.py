@@ -22,22 +22,12 @@ with open(file_path, 'rb') as f:
     if "bin_width_micros" in metadata and metadata["bin_width_micros"] is not None:
         print("Bin width: " + str(metadata["bin_width_micros"]) + "\u00B5s")
 
-    if "acquisition_time_millis" in metadata:
-        if metadata["acquisition_time_millis"] is not None:
-            print("Acquisition time: " + str(metadata["acquisition_time_millis"] / 1000) + "s")
-        elif times:
-            # Calcola dall'ultimo timestamp se acquisition_time è None
-            calculated_acq_time_s = times[-1] / 1_000_000_000
-            print("Acquisition time (calculated): " + str(calculated_acq_time_s) + "s")
-
-    if "laser_period_ns" in metadata and metadata["laser_period_ns"] is not None:
-        print("Laser period: " + str(metadata["laser_period_ns"]) + "ns")
-
     channel_lines = [[] for _ in range(len(metadata["channels"]))]
 
     number_of_channels = len(metadata["channels"])
     bin_width_seconds = metadata["bin_width_micros"] / 1000000
 
+    # READING DATA
     while True:
         time_data = f.read(8)
         if not time_data or len(time_data) < 8:
@@ -60,81 +50,88 @@ with open(file_path, 'rb') as f:
             else:
                 channel_lines[bit_position].append(0)
     
+    # PROCESSING DATA
+    # If the last bin has bitmask = 0 (all zeros), it is a marker for the acquisition time
+    # and must be removed before visualization
+    if times and all(channel_lines[ch][-1] == 0 for ch in range(len(channel_lines))):
+        final_time_marker = times[-1]
+        times = times[:-1]  # Remove the timestamp marker
+        for ch in range(len(channel_lines)):
+            channel_lines[ch] = channel_lines[ch][:-1]  # Remove the marker data
+    else:
+        final_time_marker = None
+    
     bin_width_ns = metadata["bin_width_micros"] * 1000
     
-    # DEBUG: Stampa info sull'ultimo bin
-    if times:
-        print(f"\n[DEBUG] Ultimo timestamp: {times[-1] / 1_000_000_000:.3f}s")
-        print(f"[DEBUG] Numero bin letti: {len(times)}")
-        print("[DEBUG] Ultimo bin valori:")
-        for ch_idx in range(len(channel_lines)):
-            print(f"  Channel {metadata['channels'][ch_idx]}: {channel_lines[ch_idx][-1]}")
-        print()
-    
+    # CALCULATE EXPECTED TIME BINS
     if metadata["acquisition_time_millis"] is not None:
+        acq_time_s = metadata["acquisition_time_millis"] / 1000
+        print(f"Acquisition time: {acq_time_s}s")
         total_time_ns = metadata["acquisition_time_millis"] * 1_000_000
         expected_bins = int(total_time_ns / bin_width_ns)
+    elif final_time_marker is not None:
+        # Use the final timestamp marker
+        acq_time_s = final_time_marker / 1_000_000_000
+        print(f"Acquisition time: {acq_time_s:.3f}s")
+        expected_bins = int(final_time_marker / bin_width_ns)
     elif times:
-        # Se l'ultimo bin ha tutti zeri, usa il penultimo timestamp
-        # (l'ultimo bin vuoto viene scritto solo per avere il timestamp finale)
-        last_bin_is_empty = all(channel_lines[ch][-1] == 0 for ch in range(len(channel_lines)))
-        
-        if last_bin_is_empty and len(times) > 1:
-            # Usa il penultimo timestamp
-            expected_bins = int(times[-2] / bin_width_ns) + 1
-        else:
-            # Usa l'ultimo timestamp
-            expected_bins = int(times[-1] / bin_width_ns) + 1
+        # Fallback: use the last real timestamp
+        acq_time_s = times[-1] / 1_000_000_000
+        print(f"Acquisition time: {acq_time_s:.3f}s")
+        expected_bins = int(times[-1] / bin_width_ns) + 1
     else:
-        print("\n⚠️  ATTENZIONE: Nessun bin con fotoni trovato!")
-        print("   Impossibile ricostruire la timeline senza acquisition_time.")
+        print("\n⚠️ WARNING: No data available to reconstruct acquisition time.")
         expected_bins = 0
     
-    if expected_bins > 0:
-        full_times = [i * bin_width_ns for i in range(expected_bins)]
-        full_channel_lines = [[0] * expected_bins for _ in range(number_of_channels)]
+    # RECONSTRUCT FULL TIME BINS
+    if expected_bins > 0 and times:
+        # Find the first and last bin indices from actual data
+        first_bin_index = int(times[0] / bin_width_ns)
+        last_bin_index = int(times[-1] / bin_width_ns)
         
-        if times:
-            # Se l'ultimo bin è vuoto, non includerlo nella ricostruzione
-            last_bin_is_empty = all(channel_lines[ch][-1] == 0 for ch in range(len(channel_lines)))
-            num_bins_to_process = len(times) - 1 if last_bin_is_empty and len(times) > 1 else len(times)
+        # Reconstruct only from first to last bin with data
+        num_bins = last_bin_index - first_bin_index + 1
+        full_times = [(first_bin_index + i) * bin_width_ns for i in range(num_bins)]
+        full_channel_lines = [[0] * num_bins for _ in range(number_of_channels)]
+        
+        for i in range(len(times)):
+            time_ns = times[i]
+            bin_index = int(time_ns / bin_width_ns)
+            # Adjust index to start from 0
+            adjusted_index = bin_index - first_bin_index
             
-            for i in range(num_bins_to_process):
-                time = times[i]
-                calculated = int(round(time / bin_width_ns))
-                bin_index = max(0, calculated - 1)
-                if 0 <= bin_index < expected_bins:
-                    for ch in range(number_of_channels):
-                        full_channel_lines[ch][bin_index] = channel_lines[ch][i]
+            if 0 <= adjusted_index < num_bins:
+                for ch in range(number_of_channels):
+                    full_channel_lines[ch][adjusted_index] = channel_lines[ch][i]
         
         times = full_times
         channel_lines = full_channel_lines
+    elif expected_bins == 0:
+        times = []
+        channel_lines = [[] for _ in range(number_of_channels)]
+    
+    # PLOT VISUALIZATION
+    times_seconds = [time / 1_000_000_000 for time in times]
     
     for i in range(len(metadata["channels"])):
         channel_line = channel_lines[i]
-        times = [time / 1_000_000_000 for time in times]
         plt.plot(
-            times,
+            times_seconds,
             channel_line,
             label="Channel " + str(metadata["channels"][i] + 1),
             linewidth=0.5
         )
 
-    title_str = 'Bin Width: {} us'.format(
-        metadata['bin_width_micros']
-    )
-
+    title_str = 'Bin Width: {} us'.format(metadata['bin_width_micros'])
     if metadata['acquisition_time_millis'] is not None:
         title_str += ', Acquisition Time: {} s'.format(metadata['acquisition_time_millis'] / 1000)
+    elif final_time_marker is not None:
+        title_str += f', Acquisition Time: {acq_time_s:.3f} s'
 
     plt.title(title_str)
-
     plt.xlabel("Time (s)")
     plt.ylabel("Intensity (counts)")
-
     plt.grid(True)
-
-    plt.legend(bbox_to_anchor = (1.05, 1), fancybox=True, shadow=True)
+    plt.legend(bbox_to_anchor=(1.05, 1), fancybox=True, shadow=True)
     plt.tight_layout()
-
     plt.show()
