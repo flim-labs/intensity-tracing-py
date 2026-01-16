@@ -1,23 +1,33 @@
 # Intensity Tracing Changelog
 
+## Version 2.3
+
+- Updated Python and MATLAB intensity tracing bin readers to match the new bin structure
+
 ## Version 2.2
+
 - Fix Time Tagger functionality
 - Improve Card Detection user experience
 
 ## Version 2.1
+
 - Add automatic channels connections detection
 
 ## Version 2.0
+
 - Add automatic card connection detection
 - Improvements/simplification on exported data naming system
 
 ## Version 1.9
+
 - Time Tagger feature (.bin export/reader script) added
 
 ## Version 1.8
+
 - Realtime improvements during acquisition
 
 ## Version 1.7
+
 - Fixes on binned intensity counts granularity
 - User can choose "Reader" mode to read external intensity .bin acquisitions
 - User can set a CPS threshold to highlight values ​​that exceed the limit
@@ -26,6 +36,7 @@
 - UI library updated to the latest version
 
 ## Version 1.6
+
 - Fixes on time span
 - Fixes on exported .bin file size calculation
 - Make console mode script more customizable and user-friendly
@@ -35,6 +46,7 @@
 - Make controls bar collapsible
 
 ## Version 1.5
+
 - Fixes and improvements of realtime performances
 - No more need of update rate user input to calculate plots draw frequency
 

@@ -38,29 +38,61 @@ The [Intensity Tracing](https://github.com/flim-labs/intensity-tracing-py) tool 
 
 ## File Format
 
+
 <div align="center">
     <img src="../assets/images/python/exported-data-visualization.png" alt="GUI" width="100%">
 </div>
 
-Here a detailed explanation of the exported binary data file structure:
+Below is the updated structure of the exported binary data file as implemented in the latest Intensity Tracing version:
 
-##### Header (4 bytes):
+#### Header (4 bytes)
 
-The first 4 bytes of the file must be `IT02`. This serves as a validation check to ensure the correct format of the file. If the check fails, the script prints "Invalid data file" and exits.
+- The first 4 bytes are the ASCII string `IT02`. This serves as a file format identifier. If this check fails, the file is considered invalid.
 
-##### Metadata Section (Variable length):
+#### Metadata Section (variable length)
 
-Following the header, metadata is stored in the file. This includes:
+Immediately after the header, the file contains metadata:
 
-- `JSON length (4 bytes)`: an unsigned integer representing the length of the JSON metadata.
-- `JSON metadata`: this is a variable-length string that contains information about the data, including _enabled channels_, _bin width_, _acquisition time_, and _laser period_. This information is printed to the console.
+- **JSON length (4 bytes):** An unsigned integer specifying the length (in bytes) of the JSON metadata string.
+- **JSON metadata (variable):** A UTF-8 encoded JSON string of the specified length. This contains fields such as:
+  - `channels`: List of enabled channel indices (e.g., `[0, 1]`)
+  - `bin_width_micros`: Bin width in microseconds
+  - `acquisition_time_millis`: Total acquisition time in milliseconds (optional)
+  - `laser_period_ns`: Laser period in nanoseconds (optional)
 
-##### Data Records (Variable length):
+#### Data Records (repeated until end of file)
 
-After the metadata, the script enters a loop to read and process data in chunks of variable length, depending on the number of active channels. Each chunk represents a data record containing:
+After the metadata, the file contains a sequence of data records, each corresponding to a time bin:
 
-- `Timestamp (8 bytes)`: A double representing the photons' data acquisition time in seconds.
-- `Channel Values (variable length)`: variable number of unsigned integers (4 bytes each) representing photon counts for each active channel at the corresponding timestamp.
+- **Timestamp (8 bytes):** A double (IEEE 754) representing the time (in nanoseconds) from the start of the acquisition for this bin.
+- **Bitmask (1 byte):** An unsigned byte. Each bit indicates whether the corresponding channel (as listed in `channels`) has a nonzero count in this bin:
+  - If bit `n` is set, a count value for channel `n` follows.
+  - If bit `n` is not set, no value is written for channel `n` (count is implicitly zero).
+- **Channel Counts (variable):** For each channel where the bitmask is set, a 4-byte unsigned integer follows, representing the photon count for that channel in this bin. Channels with bitmask unset are considered to have a count of zero and are not stored.
+
+This structure is repeated for each time bin until the end of the file.
+
+##### Example Data Record Layout
+
+| Field         | Size (bytes) | Description                                  |
+|---------------|--------------|-----------------------------------------------|
+| Timestamp     | 8            | double, nanoseconds from acquisition start    |
+| Bitmask       | 1            | 1 bit per channel (max 8 channels supported)  |
+| Channel Count | 4 * N        | For each set bit, 4 bytes (unsigned int)      |
+
+Where N is the number of channels with a set bit in the bitmask for that bin.
+
+
+##### Example Metadata JSON
+
+```json
+{
+  "channels": [0, 1],
+  "bin_width_micros": 100,
+  "acquisition_time_millis": 5000,
+  "laser_period_ns": 50000
+}
+```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -103,7 +135,7 @@ The script files are automatically downloaded along with the acquisition .bin fi
 For more details about the project follow these links:
 
 - [Intensity Tracing introduction](../index.md)
-- [Intensity Tracing GUI guide](../v2.2/index.md)
+- [Intensity Tracing GUI guide](../v2.3/index.md)
 - [Intensity Tracing Console guide ](./intensity-tracing-console.md)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
