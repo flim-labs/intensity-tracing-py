@@ -18,6 +18,7 @@ from gui_components.messages_utilities import MessagesUtilities
 from  gui_components.box_message import BoxMessage
 from gui_components.settings import *
 from gui_components.time_tagger import TimeTaggerController
+from gui_components.channel_name_utils import get_channel_name
 from load_data import plot_intensity_data
 current_path = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_path))
@@ -371,7 +372,9 @@ class PlotsConfigPopup(QWidget):
     def init_intensity_grid(self):
         self.app.enabled_channels.sort()
         for ch in self.app.enabled_channels:
-            checkbox = self.set_checkboxes(f"Channel {ch + 1}")
+            channel_names = getattr(self.app, 'channel_names', {})
+            channel_label = get_channel_name(ch, channel_names)
+            checkbox = self.set_checkboxes(channel_label)
             isChecked = ch in self.app.intensity_plots_to_show
             checkbox.setChecked(isChecked)
             if len(self.app.intensity_plots_to_show) >=4 and ch not in self.app.intensity_plots_to_show:

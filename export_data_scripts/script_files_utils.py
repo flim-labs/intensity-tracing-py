@@ -18,23 +18,29 @@ time_tagger_py_script_path = resource_path("export_data_scripts/time_tagger_scri
 class ScriptFileUtils:
     
     @classmethod
-    def export_scripts(cls, bin_file_paths, file_name, directory, script_type, time_tagger=False, time_tagger_file_path=""):
+    def export_scripts(cls, bin_file_paths, file_name, directory, script_type, time_tagger=False, time_tagger_file_path="", channel_names=None):
         try:
+            if channel_names is None:
+                channel_names = {}
+            
             if time_tagger:
                 python_modifier = cls.get_time_tagger_content_modifiers()
-                cls.write_new_scripts_content(python_modifier, {"time_tagger": time_tagger_file_path}, file_name, directory, "py", "time_tagger_intensity")            
+                cls.write_new_scripts_content(python_modifier, {"time_tagger": time_tagger_file_path}, file_name, directory, "py", "time_tagger_intensity", channel_names)            
             if script_type == 'intensity_tracing':
                 python_modifier, matlab_modifier = cls.get_intensity_tracing_content_modifiers(time_tagger)
-                cls.write_new_scripts_content(python_modifier, bin_file_paths, file_name, directory, "py", script_type)
-                cls.write_new_scripts_content(matlab_modifier, bin_file_paths, file_name, directory, "m", script_type)
+                cls.write_new_scripts_content(python_modifier, bin_file_paths, file_name, directory, "py", script_type, channel_names)
+                cls.write_new_scripts_content(matlab_modifier, bin_file_paths, file_name, directory, "m", script_type, channel_names)
             cls.show_success_message(file_name)                
         except Exception as e:
             cls.show_error_message(str(e))
 
     @classmethod
-    def write_new_scripts_content(cls, content_modifier, bin_file_paths, file_name, directory, file_extension, script_type):
+    def write_new_scripts_content(cls, content_modifier, bin_file_paths, file_name, directory, file_extension, script_type, channel_names=None):
+        if channel_names is None:
+            channel_names = {}
+        
         content = cls.read_file_content(content_modifier["source_file"])
-        new_content = cls.manipulate_file_content(content, bin_file_paths)
+        new_content = cls.manipulate_file_content(content, bin_file_paths, channel_names)
         script_file_name = f"{file_name}_{script_type}_script.{file_extension}"
         script_file_path = os.path.join(directory, script_file_name)
         cls.write_file(script_file_path, new_content)
@@ -92,13 +98,23 @@ class ScriptFileUtils:
             return file.readlines()
 
     @classmethod
-    def manipulate_file_content(cls, content, file_paths):
+    def manipulate_file_content(cls, content, file_paths, channel_names=None):
+        import json
+        
+        if channel_names is None:
+            channel_names = {}
+        
+        channel_names_json = json.dumps(channel_names) if channel_names else '{}'
+        
         manipulated_lines = []
         for line in content:
             if "intensity_tracing" in file_paths:
                 line = line.replace("<FILE-PATH>", file_paths['intensity_tracing'].replace("\\", "/"))
             else:
-               line = line.replace("<FILE-PATH>", file_paths['time_tagger'].replace("\\", "/"))     
+               line = line.replace("<FILE-PATH>", file_paths['time_tagger'].replace("\\", "/"))
+            
+            line = line.replace("<CHANNEL-NAMES>", channel_names_json)
+            
             manipulated_lines.append(line)
         return manipulated_lines
 
