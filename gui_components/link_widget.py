@@ -11,7 +11,7 @@ project_root = os.path.abspath(os.path.join(current_path, '..'))
 
 class LinkWidget(QWidget):
     def __init__(self, icon_filename=None, text=None, parent=None, icon_dimensions=30, icon_hover_dimensions=36,
-                 link='https://flim-labs.github.io/intensity-tracing-py/v2.2/#gui-usage'):
+                 link='https://flim-labs.github.io/intensity-tracing-py/v2.3/#gui-usage'):
         super(LinkWidget, self).__init__(parent)
 
         layout = QHBoxLayout()
