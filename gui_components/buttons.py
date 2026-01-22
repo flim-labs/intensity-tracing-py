@@ -373,7 +373,17 @@ class PlotsConfigPopup(QWidget):
         self.app.enabled_channels.sort()
         for ch in self.app.enabled_channels:
             channel_names = getattr(self.app, 'channel_names', {})
-            channel_label = get_channel_name(ch, channel_names)
+            # Get channel name and truncate custom name to 7 characters
+            custom_name = channel_names.get(str(ch), None)
+            if custom_name:
+                if len(custom_name) > 7:
+                    truncated_name = custom_name[:7] + "..."
+                else:
+                    truncated_name = custom_name
+                channel_label = f"{truncated_name} (Ch{ch + 1})"
+            else:
+                channel_label = f"Channel {ch + 1}"
+            
             checkbox = self.set_checkboxes(channel_label)
             isChecked = ch in self.app.intensity_plots_to_show
             checkbox.setChecked(isChecked)
@@ -384,7 +394,7 @@ class PlotsConfigPopup(QWidget):
 
     def set_checkboxes(self, text):
         checkbox_wrapper = QWidget()
-        checkbox_wrapper.setObjectName(f"tau_checkbox_wrapper")
+        checkbox_wrapper.setObjectName("simple_checkbox_wrapper")
         row = QHBoxLayout()
         checkbox = QCheckBox(text)
         checkbox.setStyleSheet(GUIStyles.set_simple_checkbox_style(color = "#23F3AB"))

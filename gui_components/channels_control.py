@@ -92,6 +92,7 @@ class ChannelsControl(QWidget):
             ch_checkbox_wrapper.setLayout(row)
             ch_checkbox_wrapper.setStyleSheet(GUIStyles.checkbox_wrapper_style())
             ch_checkbox_wrapper.setFixedHeight(40)
+            ch_checkbox_wrapper.setMinimumWidth(100)  # Minimum width, but can expand when space available
             self.ch_checkboxes.append(ch_checkbox_wrapper)
             self.app.channels_checkboxes.append(checkbox)
             self.widgets = [self.app.control_inputs[SETTINGS_CONN_CHANNEL]] + self.ch_checkboxes + [self.plots_config_btn]

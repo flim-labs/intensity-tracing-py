@@ -1,6 +1,6 @@
 from PyQt6.QtCore import pyqtSignal, Qt, QSize, QEvent
-from PyQt6.QtGui import QPainter, QColor, QPen, QBrush, QMouseEvent, QIcon
-from PyQt6.QtWidgets import QWidget, QHBoxLayout, QLabel, QPushButton
+from PyQt6.QtGui import QPainter, QColor, QPen, QBrush, QMouseEvent, QIcon, QFontMetrics
+from PyQt6.QtWidgets import QWidget, QHBoxLayout, QLabel, QPushButton, QSizePolicy
 
 SELECTED_COLOR = "#8d4ef2"
 SELECTED_HOVER_COLOR = "#0053a4"
@@ -25,18 +25,23 @@ class FancyCheckbox(QWidget):
         super().__init__(parent)
         self.layout = QHBoxLayout(self)
         self.layout.setContentsMargins(0, 0, 0, 0)  
-        self.layout.setSpacing(5)  
+        self.layout.setSpacing(3)  # Reduced from 5px to 3px to save space  
 
         self.checkbox = Checkbox(self)
         
         self.label_container = QWidget(self)
         self.label_container.setObjectName("label_container")
         self.label_layout = QHBoxLayout(self.label_container)
-        self.label_layout.setContentsMargins(5, 0, 5, 0)
+        self.label_layout.setContentsMargins(5, 0, 0, 0)  # Reduced right margin from 5px to 0px to save space
         self.label_layout.setSpacing(0)
         
         if label_custom_part:
-            full_text = f"{label_custom_part} {label_default_part}"
+            # Truncate custom name to 5 characters if longer
+            if len(label_custom_part) > 5:
+                truncated_custom = label_custom_part[:5] + "..."
+            else:
+                truncated_custom = label_custom_part
+            full_text = f"{truncated_custom} {label_default_part}"
         elif label_default_part:
             full_text = label_default_part
         else:
@@ -46,6 +51,10 @@ class FancyCheckbox(QWidget):
         self.has_custom_name = bool(label_custom_part)
         
         self.label.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
+        
+        # Store original parts for dynamic truncation
+        self.custom_part = label_custom_part
+        self.default_part = label_default_part
         
         self._apply_label_styles(label_clickable, self.has_custom_name)
         
@@ -136,19 +145,75 @@ class FancyCheckbox(QWidget):
         self.has_custom_name = False
 
     def set_text_parts(self, custom_part, default_part):
-        """Set custom and default parts separately"""
+        """Set custom and default parts separately with dynamic truncation"""
+        self.custom_part = custom_part
+        self.default_part = default_part
+        
         if custom_part:
-            full_text = f"{custom_part} {default_part}"
             self.has_custom_name = True
         else:
-            # No custom name: show full default
-            full_text = default_part
             self.has_custom_name = False
         
-        self.label.setText(full_text)
+        # Update the displayed text based on available width
+        self._update_label_text()
         
         # Reapply styles
         self._apply_label_styles(self.label_clickable, self.has_custom_name)
+    
+    def _update_label_text(self):
+        """Update label text with dynamic truncation based on available width"""
+        if not self.custom_part:
+            # No custom name: show full default
+            self.label.setText(self.default_part if self.default_part else "")
+            return
+        
+        # Get available width for the label
+        available_width = self.label_container.width() - 20  # Account for padding and margins
+        
+        if available_width <= 0:
+            available_width = 80  # Fallback minimum width
+        
+        font_metrics = QFontMetrics(self.label.font())
+        
+        # Always reserve space for default part (e.g., " (Ch1)")
+        default_text = f" {self.default_part}"
+        default_width = font_metrics.horizontalAdvance(default_text)
+        
+        # Available width for custom part
+        available_for_custom = available_width - default_width
+        
+        # Calculate how much of custom text fits
+        custom_text = self.custom_part
+        custom_width = font_metrics.horizontalAdvance(custom_text)
+        
+        if custom_width > available_for_custom:
+            # Need to truncate
+            ellipsis = "..."
+            ellipsis_width = font_metrics.horizontalAdvance(ellipsis)
+            available_for_custom -= ellipsis_width
+            
+            # Find how many characters fit
+            truncated = ""
+            for i in range(len(custom_text)):
+                test_text = custom_text[:i+1]
+                if font_metrics.horizontalAdvance(test_text) > available_for_custom:
+                    break
+                truncated = test_text
+            
+            # Ensure at least 3 characters are shown before ellipsis
+            if len(truncated) < 3 and len(custom_text) >= 3:
+                truncated = custom_text[:3]
+            
+            custom_text = truncated + ellipsis
+        
+        full_text = f"{custom_text}{default_text}"
+        self.label.setText(full_text)
+    
+    def resizeEvent(self, event):
+        """Handle resize to update text truncation"""
+        super().resizeEvent(event)
+        if hasattr(self, 'custom_part') and self.custom_part:
+            self._update_label_text()
 
     def setEnabled(self, enabled):
         self.checkbox.setEnabled(enabled)
