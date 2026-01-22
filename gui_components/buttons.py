@@ -373,11 +373,11 @@ class PlotsConfigPopup(QWidget):
         self.app.enabled_channels.sort()
         for ch in self.app.enabled_channels:
             channel_names = getattr(self.app, 'channel_names', {})
-            # Get channel name and truncate custom name to 7 characters
+            # Get channel name and truncate custom name to 15 characters (more space in modal)
             custom_name = channel_names.get(str(ch), None)
             if custom_name:
-                if len(custom_name) > 7:
-                    truncated_name = custom_name[:7] + "..."
+                if len(custom_name) > 15:
+                    truncated_name = custom_name[:15] + "..."
                 else:
                     truncated_name = custom_name
                 channel_label = f"{truncated_name} (Ch{ch + 1})"

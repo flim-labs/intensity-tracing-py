@@ -77,6 +77,15 @@ class RenameChannelModal(QDialog):
             QPushButton#cancelButton:pressed {
                 background-color: #333;
             }
+            QPushButton#resetButton {
+                background-color: #FB8C00;
+            }
+            QPushButton#resetButton:hover {
+                background-color: #FFA726;
+            }
+            QPushButton#resetButton:pressed {
+                background-color: #E65100;
+            }
         """)
         
         self._setup_ui()
@@ -117,6 +126,14 @@ class RenameChannelModal(QDialog):
         
         # Buttons
         button_layout = QHBoxLayout()
+        
+        # Reset button on the left
+        reset_button = QPushButton("Reset to default")
+        reset_button.setObjectName("resetButton")
+        reset_button.setCursor(Qt.CursorShape.PointingHandCursor)
+        reset_button.clicked.connect(self._on_reset)
+        button_layout.addWidget(reset_button)
+        
         button_layout.addStretch()
         
         cancel_button = QPushButton("Cancel")
@@ -141,6 +158,15 @@ class RenameChannelModal(QDialog):
         
         # Connect Enter key to save
         self.name_input.returnPressed.connect(self._on_save)
+    
+    def _on_reset(self):
+        """Handle reset to default button click"""
+        # Clear the input field (empty = default name)
+        self.name_input.clear()
+        self.error_label.hide()
+        # Emit signal with empty name to reset to default
+        self.channelRenamed.emit(self.channel_id, "")
+        self.accept()
     
     def _on_save(self):
         """Handle save button click"""
