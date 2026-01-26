@@ -131,11 +131,21 @@ class ReadData:
     @staticmethod
     def plot_intensity_data(app):
         data = app.reader_data["intensity"]["data"]
-        if "channels_lines" in data and "times" in data:
+        metadata = app.reader_data["intensity"]["metadata"]
+        if "channels_lines" in data and "times" in data and "channels" in metadata:
+            # Create a mapping from channel index to position in channels_lines
+            enabled_channels = metadata["channels"]
+            channel_to_position = {ch: i for i, ch in enumerate(enabled_channels)}
+            
             for channel_index, intensity_line in app.intensity_lines.items():
+                # Check if this channel exists in the data
+                if channel_index not in channel_to_position:
+                    continue
+                    
+                position = channel_to_position[channel_index]
                 percent = 0.004
-                step = max(1, int(len(data["channels_lines"][channel_index]) * percent))
-                channel_line = data["channels_lines"][channel_index][::step]
+                step = max(1, int(len(data["channels_lines"][position]) * percent))
+                channel_line = data["channels_lines"][position][::step]
                 times = data["times"][::step]
                 x = [time / 1_000_000_000 for time in times]
                 x = np.array(x)
