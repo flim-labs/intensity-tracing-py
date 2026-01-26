@@ -8,12 +8,10 @@ print("Using data file: " + file_path)
 times = []
 
 with open(file_path, 'rb') as f:
-    # first 4 bytes must be IT01
     if f.read(4) != b'IT02':
         print("Invalid data file")
         exit(0)
 
-    # read metadata from file
     (json_length,) = struct.unpack('I', f.read(4))
     null = None
     metadata = eval(f.read(json_length).decode("utf-8"))
@@ -24,61 +22,116 @@ with open(file_path, 'rb') as f:
     if "bin_width_micros" in metadata and metadata["bin_width_micros"] is not None:
         print("Bin width: " + str(metadata["bin_width_micros"]) + "\u00B5s")
 
-    if "acquisition_time_millis" in metadata and metadata["acquisition_time_millis"] is not None:
-        print("Acquisition time: " + str(metadata["acquisition_time_millis"] / 1000) + "s")
-
-    if "laser_period_ns" in metadata and metadata["laser_period_ns"] is not None:
-        print("Laser period: " + str(metadata["laser_period_ns"]) + "ns")
-
     channel_lines = [[] for _ in range(len(metadata["channels"]))]
 
     number_of_channels = len(metadata["channels"])
-    channel_values_unpack_string = 'I' * number_of_channels
     bin_width_seconds = metadata["bin_width_micros"] / 1000000
 
+    # READING DATA
     while True:
-        data = f.read(4 * number_of_channels + 8)
-        if not data:
+        time_data = f.read(8)
+        if not time_data or len(time_data) < 8:
             break
-        (time,) = struct.unpack('d', data[:8])
-        channel_values = struct.unpack(channel_values_unpack_string, data[8:])
-        for i in range(len(channel_lines)):
-            channel_lines[i].append(channel_values[i])
+        (time,) = struct.unpack('d', time_data)
         times.append(time)
         
+        bitmask_data = f.read(1)
+        if not bitmask_data:
+            break
+        (bitmask,) = struct.unpack('B', bitmask_data)
+        
+        for bit_position in range(number_of_channels):
+            if (bitmask & (1 << bit_position)) != 0:
+                count_data = f.read(4)
+                if not count_data or len(count_data) < 4:
+                    break
+                (count,) = struct.unpack('I', count_data)
+                channel_lines[bit_position].append(count)
+            else:
+                channel_lines[bit_position].append(0)
     
-    # Plot data
+    # PROCESSING DATA
+    # If the last bin has bitmask = 0 (all zeros), it is a marker for the acquisition time
+    # and must be removed before visualization
+    if times and all(channel_lines[ch][-1] == 0 for ch in range(len(channel_lines))):
+        final_time_marker = times[-1]
+        times = times[:-1]  # Remove the timestamp marker
+        for ch in range(len(channel_lines)):
+            channel_lines[ch] = channel_lines[ch][:-1]  # Remove the marker data
+    else:
+        final_time_marker = None
+    
+    bin_width_ns = metadata["bin_width_micros"] * 1000
+    
+    # CALCULATE EXPECTED TIME BINS
+    if metadata["acquisition_time_millis"] is not None:
+        acq_time_s = metadata["acquisition_time_millis"] / 1000
+        print(f"Acquisition time: {acq_time_s}s")
+        total_time_ns = metadata["acquisition_time_millis"] * 1_000_000
+        expected_bins = int(total_time_ns / bin_width_ns)
+    elif final_time_marker is not None:
+        # Use the final timestamp marker
+        acq_time_s = final_time_marker / 1_000_000_000
+        print(f"Acquisition time: {acq_time_s:.3f}s")
+        expected_bins = int(final_time_marker / bin_width_ns)
+    elif times:
+        # Fallback: use the last real timestamp
+        acq_time_s = times[-1] / 1_000_000_000
+        print(f"Acquisition time: {acq_time_s:.3f}s")
+        expected_bins = int(times[-1] / bin_width_ns) + 1
+    else:
+        print("\n⚠️ WARNING: No data available to reconstruct acquisition time.")
+        expected_bins = 0
+    
+    # RECONSTRUCT FULL TIME BINS
+    if expected_bins > 0 and times:
+        # Find the first and last bin indices from actual data
+        first_bin_index = int(times[0] / bin_width_ns)
+        last_bin_index = int(times[-1] / bin_width_ns)
+        
+        # Reconstruct only from first to last bin with data
+        num_bins = last_bin_index - first_bin_index + 1
+        full_times = [(first_bin_index + i) * bin_width_ns for i in range(num_bins)]
+        full_channel_lines = [[0] * num_bins for _ in range(number_of_channels)]
+        
+        for i in range(len(times)):
+            time_ns = times[i]
+            bin_index = int(time_ns / bin_width_ns)
+            # Adjust index to start from 0
+            adjusted_index = bin_index - first_bin_index
+            
+            if 0 <= adjusted_index < num_bins:
+                for ch in range(number_of_channels):
+                    full_channel_lines[ch][adjusted_index] = channel_lines[ch][i]
+        
+        times = full_times
+        channel_lines = full_channel_lines
+    elif expected_bins == 0:
+        times = []
+        channel_lines = [[] for _ in range(number_of_channels)]
+    
+    # PLOT VISUALIZATION
+    times_seconds = [time / 1_000_000_000 for time in times]
+    
     for i in range(len(metadata["channels"])):
         channel_line = channel_lines[i]
-        times = [time / 1_000_000_000 for time in times]
         plt.plot(
-            times,
+            times_seconds,
             channel_line,
             label="Channel " + str(metadata["channels"][i] + 1),
             linewidth=0.5
         )
 
-    # Set plot title with metadata information
-    title_str = 'Bin Width: {} us'.format(
-        metadata['bin_width_micros']
-    )
-
+    title_str = 'Bin Width: {} us'.format(metadata['bin_width_micros'])
     if metadata['acquisition_time_millis'] is not None:
         title_str += ', Acquisition Time: {} s'.format(metadata['acquisition_time_millis'] / 1000)
+    elif final_time_marker is not None:
+        title_str += f', Acquisition Time: {acq_time_s:.3f} s'
 
     plt.title(title_str)
-
-    # Set x and y axis labels
     plt.xlabel("Time (s)")
     plt.ylabel("Intensity (counts)")
-
-    # Display grid
     plt.grid(True)
-
-    # Set legend
-    plt.legend(bbox_to_anchor = (1.05, 1), fancybox=True, shadow=True)
+    plt.legend(bbox_to_anchor=(1.05, 1), fancybox=True, shadow=True)
     plt.tight_layout()
-
-
-    # Show the plot
     plt.show()

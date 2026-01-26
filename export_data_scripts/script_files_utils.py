@@ -78,7 +78,7 @@ class ScriptFileUtils:
 
     @classmethod
     def write_file(cls, file_name, content):
-        with open(file_name, "w") as file:
+        with open(file_name, "w", encoding='utf-8') as file:
             file.writelines(content)
 
     @classmethod
@@ -88,7 +88,7 @@ class ScriptFileUtils:
 
     @classmethod
     def read_file_content(cls, file_path):
-        with open(file_path, "r") as file:
+        with open(file_path, "r", encoding='utf-8') as file:
             return file.readlines()
 
     @classmethod

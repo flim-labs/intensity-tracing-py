@@ -19,13 +19,13 @@ class ExportDataControl(QWidget):
         self.info_link_widget, self.export_data_control = (
             self.create_export_data_input()
         )
-        self.file_size_info_layout = self.create_file_size_info_row()
+        # self.file_size_info_layout = self.create_file_size_info_row()
         layout = QHBoxLayout()
         layout.addWidget(self.info_link_widget)
         layout.addLayout(self.export_data_control)
         self.export_data_control.addSpacing(10)
-        layout.addLayout(self.file_size_info_layout)
-        layout.addSpacing(5)
+        # layout.addLayout(self.file_size_info_layout)
+        # layout.addSpacing(5)
         # Time Tagger
         time_tagger = TimeTaggerWidget(self.app)
         layout.addWidget(time_tagger)
@@ -43,7 +43,7 @@ class ExportDataControl(QWidget):
             self.app.bin_file_size,
             self.app.bin_file_size_label,
             self.app.write_data,
-            partial(DataExportActions.calc_exported_file_size, self.app),
+            # partial(DataExportActions.calc_exported_file_size, self.app),
         )
         return file_size_info_layout
 
@@ -51,8 +51,8 @@ class ExportDataControl(QWidget):
         if state:
             self.app.write_data = True
             self.app.settings.setValue(SETTINGS_WRITE_DATA, True)
-            self.app.bin_file_size_label.show()
-            DataExportActions.calc_exported_file_size(self.app)
+            # self.app.bin_file_size_label.show()
+            # DataExportActions.calc_exported_file_size(self.app)
         else:
             self.app.write_data = False
             self.app.settings.setValue(SETTINGS_WRITE_DATA, False)
@@ -62,26 +62,29 @@ class ExportDataControl(QWidget):
 
 
 class DataExportActions:
+
     @staticmethod
-    def calc_exported_file_size(app):
-        if len(app.enabled_channels) == 0:
-            app.bin_file_size_label.setText("")
-            return
-        chunk_bytes = 8 + (4 * len(app.enabled_channels))
-        chunk_bytes_in_us = (1000 * (chunk_bytes * 1000)) / app.bin_width_micros
-        acquisition_time = (
-            0 if app.acquisition_time_millis is None else app.acquisition_time_millis
-        )
-        if app.free_running_acquisition_time is True:
-            file_size_bytes = int(chunk_bytes_in_us)
-            app.bin_file_size = FormatUtils.format_size(file_size_bytes)
-            app.bin_file_size_label.setText(
-                "File size: " + str(app.bin_file_size) + "/s"
-            )
-        else:
-            file_size_bytes = int(chunk_bytes_in_us * (acquisition_time / 1000))
-            app.bin_file_size = FormatUtils.format_size(file_size_bytes)
-            app.bin_file_size_label.setText("File size: " + str(app.bin_file_size))
+    def placeholder_function():
+        pass
+    # def calc_exported_file_size(app):
+    #     if len(app.enabled_channels) == 0:
+    #         app.bin_file_size_label.setText("")
+    #         return
+    #     chunk_bytes = 8 + (4 * len(app.enabled_channels))
+    #     chunk_bytes_in_us = (1000 * (chunk_bytes * 1000)) / app.bin_width_micros
+    #     acquisition_time = (
+    #         0 if app.acquisition_time_millis is None else app.acquisition_time_millis
+    #     )
+    #     if app.free_running_acquisition_time is True:
+    #         file_size_bytes = int(chunk_bytes_in_us)
+    #         app.bin_file_size = FormatUtils.format_size(file_size_bytes)
+    #         app.bin_file_size_label.setText(
+    #             "File size: " + str(app.bin_file_size) + "/s"
+    #         )
+    #     else:
+    #         file_size_bytes = int(chunk_bytes_in_us * (acquisition_time / 1000))
+    #         app.bin_file_size = FormatUtils.format_size(file_size_bytes)
+    #         app.bin_file_size_label.setText("File size: " + str(app.bin_file_size))
 
 
 class ExportData:

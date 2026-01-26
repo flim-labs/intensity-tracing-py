@@ -536,24 +536,90 @@ class DataReaderWorker(QRunnable):
                     self.signals.error.emit(
                         "The file is not a valid Intensity Tracing file"
                     )
+                    return
 
                 json_length = struct.unpack("I", file.read(4))[0]
                 metadata = json.loads(file.read(json_length).decode("utf-8"))
                 number_of_channels = len(metadata["channels"])
-                channel_values_unpack_string = "I" * number_of_channels
                 channels_lines = [[] for _ in range(len(metadata["channels"]))]
                 times = []
+                
+                # READING DATA WITH BITMASK
                 while True:
-                    data = file.read(4 * number_of_channels + 8)
-                    if not data:
+                    time_data = file.read(8)
+                    if not time_data or len(time_data) < 8:
                         break
-                    (time,) = struct.unpack("d", data[:8])
-                    channel_values = struct.unpack(
-                        channel_values_unpack_string, data[8:]
-                    )
-                    for i in range(len(channels_lines)):
-                        channels_lines[i].append(channel_values[i])
+                    (time,) = struct.unpack("d", time_data)
                     times.append(time)
+                    
+                    bitmask_data = file.read(1)
+                    if not bitmask_data:
+                        break
+                    (bitmask,) = struct.unpack("B", bitmask_data)
+                    
+                    for bit_position in range(number_of_channels):
+                        if (bitmask & (1 << bit_position)) != 0:
+                            count_data = file.read(4)
+                            if not count_data or len(count_data) < 4:
+                                break
+                            (count,) = struct.unpack("I", count_data)
+                            channels_lines[bit_position].append(count)
+                        else:
+                            channels_lines[bit_position].append(0)
+                
+                # PROCESSING DATA
+                # If the last bin has bitmask = 0 (all zeros), it is a marker for the acquisition time
+                # and must be removed before visualization
+                if times and all(channels_lines[ch][-1] == 0 for ch in range(len(channels_lines))):
+                    final_time_marker = times[-1]
+                    times = times[:-1]  # Remove the timestamp marker
+                    for ch in range(len(channels_lines)):
+                        channels_lines[ch] = channels_lines[ch][:-1]  # Remove the marker data
+                else:
+                    final_time_marker = None
+                
+                bin_width_ns = metadata["bin_width_micros"] * 1000
+                
+                # CALCULATE EXPECTED TIME BINS
+                if metadata["acquisition_time_millis"] is not None:
+                    total_time_ns = metadata["acquisition_time_millis"] * 1_000_000
+                    expected_bins = int(total_time_ns / bin_width_ns)
+                elif final_time_marker is not None:
+                    # Use the final timestamp marker
+                    expected_bins = int(final_time_marker / bin_width_ns)
+                elif times:
+                    # Fallback: use the last real timestamp
+                    expected_bins = int(times[-1] / bin_width_ns) + 1
+                else:
+                    expected_bins = 0
+                
+                # RECONSTRUCT FULL TIME BINS
+                if expected_bins > 0 and times:
+                    # Find the first and last bin indices from actual data
+                    first_bin_index = int(times[0] / bin_width_ns)
+                    last_bin_index = int(times[-1] / bin_width_ns)
+                    
+                    # Reconstruct only from first to last bin with data
+                    num_bins = last_bin_index - first_bin_index + 1
+                    full_times = [(first_bin_index + i) * bin_width_ns for i in range(num_bins)]
+                    full_channel_lines = [[0] * num_bins for _ in range(number_of_channels)]
+                    
+                    for i in range(len(times)):
+                        time_ns = times[i]
+                        bin_index = int(time_ns / bin_width_ns)
+                        # Adjust index to start from 0
+                        adjusted_index = bin_index - first_bin_index
+                        
+                        if 0 <= adjusted_index < num_bins:
+                            for ch in range(number_of_channels):
+                                full_channel_lines[ch][adjusted_index] = channels_lines[ch][i]
+                    
+                    times = full_times
+                    channels_lines = full_channel_lines
+                elif expected_bins == 0:
+                    times = []
+                    channels_lines = [[] for _ in range(number_of_channels)]
+                
                 self.signals.success.emit(
                     (self.file_name, times, channels_lines, metadata)
                 )

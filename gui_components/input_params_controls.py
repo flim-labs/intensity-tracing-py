@@ -91,13 +91,13 @@ class InputParamsControls(QWidget):
             self.app.control_inputs[SETTINGS_ACQUISITION_TIME_MILLIS].setEnabled(True)
             self.app.free_running_acquisition_time = False
             self.app.settings.setValue(SETTINGS_FREE_RUNNING_MODE, False)
-        DataExportActions.calc_exported_file_size(self.app)    
+        # DataExportActions.calc_exported_file_size(self.app)    
 
     def acquisition_time_value_change(self, value):        
         self.app.control_inputs[START_BUTTON].setEnabled(value != 0)
         self.app.acquisition_time_millis = value * 1000  # convert s to ms
         self.app.settings.setValue(SETTINGS_ACQUISITION_TIME_MILLIS, self.app.acquisition_time_millis)
-        DataExportActions.calc_exported_file_size(self.app)    
+        # DataExportActions.calc_exported_file_size(self.app)    
 
     def time_span_value_change(self, value):        
         self.app.control_inputs[START_BUTTON].setEnabled(value != 0)
@@ -113,7 +113,7 @@ class InputParamsControls(QWidget):
         self.app.control_inputs[START_BUTTON].setEnabled(value != 0)
         self.app.bin_width_micros = value
         self.app.settings.setValue(SETTINGS_BIN_WIDTH_MICROS, value)
-        DataExportActions.calc_exported_file_size(self.app)
+        # DataExportActions.calc_exported_file_size(self.app)
         
     
     def toggle_show_cps(self, state):
