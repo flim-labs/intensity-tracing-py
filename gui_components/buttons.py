@@ -199,6 +199,24 @@ class ButtonsActionsController:
         app.acquisition_stopped = False
         app.warning_box = None
         app.settings.setValue(SETTINGS_ACQUISITION_STOPPED, False)
+        # Sync enabled channels from UI checkboxes before starting
+        if hasattr(app, "channels_checkboxes") and app.channels_checkboxes:
+            enabled_channels = [
+                i for i, checkbox in enumerate(app.channels_checkboxes)
+                if checkbox.is_checked()
+            ]
+            app.enabled_channels = enabled_channels
+            app.settings.setValue(
+                SETTINGS_ENABLED_CHANNELS, json.dumps(app.enabled_channels)
+            )
+            # Keep plots list consistent with enabled channels
+            app.intensity_plots_to_show = [
+                ch for ch in app.intensity_plots_to_show if ch in app.enabled_channels
+            ]
+            app.settings.setValue(
+                SETTINGS_INTENSITY_PLOTS_TO_SHOW,
+                json.dumps(app.intensity_plots_to_show),
+            )
         warn_title, warn_msg = MessagesUtilities.invalid_inputs_handler(
             app.bin_width_micros,
             app.time_span,
