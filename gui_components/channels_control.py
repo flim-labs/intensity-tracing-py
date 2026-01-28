@@ -11,6 +11,8 @@ from gui_components.data_export_controls import DataExportActions
 from gui_components.resource_path import resource_path
 from gui_components.gui_styles import GUIStyles
 from gui_components.settings import *
+from gui_components.channel_name_utils import get_channel_name_parts
+from gui_components.rename_channel_modal import RenameChannelModal
 current_path = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_path))
 
@@ -71,16 +73,26 @@ class ChannelsControl(QWidget):
             from gui_components.fancy_checkbox import FancyCheckbox
             ch_checkbox_wrapper = QWidget() 
             ch_checkbox_wrapper.setObjectName(f"ch_checkbox_wrapper")
-            checkbox = FancyCheckbox(text=f"Channel {i + 1}")
+            
+            custom_part, default_part = get_channel_name_parts(i, self.app.channel_names)
+            
+            checkbox = FancyCheckbox(
+                label_custom_part=custom_part,
+                label_default_part=default_part,
+                label_clickable=True
+            )
             checkbox.setStyleSheet(GUIStyles.set_checkbox_style())
             checked = i in self.app.enabled_channels
             checkbox.set_checked(checked)
             checkbox.toggled.connect(lambda state, index=i: self.on_ch_toggled(state, index))
+            checkbox.labelClicked.connect(lambda index=i: self.open_rename_modal(index))
+            
             row = QHBoxLayout()
             row.addWidget(checkbox)
             ch_checkbox_wrapper.setLayout(row)
             ch_checkbox_wrapper.setStyleSheet(GUIStyles.checkbox_wrapper_style())
             ch_checkbox_wrapper.setFixedHeight(40)
+            ch_checkbox_wrapper.setMinimumWidth(100)  # Minimum width, but can expand when space available
             self.ch_checkboxes.append(ch_checkbox_wrapper)
             self.app.channels_checkboxes.append(checkbox)
             self.widgets = [self.app.control_inputs[SETTINGS_CONN_CHANNEL]] + self.ch_checkboxes + [self.plots_config_btn]
@@ -107,6 +119,34 @@ class ChannelsControl(QWidget):
         self.app.settings.setValue(SETTINGS_ENABLED_CHANNELS, json.dumps(self.app.enabled_channels))
         # DataExportActions.calc_exported_file_size(self.app)
  
+
+    def open_rename_modal(self, channel_id):
+        """Open modal to rename a channel"""
+        current_name = self.app.channel_names.get(str(channel_id), "")
+        
+        modal = RenameChannelModal(channel_id, current_name, self)
+        modal.channelRenamed.connect(self.on_channel_renamed)
+        modal.exec()
+    
+    def on_channel_renamed(self, channel_id, new_name):
+        """Handle channel rename event"""
+        if new_name:
+            self.app.channel_names[str(channel_id)] = new_name
+        else:
+            if str(channel_id) in self.app.channel_names:
+                del self.app.channel_names[str(channel_id)]
+        
+        self.app.settings.setValue(SETTINGS_CHANNEL_NAMES, json.dumps(self.app.channel_names))
+        
+        custom_part, default_part = get_channel_name_parts(channel_id, self.app.channel_names)
+        checkbox = self.app.channels_checkboxes[channel_id]
+        checkbox.set_text_parts(custom_part, default_part)
+        
+        self.update_plot_titles()
+    
+    def update_plot_titles(self):
+        """Update plot titles with new channel names"""
+        pass
 
     def open_plots_config_popup(self):
         self.popup = PlotsConfigPopup(self.app, start_acquisition=False)

@@ -11,6 +11,7 @@ from gui_components.format_utilities import FormatUtils
 from gui_components.messages_utilities import MessagesUtilities
 from gui_components.gui_styles import GUIStyles
 from gui_components.settings import *
+from gui_components.channel_name_utils import get_channel_name
 from PyQt6.QtWidgets import (
     QApplication,
     QMessageBox,
@@ -209,7 +210,7 @@ class IntensityTracingPlot:
         intensity_widget = pg.PlotWidget()
         intensity_widget.setLabel("left", "AVG. Photon counts", units="")
         intensity_widget.setLabel("bottom", "Time", units="s")
-        intensity_widget.setTitle("Channel " + str(channel_index + 1))
+        intensity_widget.setTitle(get_channel_name(channel_index, app.channel_names))
         intensity_plot = intensity_widget.plot(x, y, pen=pg.mkPen(color="#23F3AB", width=2))
         intensity_widget.setStyleSheet("border: 1px solid #3b3b3b")
         intensity_widget.setBackground("#141414")
@@ -301,7 +302,7 @@ class IntensityTracingOnlyCPS:
             bg_color="transparent",
             start_color="#DA1212",
         )
-        channel_label = QLabel(f"Channel {channel + 1}")
+        channel_label = QLabel(get_channel_name(channel, app.channel_names))
         channel_label.setObjectName("ch")
         row_cps.addWidget(channel_label)
         arrow_icon = QLabel()

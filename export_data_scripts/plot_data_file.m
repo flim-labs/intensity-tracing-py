@@ -1,5 +1,27 @@
 file_path = '<FILE-PATH>';
 
+% Custom channel names (if any)
+channel_names_json = '<CHANNEL-NAMES>';
+try
+    channel_names = jsondecode(channel_names_json);
+catch
+    channel_names = struct();
+end
+
+% Helper function to get channel name with custom name support
+function name = get_channel_name(channel_id, custom_names)
+    field_name = sprintf('x%d', channel_id);
+    if isfield(custom_names, field_name)
+        custom_name = custom_names.(field_name);
+        if length(custom_name) > 30
+            custom_name = [custom_name(1:30) '...'];
+        end
+        name = sprintf('%s (Ch%d)', custom_name, channel_id + 1);
+    else
+        name = sprintf('Channel %d', channel_id + 1);
+    end
+end
+
 metadata = struct('channels', [], 'bin_width_micros', [], 'acquisition_time_millis', [], 'laser_period_ns', []);
 
 fid = fopen(file_path, 'rb');
@@ -159,7 +181,7 @@ figure;
 hold on;
 
 for i = 1:numel(active_channels)
-    plot(times, channel_lines{i}, 'LineWidth', 0.5, 'DisplayName', ['Channel ' num2str(active_channels(i) + 1)]);
+    plot(times, channel_lines{i}, 'LineWidth', 0.5, 'DisplayName', get_channel_name(active_channels(i), channel_names));
 end
 
 title_str = sprintf('Bin Width: %s us, Laser Period: %s ns', ...

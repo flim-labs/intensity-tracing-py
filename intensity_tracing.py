@@ -87,10 +87,17 @@ class PhotonsTracingWindow(QMainWindow):
             SETTINGS_WRITE_DATA, DEFAULT_WRITE_DATA
         ) in ["true", True]
         
-        # Time tagger
         time_tagger = self.settings.value(SETTINGS_TIME_TAGGER, DEFAULT_TIME_TAGGER)
         self.time_tagger = time_tagger == "true" or time_tagger == True
         
+        default_channel_names = self.settings.value(
+            SETTINGS_CHANNEL_NAMES, DEFAULT_CHANNEL_NAMES
+        )
+        self.channel_names = (
+            json.loads(default_channel_names)
+            if default_channel_names
+            else {}
+        )
         
         self.cached_time_span_seconds = 3
 

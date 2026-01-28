@@ -1,9 +1,26 @@
 import struct
+import json
 import matplotlib.pyplot as plt
 
 
 file_path = "<FILE-PATH>"
 print("Using data file: " + file_path)
+
+# Custom channel names (if any)
+channel_names_json = '<CHANNEL-NAMES>'
+try:
+    channel_names = json.loads(channel_names_json) if channel_names_json else {}
+except:
+    channel_names = {}
+
+def get_channel_name(channel_id):
+    """Get custom channel name with channel reference, or default name."""
+    custom_name = channel_names.get(str(channel_id), None)
+    if custom_name:
+        if len(custom_name) > 30:
+            custom_name = custom_name[:30] + "..."
+        return f"{custom_name} (Ch{channel_id + 1})"
+    return f"Channel {channel_id + 1}"
 
 times = []
 
@@ -118,7 +135,7 @@ with open(file_path, 'rb') as f:
         plt.plot(
             times_seconds,
             channel_line,
-            label="Channel " + str(metadata["channels"][i] + 1),
+            label=get_channel_name(metadata["channels"][i]),
             linewidth=0.5
         )
 

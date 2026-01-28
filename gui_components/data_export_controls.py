@@ -122,6 +122,9 @@ class ExportData:
             )
 
             file_paths = {"intensity_tracing": new_intensity_file_path}
+            
+            channel_names = getattr(app, 'channel_names', {})
+            
             ExportData.download_scripts(
                 file_paths,
                 save_name,
@@ -130,6 +133,7 @@ class ExportData:
                 timestamp,
                 time_tagger=time_tagger,
                 time_tagger_file_path=new_time_tagger_path,
+                channel_names=channel_names,
             )
         except Exception as e:
             ScriptFileUtils.show_error_message(e)
@@ -143,7 +147,11 @@ class ExportData:
         timestamp,
         time_tagger=False,
         time_tagger_file_path="",
+        channel_names=None,
     ):
+        if channel_names is None:
+            channel_names = {}
+        
         file_name = FileUtils.clean_filename(file_name)
         file_name = f"{file_name}_{timestamp}"
         ScriptFileUtils.export_scripts(
@@ -153,6 +161,7 @@ class ExportData:
             script_type,
             time_tagger,
             time_tagger_file_path,
+            channel_names,
         )
 
     @staticmethod
