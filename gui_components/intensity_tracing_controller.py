@@ -65,7 +65,6 @@ class IntensityTracing:
             result = flim_labs.start_intensity_tracing(
                 enabled_channels=app.enabled_channels,
                 bin_width_micros=app.bin_width_micros,
-                channel_names=app.channel_names,
                 write_bin=False,
                 write_data=app.write_data,
                 time_tagger=app.time_tagger,

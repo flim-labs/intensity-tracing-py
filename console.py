@@ -53,12 +53,10 @@ if __name__ == "__main__":
     write_bin=False
     write_data=True
     firmware_file="intensity_tracing_usb.flim"
-    channel_names=["Ch1", "Ch2", "Ch3", "Ch4", "Ch5", "Ch6", "Ch7", "Ch8"]
     
     result = flim_labs.start_intensity_tracing(
         enabled_channels=enabled_channels,
         bin_width_micros=bin_width_micros,
-        channel_names=channel_names,
         acquisition_time_millis=acquisition_time_millis,
         write_bin=write_bin,
         write_data=write_data,
