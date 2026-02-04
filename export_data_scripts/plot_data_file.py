@@ -13,9 +13,11 @@ try:
 except:
     channel_names = {}
 
-def get_channel_name(channel_id):
+def get_channel_name(channel_id, channel_names_dict=None):
     """Get custom channel name with channel reference, or default name."""
-    custom_name = channel_names.get(str(channel_id), None)
+    if channel_names_dict is None:
+        channel_names_dict = channel_names
+    custom_name = channel_names_dict.get(str(channel_id), None)
     if custom_name:
         if len(custom_name) > 30:
             custom_name = custom_name[:30] + "..."
@@ -34,7 +36,10 @@ with open(file_path, 'rb') as f:
     metadata = eval(f.read(json_length).decode("utf-8"))
 
     if "channels" in metadata and metadata["channels"]:
-        print("Enabled channels: " + (", ".join(["Channel " + str(ch + 1) for ch in metadata["channels"]])))
+        # Get channel_names from metadata if available
+        channel_names_from_file = metadata.get("channel_names", {})
+        channel_display_names = [get_channel_name(ch, channel_names_from_file) for ch in metadata["channels"]]
+        print("Enabled channels: " + (", ".join(channel_display_names)))
 
     if "bin_width_micros" in metadata and metadata["bin_width_micros"] is not None:
         print("Bin width: " + str(metadata["bin_width_micros"]) + "\u00B5s")

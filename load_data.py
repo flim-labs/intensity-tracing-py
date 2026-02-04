@@ -1,4 +1,5 @@
 from matplotlib import pyplot as plt
+from gui_components.channel_name_utils import get_channel_name
 
 
 def plot_intensity_data(channels_lines, times, metadata, show_plot=True):
@@ -9,13 +10,17 @@ def plot_intensity_data(channels_lines, times, metadata, show_plot=True):
       "Intensity Tracing"
     )
     # plot all channels data
+    # Get channel_names from metadata for labels
+    channel_names_from_file = metadata.get("channel_names", {})
     for i in range(len(metadata["channels"])):
         channel_line = channels_lines[i]
+        channel_id = metadata["channels"][i]
+        channel_label = get_channel_name(channel_id, channel_names_from_file)
         x = [time / 1_000_000_000 for time in times]
         ax.plot(
             x,
             channel_line,
-            label="Channel " + str(metadata["channels"][i] + 1),
+            label=channel_label,
             linewidth=0.5
         )
     ax.grid(True)

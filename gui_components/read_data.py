@@ -14,6 +14,7 @@ from gui_components.layout_utilities import clear_layout
 from gui_components.logo_utilities import TitlebarIcon
 from gui_components.messages_utilities import MessagesUtilities
 from gui_components.resource_path import resource_path
+from gui_components.channel_name_utils import get_channel_name
 from gui_components.settings import (
     BIN_METADATA_BUTTON,
     CHECK_CARD_WIDGET,
@@ -120,6 +121,12 @@ class ReadData:
         }
         last_time_s = round(times[-1] / 1_000_000_000, 5)
         app.reader_data["intensity"]["metadata"]["last_time_s"] = last_time_s
+        
+        if "channel_names" in metadata:
+            app.reader_data["intensity"]["metadata"]["channel_names"] = metadata["channel_names"]
+        else:
+            app.reader_data["intensity"]["metadata"]["channel_names"] = {}
+        
         ReaderPopup.handle_bin_file_result_ui(app.widgets[READER_POPUP])
 
     @staticmethod
@@ -317,8 +324,11 @@ class ReaderPopup(QWidget):
             desc = QLabel("CHOOSE MAX 4 PLOTS TO DISPLAY:")
             desc.setStyleSheet("font-size: 16px; font-family: 'Montserrat'")
             grid = QGridLayout()
+            # Get channel_names from file metadata
+            channel_names_from_file = file_metadata.get("channel_names", {})
             for ch in selected_channels:
-                checkbox, checkbox_wrapper = self.set_checkboxes(f"Channel {ch + 1}")
+                channel_display_name = get_channel_name(ch, channel_names_from_file)
+                checkbox, checkbox_wrapper = self.set_checkboxes(channel_display_name)
                 isChecked = ch in plots_to_show
                 checkbox.setChecked(isChecked)
                 if len(plots_to_show) >= 4 and ch not in plots_to_show:
@@ -467,6 +477,7 @@ class ReaderMetadataPopup(QWidget):
             "channels": "Enabled Channels",
             "bin_width_micros": "Bin width (μs)",
             "acquisition_time_millis": "Acquisition time (s)",
+            "channel_names": "Channel Names",
         }
 
     def create_metadata_table(self):
@@ -500,14 +511,22 @@ class ReaderMetadataPopup(QWidget):
                 if key in metadata:
                     metadata_value = str(metadata[key])
                     if key == "channels":
+                        # Get channel_names from metadata for display
+                        channel_names_from_file = metadata.get("channel_names", {})
                         metadata_value = ", ".join(
-                            ["Channel " + str(ch + 1) for ch in metadata[key]]
+                            [get_channel_name(ch, channel_names_from_file) for ch in metadata[key]]
                         )
                     if key == "acquisition_time_millis":
                         if metadata[key] is not None:
                             metadata_value = str(metadata[key] / 1000)
                         else:
-                            metadata_value = str(metadata["last_time_s"])   
+                            metadata_value = str(metadata["last_time_s"])
+                    if key == "channel_names":
+                        if isinstance(metadata[key], dict) and len(metadata[key]) > 0:
+                            channel_names_list = [f"{ch_id}: {ch_name}" for ch_id, ch_name in metadata[key].items()]
+                            metadata_value = ", ".join(channel_names_list)
+                        else:
+                            metadata_value = "No custom channel names"   
                 h_box = QHBoxLayout()
                 h_box.setContentsMargins(0, 0, 0, 0)
                 h_box.setSpacing(0)
